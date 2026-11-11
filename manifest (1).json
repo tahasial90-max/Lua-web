@@ -1,0 +1,29 @@
+{
+  "id": "/",
+  "name": "Lua → Loadstring",
+  "short_name": "Lua Paste",
+  "description": "Lua-Code teilen, als Pastefy-Paste speichern und Loadstring erzeugen.",
+  "lang": "de",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#10151c",
+  "theme_color": "#10151c",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        { "name": "files", "accept": [".lua", "text/plain", "text/x-lua", "application/octet-stream"] }
+      ]
+    }
+  }
+}
